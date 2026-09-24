@@ -1,0 +1,6 @@
+{
+  "name": "راحة",
+  "description": "تطبيق راحة (RAHA) - دليلك الذكي للمراحيض العمومية والحمامات ونقاط الاستراحة في الجزائر",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
