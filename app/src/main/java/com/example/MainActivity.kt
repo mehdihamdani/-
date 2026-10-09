@@ -31,7 +31,8 @@ class MainActivity : ComponentActivity() {
         val repo = RestroomRepository(
             dao = db.restroomDao(),
             cachedLocationDao = db.cachedLocationDao(),
-            cacheMetadataDao = db.offlineCacheMetadataDao()
+            cacheMetadataDao = db.offlineCacheMetadataDao(),
+            reviewDao = db.reviewDao()
         )
         RestroomViewModelFactory(repo)
     }

@@ -37,7 +37,8 @@ class OfflineRoomCacheTest {
         repository = RestroomRepository(
             dao = db.restroomDao(),
             cachedLocationDao = db.cachedLocationDao(),
-            cacheMetadataDao = db.offlineCacheMetadataDao()
+            cacheMetadataDao = db.offlineCacheMetadataDao(),
+            reviewDao = db.reviewDao()
         )
     }
 
@@ -209,5 +210,60 @@ class OfflineRoomCacheTest {
         assertEquals(36.7538, cachedLoc!!.latitude, 0.0001)
         assertEquals(3.0588, cachedLoc.longitude, 0.0001)
         assertEquals("الجزائر العاصمة", cachedLoc.cityName)
+    }
+
+    @Test
+    fun testReviewAndCleanlinessRatingSystem() = runBlocking {
+        val restroom = RestroomEntity(
+            id = 501,
+            name = "مرفق مسجد الهدى",
+            wilaya = "البليدة",
+            commune = "البليدة",
+            type = RestroomType.MOSQUE,
+            latitude = 36.4700,
+            longitude = 2.8300,
+            isFree = true,
+            rating = 4.0f,
+            cleanlinessRating = 4.0f,
+            reviewsCount = 0
+        )
+        db.restroomDao().insertRestroom(restroom)
+
+        // Submit first review
+        repository.submitReview(
+            restroomId = 501,
+            authorName = "أحمد زائر",
+            rating = 5.0f,
+            cleanlinessRating = 5.0f,
+            comment = "نظيف جداً ومعقم، والماء متوفر دائماً للوضوء.",
+            hasWaterAvailable = true,
+            hasSoapPaper = true
+        )
+
+        // Submit second review
+        repository.submitReview(
+            restroomId = 501,
+            authorName = "مسافر",
+            rating = 4.0f,
+            cleanlinessRating = 4.0f,
+            comment = "مكان نظيف ومريح لكن يحتاج مناديل إضافية.",
+            hasWaterAvailable = true,
+            hasSoapPaper = false
+        )
+
+        // Verify reviews stored in Room
+        val reviews = repository.getReviewsForRestroom(501).first()
+        assertEquals(2, reviews.size)
+        assertEquals("مسافر", reviews[0].authorName)
+        assertEquals("أحمد زائر", reviews[1].authorName)
+        assertEquals("نظيف جداً ومعقم، والماء متوفر دائماً للوضوء.", reviews[1].comment)
+        assertTrue(reviews[1].formattedTime.isNotEmpty())
+
+        // Verify updated average ratings on the restroom entity
+        val updatedRestroom = repository.getRestroomById(501)
+        assertNotNull(updatedRestroom)
+        assertEquals(2, updatedRestroom!!.reviewsCount)
+        assertEquals(4.5f, updatedRestroom.rating, 0.01f)
+        assertEquals(4.5f, updatedRestroom.cleanlinessRating, 0.01f)
     }
 }

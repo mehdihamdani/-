@@ -58,6 +58,9 @@ interface RestroomDao {
     @Query("UPDATE restrooms SET rating = :rating, reviewsCount = reviewsCount + 1 WHERE id = :id")
     suspend fun addReviewRating(id: Long, rating: Float)
 
+    @Query("UPDATE restrooms SET rating = :rating, cleanlinessRating = :cleanlinessRating, reviewsCount = :reviewsCount WHERE id = :id")
+    suspend fun updateRatingsAndReviewsCount(id: Long, rating: Float, cleanlinessRating: Float, reviewsCount: Int)
+
     @Query("DELETE FROM restrooms WHERE id = :id")
     suspend fun deleteRestroom(id: Long)
 }

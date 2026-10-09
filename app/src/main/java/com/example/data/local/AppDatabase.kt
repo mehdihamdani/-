@@ -8,6 +8,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.data.model.CachedUserLocationEntity
 import com.example.data.model.OfflineCacheMetadataEntity
 import com.example.data.model.RestroomEntity
+import com.example.data.model.ReviewEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -16,15 +17,17 @@ import kotlinx.coroutines.launch
     entities = [
         RestroomEntity::class,
         CachedUserLocationEntity::class,
-        OfflineCacheMetadataEntity::class
+        OfflineCacheMetadataEntity::class,
+        ReviewEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun restroomDao(): RestroomDao
     abstract fun cachedLocationDao(): CachedLocationDao
     abstract fun offlineCacheMetadataDao(): OfflineCacheMetadataDao
+    abstract fun reviewDao(): ReviewDao
 
     companion object {
         @Volatile
@@ -43,6 +46,7 @@ abstract class AppDatabase : RoomDatabase() {
                         CoroutineScope(Dispatchers.IO).launch {
                             val items = InitialRestroomsData.sampleAlgerianRestrooms
                             INSTANCE?.restroomDao()?.insertAll(items)
+                            INSTANCE?.reviewDao()?.insertAll(InitialRestroomsData.sampleReviews)
                             INSTANCE?.offlineCacheMetadataDao()?.saveMetadata(
                                 OfflineCacheMetadataEntity(
                                     id = 1,

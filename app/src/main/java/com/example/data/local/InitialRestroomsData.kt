@@ -2,6 +2,7 @@ package com.example.data.local
 
 import com.example.data.model.RestroomEntity
 import com.example.data.model.RestroomType
+import com.example.data.model.ReviewEntity
 
 object InitialRestroomsData {
     val sampleAlgerianRestrooms = listOf(
@@ -356,7 +357,75 @@ object InitialRestroomsData {
             hasWudu = true,
             openingHours = "05:00 - 20:00",
             address = "حي سيدي ابراهيم، عنابة",
-            notes = "تخدم المسافرين بين الولايات مع جناح للرجال وجناح للنساء."
+        )
+    )
+
+    val sampleReviews = listOf(
+        ReviewEntity(
+            id = 1,
+            restroomId = 1, // جامع الجزائر الأعظم
+            authorName = "أحمد ز.",
+            rating = 5.0f,
+            cleanlinessRating = 5.0f,
+            comment = "مرافق وضوء ودورات مياه في قمة النظافة والترتيب. ماء دافئ متوفر دائماً، صابون ومناديل ورقية متوفرة، ومصممة بأعلى المقاييس العصرية.",
+            hasWaterAvailable = true,
+            hasSoapPaper = true,
+            timestamp = System.currentTimeMillis() - (1000L * 60 * 60 * 3) // 3 hours ago
+        ),
+        ReviewEntity(
+            id = 2,
+            restroomId = 1,
+            authorName = "سفيان بن علي",
+            rating = 5.0f,
+            cleanlinessRating = 4.8f,
+            comment = "مهيأة ومريحة جداً لذوي الاحتياجات الخاصة وكبار السن بفضل المصاعد والمنحدرات ونظافة المرافق.",
+            hasWaterAvailable = true,
+            hasSoapPaper = true,
+            timestamp = System.currentTimeMillis() - (1000L * 60 * 60 * 26) // yesterday
+        ),
+        ReviewEntity(
+            id = 3,
+            restroomId = 2, // محطة النقل البري خروبة
+            authorName = "محمد مسافر",
+            rating = 4.0f,
+            cleanlinessRating = 3.8f,
+            comment = "المكان يؤدي الغرض جيداً للمسافرين القادمين من مختلف الولايات. الدخول 20 دج وعمال النظافة يقومون بالمسح بانتظام.",
+            hasWaterAvailable = true,
+            hasSoapPaper = true,
+            timestamp = System.currentTimeMillis() - (1000L * 60 * 60 * 48) // 2 days ago
+        ),
+        ReviewEntity(
+            id = 4,
+            restroomId = 3, // مركز باب الزوار
+            authorName = "مريم ع.",
+            rating = 4.8f,
+            cleanlinessRating = 4.9f,
+            comment = "نظيفة جداً ومعقمة، وأكثر ما أعجبني هو توفر غرفة مريحة ومجهزة لتغيير حفاضات الأطفال والرضع.",
+            hasWaterAvailable = true,
+            hasSoapPaper = true,
+            timestamp = System.currentTimeMillis() - (1000L * 60 * 60 * 12)
+        ),
+        ReviewEntity(
+            id = 5,
+            restroomId = 4, // محطة نفطال باسطا - البويرة
+            authorName = "طارق ق.",
+            rating = 4.8f,
+            cleanlinessRating = 4.8f,
+            comment = "محطة استراحة نموذجية في الطريق السيار شرق-غرب! دورات المياه نظيفة وعمال النظافة حاضرون دائماً، ماء غزير وصابون متوفر.",
+            hasWaterAvailable = true,
+            hasSoapPaper = true,
+            timestamp = System.currentTimeMillis() - (1000L * 60 * 60 * 36)
+        ),
+        ReviewEntity(
+            id = 6,
+            restroomId = 5, // مسجد الأمير عبد القادر قسنطينة
+            authorName = "عمر سيرتا",
+            rating = 5.0f,
+            cleanlinessRating = 5.0f,
+            comment = "مرافق وضوء فسيحة ونظيفة جداً تليق بمكانة المسجد التاريخي. ماء بارد وساخن متوفر وصيانة ممتازة.",
+            hasWaterAvailable = true,
+            hasSoapPaper = true,
+            timestamp = System.currentTimeMillis() - (1000L * 60 * 60 * 72)
         )
     )
 }

@@ -63,6 +63,7 @@ import com.example.ui.theme.HammamBronze
 import com.example.ui.theme.MallViolet
 import com.example.ui.theme.MosqueEmerald
 import com.example.ui.theme.NaftalFlame
+import com.example.ui.theme.RahaGreen
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.TealPrimary
 import com.example.ui.theme.TransportBlue
@@ -237,6 +238,13 @@ fun RestroomCard(
                     icon = Icons.Default.Star
                 )
 
+                // Cleanliness badge
+                StatusBadge(
+                    text = "نظافة: ${restroom.cleanlinessRating}/5",
+                    color = RahaGreen,
+                    icon = Icons.Default.CleaningServices
+                )
+
                 // Water status
                 if (!restroom.waterCutReported && restroom.hasWater) {
                     StatusBadge(
@@ -393,6 +401,7 @@ fun getTypeColor(type: RestroomType): Color {
         RestroomType.TRANSPORT_HUB -> TransportBlue
         RestroomType.MALL -> MallViolet
         RestroomType.PUBLIC_MUNICIPAL -> TealPrimary
+        RestroomType.PRIVATE_COMMERCIAL -> Color(0xFFD97706)
     }
 }
 
@@ -404,5 +413,6 @@ fun getTypeIcon(type: RestroomType): ImageVector {
         RestroomType.TRANSPORT_HUB -> Icons.Default.Train
         RestroomType.MALL -> Icons.Default.ShoppingBag
         RestroomType.PUBLIC_MUNICIPAL -> Icons.Default.Wc
+        RestroomType.PRIVATE_COMMERCIAL -> Icons.Default.Wc
     }
 }

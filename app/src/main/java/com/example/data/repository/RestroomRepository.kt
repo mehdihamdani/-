@@ -4,9 +4,11 @@ import com.example.data.local.CachedLocationDao
 import com.example.data.local.InitialRestroomsData
 import com.example.data.local.OfflineCacheMetadataDao
 import com.example.data.local.RestroomDao
+import com.example.data.local.ReviewDao
 import com.example.data.model.CachedUserLocationEntity
 import com.example.data.model.OfflineCacheMetadataEntity
 import com.example.data.model.RestroomEntity
+import com.example.data.model.ReviewEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -15,7 +17,8 @@ import kotlinx.coroutines.withContext
 class RestroomRepository(
     private val dao: RestroomDao,
     private val cachedLocationDao: CachedLocationDao,
-    private val cacheMetadataDao: OfflineCacheMetadataDao? = null
+    private val cacheMetadataDao: OfflineCacheMetadataDao? = null,
+    private val reviewDao: ReviewDao? = null
 ) {
 
     val allRestrooms: Flow<List<RestroomEntity>> = dao.getAllRestrooms()
@@ -23,6 +26,10 @@ class RestroomRepository(
     val offlineRestrooms: Flow<List<RestroomEntity>> = dao.getOfflineAvailableRestrooms()
     val cachedLocationFlow: Flow<CachedUserLocationEntity?> = cachedLocationDao.getCachedLocationFlow()
     val cacheMetadataFlow: Flow<OfflineCacheMetadataEntity?> = cacheMetadataDao?.getMetadataFlow() ?: emptyFlow()
+
+    fun getReviewsForRestroom(restroomId: Long): Flow<List<ReviewEntity>> {
+        return reviewDao?.getReviewsForRestroom(restroomId) ?: emptyFlow()
+    }
 
     suspend fun checkAndSeedInitialData() = withContext(Dispatchers.IO) {
         val count = dao.countRestrooms()
@@ -35,6 +42,11 @@ class RestroomRepository(
             if (cacheMetadataDao != null && cacheMetadataDao.getMetadataOnce() == null) {
                 updateOfflineCacheStats(count)
             }
+        }
+
+        // Seed initial community reviews if none exist
+        if (reviewDao != null && reviewDao.countAllReviews() == 0) {
+            reviewDao.insertAll(InitialRestroomsData.sampleReviews)
         }
     }
 
@@ -105,6 +117,46 @@ class RestroomRepository(
 
     suspend fun submitRating(id: Long, rating: Float) = withContext(Dispatchers.IO) {
         dao.addReviewRating(id, rating)
+    }
+
+    suspend fun submitReview(
+        restroomId: Long,
+        authorName: String,
+        rating: Float,
+        cleanlinessRating: Float,
+        comment: String,
+        hasWaterAvailable: Boolean,
+        hasSoapPaper: Boolean
+    ): Long = withContext(Dispatchers.IO) {
+        val review = ReviewEntity(
+            restroomId = restroomId,
+            authorName = authorName.ifBlank { "مواطن" },
+            rating = rating.coerceIn(1.0f, 5.0f),
+            cleanlinessRating = cleanlinessRating.coerceIn(1.0f, 5.0f),
+            comment = comment.trim(),
+            hasWaterAvailable = hasWaterAvailable,
+            hasSoapPaper = hasSoapPaper,
+            timestamp = System.currentTimeMillis()
+        )
+        val insertedId = reviewDao?.insertReview(review) ?: 0L
+
+        // Recompute average overall rating and cleanliness rating from database
+        if (reviewDao != null) {
+            val avgRating = reviewDao.getAverageRating(restroomId) ?: rating
+            val avgCleanliness = reviewDao.getAverageCleanlinessRating(restroomId) ?: cleanlinessRating
+            val count = reviewDao.countReviewsForRestroom(restroomId)
+            val roundedRating = Math.round(avgRating * 10f) / 10f
+            val roundedCleanliness = Math.round(avgCleanliness * 10f) / 10f
+            dao.updateRatingsAndReviewsCount(
+                id = restroomId,
+                rating = roundedRating,
+                cleanlinessRating = roundedCleanliness,
+                reviewsCount = count
+            )
+        } else {
+            dao.addReviewRating(restroomId, rating)
+        }
+        insertedId
     }
 
     suspend fun deleteRestroom(id: Long) = withContext(Dispatchers.IO) {

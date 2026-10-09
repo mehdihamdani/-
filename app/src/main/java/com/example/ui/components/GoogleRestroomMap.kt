@@ -59,6 +59,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -172,55 +173,106 @@ fun GoogleRestroomMap(
             .fillMaxSize()
             .testTag("google_map_container")
     ) {
-        // Google Maps View
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState,
-            properties = MapProperties(
-                isMyLocationEnabled = hasLocationPermission,
-                mapType = currentMapType
-            ),
-            uiSettings = MapUiSettings(
-                zoomControlsEnabled = false,
-                myLocationButtonEnabled = false,
-                compassEnabled = true,
-                mapToolbarEnabled = false
-            ),
-            onMapClick = {
-                onRestroomSelected(null)
-            }
-        ) {
-            // User location halo marker
-            Circle(
-                center = LatLng(userLocation.latitude, userLocation.longitude),
-                radius = 70.0,
-                fillColor = Color(0x330077B6),
-                strokeColor = Color(0xFF0077B6),
-                strokeWidth = 2f
-            )
-
-            Marker(
-                state = MarkerState(position = LatLng(userLocation.latitude, userLocation.longitude)),
-                title = "موقعي الحالي",
-                snippet = userLocation.cityName,
-                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
-            )
-
-            // Rest stop markers
-            restrooms.forEach { item ->
-                val restroom = item.restroom
-                val isSelected = selectedRestroom?.id == restroom.id
+        if (com.example.util.MapsKeyValidator.isKeyValid()) {
+            // Google Maps View
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(
+                    isMyLocationEnabled = hasLocationPermission,
+                    mapType = currentMapType
+                ),
+                uiSettings = MapUiSettings(
+                    zoomControlsEnabled = false,
+                    myLocationButtonEnabled = false,
+                    compassEnabled = true,
+                    mapToolbarEnabled = false
+                ),
+                onMapClick = {
+                    onRestroomSelected(null)
+                }
+            ) {
+                // User location halo marker
+                Circle(
+                    center = LatLng(userLocation.latitude, userLocation.longitude),
+                    radius = 70.0,
+                    fillColor = Color(0x330077B6),
+                    strokeColor = Color(0xFF0077B6),
+                    strokeWidth = 2f
+                )
 
                 Marker(
-                    state = MarkerState(position = LatLng(restroom.latitude, restroom.longitude)),
-                    title = restroom.name,
-                    snippet = "${restroom.wilaya} • ${item.formattedDistance} • ${if (restroom.isFree) "مجاني" else "${restroom.priceDzd} دج"}",
-                    icon = BitmapDescriptorFactory.defaultMarker(getGoogleMarkerHue(restroom.type)),
-                    onClick = {
-                        onRestroomSelected(if (isSelected) null else restroom)
-                        true
-                    }
+                    state = MarkerState(position = LatLng(userLocation.latitude, userLocation.longitude)),
+                    title = "موقعي الحالي",
+                    snippet = userLocation.cityName,
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
                 )
+
+                // Rest stop markers
+                restrooms.forEach { item ->
+                    val restroom = item.restroom
+                    val isSelected = selectedRestroom?.id == restroom.id
+
+                    Marker(
+                        state = MarkerState(position = LatLng(restroom.latitude, restroom.longitude)),
+                        title = restroom.name,
+                        snippet = "${restroom.wilaya} • ${item.formattedDistance} • ${if (restroom.isFree) "مجاني" else "${restroom.priceDzd} دج"}",
+                        icon = BitmapDescriptorFactory.defaultMarker(getGoogleMarkerHue(restroom.type)),
+                        onClick = {
+                            onRestroomSelected(if (isSelected) null else restroom)
+                            true
+                        }
+                    )
+                }
+            }
+        } else {
+            // Graceful Fallback Card when API key is missing or invalid (e.g. 'chlef')
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF0D1B2A))
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Map,
+                            contentDescription = null,
+                            tint = TealPrimary,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "مفتاح Google Maps يحتاج إلى تهيئة",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = com.example.util.MapsKeyValidator.getErrorMessage(),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = onSwitchToOfflineMap,
+                            colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("التبديل إلى الخريطة التفاعلية (تعمل 100% بدون إنترنت)")
+                        }
+                    }
+                }
             }
         }
 
@@ -665,5 +717,6 @@ fun getGoogleMarkerHue(type: RestroomType): Float {
         RestroomType.TRANSPORT_HUB -> BitmapDescriptorFactory.HUE_VIOLET
         RestroomType.MALL -> BitmapDescriptorFactory.HUE_ROSE
         RestroomType.PUBLIC_MUNICIPAL -> BitmapDescriptorFactory.HUE_CYAN
+        RestroomType.PRIVATE_COMMERCIAL -> BitmapDescriptorFactory.HUE_YELLOW
     }
 }

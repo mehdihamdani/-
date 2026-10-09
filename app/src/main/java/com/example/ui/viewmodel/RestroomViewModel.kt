@@ -6,14 +6,19 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.data.model.OfflineCacheMetadataEntity
 import com.example.data.model.RestroomEntity
 import com.example.data.model.RestroomType
+import com.example.data.model.ReviewEntity
 import com.example.data.model.UserLocation
 import com.example.data.repository.RestroomRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -69,8 +74,17 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
     )
     val userLocation: StateFlow<UserLocation> = _userLocation
 
-    private val _mapProvider = MutableStateFlow(MapProviderType.GOOGLE_MAPS)
+    private val _mapProvider = MutableStateFlow(
+        if (com.example.util.MapsKeyValidator.isKeyValid()) MapProviderType.GOOGLE_MAPS else MapProviderType.OFFLINE_VECTOR
+    )
     val mapProvider: StateFlow<MapProviderType> = _mapProvider
+
+    private val _showInvalidApiKeyDialog = MutableStateFlow(false)
+    val showInvalidApiKeyDialog: StateFlow<Boolean> = _showInvalidApiKeyDialog
+
+    fun setShowInvalidApiKeyDialog(show: Boolean) {
+        _showInvalidApiKeyDialog.value = show
+    }
 
     private val _isLocating = MutableStateFlow(false)
     val isLocating: StateFlow<Boolean> = _isLocating
@@ -83,6 +97,21 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
 
     private val _selectedRestroom = MutableStateFlow<RestroomEntity?>(null)
     val selectedRestroom: StateFlow<RestroomEntity?> = _selectedRestroom
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val selectedRestroomReviews: StateFlow<List<ReviewEntity>> = _selectedRestroom
+        .flatMapLatest { restroom ->
+            if (restroom != null) {
+                repository.getReviewsForRestroom(restroom.id)
+            } else {
+                flowOf(emptyList())
+            }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     private val _showAddDialog = MutableStateFlow(false)
     val showAddDialog: StateFlow<Boolean> = _showAddDialog
@@ -262,7 +291,12 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
     }
 
     fun setMapProvider(provider: MapProviderType) {
-        _mapProvider.value = provider
+        if (provider == MapProviderType.GOOGLE_MAPS && !com.example.util.MapsKeyValidator.isKeyValid()) {
+            _showInvalidApiKeyDialog.value = true
+            _mapProvider.value = MapProviderType.OFFLINE_VECTOR
+        } else {
+            _mapProvider.value = provider
+        }
     }
 
     fun requestGpsLocation(locationHelper: com.example.data.location.LocationHelper) {
@@ -305,6 +339,32 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
     fun rateRestroom(restroom: RestroomEntity, rating: Float) {
         viewModelScope.launch {
             repository.submitRating(restroom.id, rating)
+        }
+    }
+
+    fun submitReview(
+        restroomId: Long,
+        authorName: String,
+        rating: Float,
+        cleanlinessRating: Float,
+        comment: String,
+        hasWaterAvailable: Boolean,
+        hasSoapPaper: Boolean
+    ) {
+        viewModelScope.launch {
+            repository.submitReview(
+                restroomId = restroomId,
+                authorName = authorName,
+                rating = rating,
+                cleanlinessRating = cleanlinessRating,
+                comment = comment,
+                hasWaterAvailable = hasWaterAvailable,
+                hasSoapPaper = hasSoapPaper
+            )
+            val updated = repository.getRestroomById(restroomId)
+            if (updated != null && _selectedRestroom.value?.id == restroomId) {
+                _selectedRestroom.value = updated
+            }
         }
     }
 
@@ -422,7 +482,7 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
                     if (filters.selectedType != null && item.type != filters.selectedType) return@filter false
                     // Group visibility toggles (Mosques, Public Toilets, Rest Areas)
                     val isMosque = item.type == RestroomType.MOSQUE
-                    val isPublicToilet = item.type == RestroomType.PUBLIC_MUNICIPAL || item.type == RestroomType.MALL || item.type == RestroomType.HAMMAM
+                    val isPublicToilet = item.type == RestroomType.PUBLIC_MUNICIPAL || item.type == RestroomType.MALL || item.type == RestroomType.HAMMAM || item.type == RestroomType.PRIVATE_COMMERCIAL
                     val isRestArea = item.type == RestroomType.NAFTAL_HIGHWAY || item.type == RestroomType.TRANSPORT_HUB
 
                     if (isMosque && !filters.showMosques) return@filter false

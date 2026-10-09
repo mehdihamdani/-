@@ -47,6 +47,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Wc
 import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -107,6 +109,7 @@ import com.example.ui.theme.AlertRed
 import com.example.ui.theme.RahaBlue
 import com.example.ui.theme.RahaGreen
 import com.example.ui.theme.RahaGreenContainer
+import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.TealPrimary
 import com.example.ui.viewmodel.MapProviderType
 import com.example.ui.viewmodel.RestroomViewModel
@@ -124,6 +127,7 @@ fun HomeScreen(
     val filteredRestrooms by viewModel.filteredRestrooms.collectAsStateWithLifecycle()
     val nearestRestroom by viewModel.nearestRestroom.collectAsStateWithLifecycle()
     val selectedRestroom by viewModel.selectedRestroom.collectAsStateWithLifecycle()
+    val selectedRestroomReviews by viewModel.selectedRestroomReviews.collectAsStateWithLifecycle()
     val showAddDialog by viewModel.showAddDialog.collectAsStateWithLifecycle()
     val showStudyDialog by viewModel.showStudyDialog.collectAsStateWithLifecycle()
     val mapProvider by viewModel.mapProvider.collectAsStateWithLifecycle()
@@ -132,6 +136,7 @@ fun HomeScreen(
     val offlineCacheMetadata by viewModel.offlineCacheMetadata.collectAsStateWithLifecycle()
     val isOfflineMode by viewModel.isOfflineMode.collectAsStateWithLifecycle()
     val showOfflineCacheDialog by viewModel.showOfflineCacheDialog.collectAsStateWithLifecycle()
+    val showInvalidApiKeyDialog by viewModel.showInvalidApiKeyDialog.collectAsStateWithLifecycle()
 
     val locationHelper = remember { LocationHelper(context) }
     var hasLocationPermission by remember {
@@ -285,9 +290,9 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = null)
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "إضافة")
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("إضافة مرحاض", fontWeight = FontWeight.Bold)
+                    Text("إضافة", fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -498,6 +503,17 @@ fun HomeScreen(
                     selected = filterState.selectedType == RestroomType.MALL,
                     onClick = { viewModel.setSelectedType(RestroomType.MALL) },
                     label = { Text("مراكز تجارية") }
+                )
+
+                // Private Restroom (مراحيض خواص)
+                FilterChip(
+                    selected = filterState.selectedType == RestroomType.PRIVATE_COMMERCIAL,
+                    onClick = { viewModel.setSelectedType(RestroomType.PRIVATE_COMMERCIAL) },
+                    label = { Text("مراحيض خواص") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = getTypeColor(RestroomType.PRIVATE_COMMERCIAL),
+                        selectedLabelColor = Color.White
+                    )
                 )
 
                 // Free Only
@@ -762,6 +778,7 @@ fun HomeScreen(
         val distText = filteredRestrooms.find { it.restroom.id == selectedRestroom!!.id }?.formattedDistance ?: ""
         RestroomDetailSheet(
             restroom = selectedRestroom!!,
+            reviews = selectedRestroomReviews,
             distanceText = distText,
             sheetState = detailSheetState,
             onDismiss = { viewModel.selectRestroom(null) },
@@ -769,7 +786,18 @@ fun HomeScreen(
             onShareClick = { viewModel.shareRestroom(context, selectedRestroom!!) },
             onFavoriteToggle = { viewModel.toggleFavorite(selectedRestroom!!) },
             onReportWaterCut = { isCut -> viewModel.reportWaterCut(selectedRestroom!!, isCut) },
-            onRateRestroom = { rating -> viewModel.rateRestroom(selectedRestroom!!, rating) }
+            onRateRestroom = { rating -> viewModel.rateRestroom(selectedRestroom!!, rating) },
+            onSubmitReview = { author, rating, cleanliness, comment, water, soap ->
+                viewModel.submitReview(
+                    restroomId = selectedRestroom!!.id,
+                    authorName = author,
+                    rating = rating,
+                    cleanlinessRating = cleanliness,
+                    comment = comment,
+                    hasWaterAvailable = water,
+                    hasSoapPaper = soap
+                )
+            }
         )
     }
 
@@ -803,6 +831,55 @@ fun HomeScreen(
             onToggleOfflineMode = { viewModel.toggleOfflineMode() },
             onRefreshCache = { viewModel.refreshOfflineCache() },
             onDismiss = { viewModel.setShowOfflineCacheDialog(false) }
+        )
+    }
+
+    // Invalid Google Maps API Key Explanatory Dialog
+    if (showInvalidApiKeyDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.setShowInvalidApiKeyDialog(false) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = AlertRed
+                )
+            },
+            title = {
+                Text(
+                    text = "تنبيه: مفتاح Google Maps غير صالح",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "القيمة الحالية لمفتاح الخرائط هي: \"${com.example.BuildConfig.MAPS_API_KEY}\".",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "مفاتيح Google Maps الرسمية تبدأ دائماً بـ AIzaSy... وتتكون من 39 حرفاً من Google Cloud Console.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "يعمل تطبيق «راحة» حالياً بالخريطة التفاعلية المحلية البديلة 100% بدون إنترنت وبشكل مجاني تماماً وبدون الحاجة لأي مفتاح.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SuccessGreen
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.setShowInvalidApiKeyDialog(false) },
+                    colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
+                ) {
+                    Text("متابعة بالخريطة التفاعلية (بدون إنترنت)")
+                }
+            }
         )
     }
 }

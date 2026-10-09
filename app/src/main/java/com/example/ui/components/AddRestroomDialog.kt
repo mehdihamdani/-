@@ -15,7 +15,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddLocationAlt
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -43,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.data.model.AlgerianWilayas
 import com.example.data.model.RestroomType
 import com.example.ui.theme.TealPrimary
 
@@ -90,12 +93,8 @@ fun AddRestroomDialog(
 
     var typeMenuExpanded by remember { mutableStateOf(false) }
     var wilayaMenuExpanded by remember { mutableStateOf(false) }
-
-    val algerianWilayas = listOf(
-        "الجزائر العاصمة", "وهران", "قسنطينة", "سطيف", "عنابة", "البليدة", "تلمسان",
-        "تيزي وزو", "بجاية", "باتنة", "الشلف", "بسكرة", "سكيكدة", "سيدي بلعباس",
-        "مستغانم", "المسيلة", "معسكر", "ورقلة", "بومرداس", "تيبازة", "ميلة", "عين الدفلى"
-    )
+    var wilayaSearchQuery by remember { mutableStateOf("") }
+    val algerianWilayas = AlgerianWilayas.all58Wilayas
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -187,6 +186,12 @@ fun AddRestroomDialog(
                                         hasWudu = true
                                         isFree = true
                                         priceText = "0"
+                                    } else if (type == RestroomType.PRIVATE_COMMERCIAL) {
+                                        hasShower = false
+                                        isFree = false
+                                        priceText = "20"
+                                        hasWater = true
+                                        hasSoapPaper = true
                                     }
                                 }
                             )
@@ -196,7 +201,7 @@ fun AddRestroomDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Wilaya Dropdown
+                // Wilaya Dropdown (58 Algerian Wilayas with search)
                 ExposedDropdownMenuBox(
                     expanded = wilayaMenuExpanded,
                     onExpandedChange = { wilayaMenuExpanded = it }
@@ -205,24 +210,91 @@ fun AddRestroomDialog(
                         value = wilaya,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("الولاية *") },
+                        label = { Text("الولاية (58 ولاية) *") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = wilayaMenuExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                            .testTag("wilaya_dropdown_field")
                     )
                     ExposedDropdownMenu(
                         expanded = wilayaMenuExpanded,
-                        onDismissRequest = { wilayaMenuExpanded = false }
+                        onDismissRequest = {
+                            wilayaMenuExpanded = false
+                            wilayaSearchQuery = ""
+                        }
                     ) {
-                        algerianWilayas.forEach { w ->
-                            DropdownMenuItem(
-                                text = { Text(w) },
-                                onClick = {
-                                    wilaya = w
-                                    wilayaMenuExpanded = false
+                        // Search box inside dropdown
+                        OutlinedTextField(
+                            value = wilayaSearchQuery,
+                            onValueChange = { wilayaSearchQuery = it },
+                            placeholder = { Text("ابحث برقم أو اسم الولاية...") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            trailingIcon = {
+                                if (wilayaSearchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { wilayaSearchQuery = "" }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Clear,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
                                 }
+                            },
+                            singleLine = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+
+                        val filteredWilayas = if (wilayaSearchQuery.isBlank()) {
+                            algerianWilayas
+                        } else {
+                            val q = wilayaSearchQuery.trim().lowercase()
+                            algerianWilayas.filter {
+                                it.fullSearchableText.contains(q)
+                            }
+                        }
+
+                        if (filteredWilayas.isEmpty()) {
+                            DropdownMenuItem(
+                                text = { Text("لا توجد ولاية مطابقة", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                                onClick = {}
                             )
+                        } else {
+                            filteredWilayas.forEach { w ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = w.displayName,
+                                                fontWeight = if (wilaya == w.arabicName) FontWeight.Bold else FontWeight.Normal
+                                            )
+                                            Text(
+                                                text = w.frenchName,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        wilaya = w.arabicName
+                                        wilayaMenuExpanded = false
+                                        wilayaSearchQuery = ""
+                                    }
+                                )
+                            }
                         }
                     }
                 }

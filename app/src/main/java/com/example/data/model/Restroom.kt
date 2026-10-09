@@ -9,7 +9,8 @@ enum class RestroomType(val arabicName: String, val frenchName: String) {
     NAFTAL_HIGHWAY("محطة نفطال / طريق سريع", "Station Naftal / Autoroute"),
     TRANSPORT_HUB("محطة نقل (سوجرال/ميترو/قطار)", "Gare / Station de transport"),
     MALL("مركز تجاري (مول)", "Centre commercial"),
-    PUBLIC_MUNICIPAL("مرحاض عمومي بلدي", "Toilette publique municipale")
+    PUBLIC_MUNICIPAL("مرحاض عمومي بلدي", "Toilette publique municipale"),
+    PRIVATE_COMMERCIAL("مرحاض خواص", "Toilettes privées")
 }
 
 @Entity(tableName = "restrooms")
