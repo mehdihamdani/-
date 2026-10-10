@@ -1,0 +1,92 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile in the DZ Restrooms application",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Unique user ID matching Auth UID" },
+        "displayName": { "type": "string", "description": "User display name" },
+        "email": { "type": "string", "description": "User email address" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when user profile was created" }
+      },
+      "required": ["userId", "displayName", "email", "createdAt"]
+    },
+    "UserFavorite": {
+      "title": "UserFavorite",
+      "description": "User bookmarked restroom facility",
+      "type": "object",
+      "properties": {
+        "restroomId": { "type": "string", "description": "ID of the saved restroom" },
+        "addedAt": { "type": "string", "format": "date-time", "description": "Timestamp when restroom was saved" }
+      },
+      "required": ["restroomId", "addedAt"]
+    },
+    "Restroom": {
+      "title": "Restroom",
+      "description": "Restroom facility details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Document ID" },
+        "name": { "type": "string", "description": "Name of restroom in French or common name" },
+        "nameAr": { "type": "string", "description": "Arabic name of the facility" },
+        "latitude": { "type": "number", "description": "GPS latitude" },
+        "longitude": { "type": "number", "description": "GPS longitude" },
+        "province": { "type": "string", "description": "Wilaya name in Algeria" },
+        "address": { "type": "string", "description": "Street or landmark address" },
+        "type": { "type": "string", "description": "Facility type (public, private, mosque, mall, station)" },
+        "isFree": { "type": "boolean", "description": "Whether the facility is free" },
+        "priceDzd": { "type": "number", "description": "Price in Algerian Dinars if paid" },
+        "hasWater": { "type": "boolean", "description": "Running water available" },
+        "hasSoap": { "type": "boolean", "description": "Soap available" },
+        "hasPaper": { "type": "boolean", "description": "Toilet paper available" },
+        "hasAccessibleToilet": { "type": "boolean", "description": "Wheelchair accessible" },
+        "hasSquatToilet": { "type": "boolean", "description": "Traditional squat toilet" },
+        "hasSittingToilet": { "type": "boolean", "description": "Western sitting toilet" },
+        "rating": { "type": "number", "description": "Average rating out of 5" },
+        "reviewsCount": { "type": "number", "description": "Total reviews count" },
+        "cleanlinessRating": { "type": "number", "description": "Average cleanliness rating" },
+        "createdBy": { "type": "string", "description": "User ID of creator" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+      },
+      "required": ["id", "name", "latitude", "longitude", "province", "createdBy", "createdAt"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Community user review and cleanliness rating",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Review unique identifier" },
+        "restroomId": { "type": "string", "description": "Target restroom document ID" },
+        "userId": { "type": "string", "description": "Author UID" },
+        "authorName": { "type": "string", "description": "Author display name" },
+        "rating": { "type": "number", "description": "Overall rating 1.0 to 5.0" },
+        "cleanlinessRating": { "type": "number", "description": "Cleanliness rating 1.0 to 5.0" },
+        "comment": { "type": "string", "description": "Text review comments" },
+        "hasWaterAvailable": { "type": "boolean", "description": "Water was available" },
+        "hasSoapPaper": { "type": "boolean", "description": "Soap/paper was available" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Review submission timestamp" }
+      },
+      "required": ["id", "restroomId", "userId", "authorName", "rating", "cleanlinessRating", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile collection"
+    },
+    "/users/{userId}/favorites/{restroomId}": {
+      "schema": { "$ref": "#/entities/UserFavorite" },
+      "description": "Bookmarked favorite restrooms for the user"
+    },
+    "/restrooms/{restroomId}": {
+      "schema": { "$ref": "#/entities/Restroom" },
+      "description": "Algerian restrooms registry"
+    },
+    "/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/Review" },
+      "description": "Community reviews and cleanliness ratings"
+    }
+  }
+}

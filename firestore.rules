@@ -1,0 +1,107 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
+             data.email is string && data.email.size() <= 200 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidUserFavorite(data) {
+      return data.restroomId is string && data.restroomId.size() > 0 && data.restroomId.size() <= 128 &&
+             data.addedAt is timestamp && data.addedAt <= request.time;
+    }
+
+    function isValidRestroom(data) {
+      return data.id is string && data.id.size() > 0 &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 150 &&
+             (!('nameAr' in data) || (data.nameAr is string && data.nameAr.size() <= 150)) &&
+             data.latitude is number && data.latitude >= -90.0 && data.latitude <= 90.0 &&
+             data.longitude is number && data.longitude >= -180.0 && data.longitude <= 180.0 &&
+             data.province is string && data.province.size() >= 1 && data.province.size() <= 100 &&
+             (!('address' in data) || (data.address is string && data.address.size() <= 300)) &&
+             (!('type' in data) || (data.type is string && data.type.size() <= 50)) &&
+             (!('isFree' in data) || data.isFree is bool) &&
+             (!('priceDzd' in data) || data.priceDzd is number) &&
+             (!('hasWater' in data) || data.hasWater is bool) &&
+             (!('hasSoap' in data) || data.hasSoap is bool) &&
+             (!('hasPaper' in data) || data.hasPaper is bool) &&
+             (!('hasAccessibleToilet' in data) || data.hasAccessibleToilet is bool) &&
+             (!('hasSquatToilet' in data) || data.hasSquatToilet is bool) &&
+             (!('hasSittingToilet' in data) || data.hasSittingToilet is bool) &&
+             (!('rating' in data) || (data.rating is number && data.rating >= 0.0 && data.rating <= 5.0)) &&
+             (!('reviewsCount' in data) || (data.reviewsCount is int && data.reviewsCount >= 0)) &&
+             (!('cleanlinessRating' in data) || (data.cleanlinessRating is number && data.cleanlinessRating >= 0.0 && data.cleanlinessRating <= 5.0)) &&
+             data.createdBy is string &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
+    }
+
+    function isValidReview(data) {
+      return data.id is string && data.id.size() > 0 &&
+             data.restroomId is string && data.restroomId.size() > 0 &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 100 &&
+             data.rating is number && data.rating >= 1.0 && data.rating <= 5.0 &&
+             data.cleanlinessRating is number && data.cleanlinessRating >= 1.0 && data.cleanlinessRating <= 5.0 &&
+             (!('comment' in data) || (data.comment is string && data.comment.size() <= 1000)) &&
+             (!('hasWaterAvailable' in data) || data.hasWaterAvailable is bool) &&
+             (!('hasSoapPaper' in data) || data.hasSoapPaper is bool) &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow get, list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow update: if isSignedIn() && isOwner(userId) && isValidUserProfile(request.resource.data) &&
+                       request.resource.data.userId == resource.data.userId;
+      allow delete: if isSignedIn() && isOwner(userId);
+
+      match /favorites/{restroomId} {
+        allow get, list: if isSignedIn() && isOwner(userId);
+        allow create: if isSignedIn() && isOwner(userId) && isValidUserFavorite(request.resource.data);
+        allow update: if isSignedIn() && isOwner(userId) && isValidUserFavorite(request.resource.data);
+        allow delete: if isSignedIn() && isOwner(userId);
+      }
+    }
+
+    match /restrooms/{restroomId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() &&
+                       request.resource.data.createdBy == request.auth.uid &&
+                       isValidRestroom(request.resource.data);
+      allow update: if isSignedIn() &&
+                       (resource.data.createdBy == request.auth.uid ||
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rating', 'reviewsCount', 'cleanlinessRating', 'updatedAt'])) &&
+                       isValidRestroom(request.resource.data) &&
+                       request.resource.data.createdBy == resource.data.createdBy;
+      allow delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+    }
+
+    match /reviews/{reviewId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() &&
+                       request.resource.data.userId == request.auth.uid &&
+                       isValidReview(request.resource.data);
+      allow update: if isSignedIn() &&
+                       resource.data.userId == request.auth.uid &&
+                       request.resource.data.userId == request.auth.uid &&
+                       isValidReview(request.resource.data);
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

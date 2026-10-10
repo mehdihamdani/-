@@ -24,6 +24,13 @@ import com.example.ui.viewmodel.RestroomViewModel
 import com.example.ui.viewmodel.RestroomViewModelFactory
 import kotlinx.coroutines.launch
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.ui.auth.SignInScreen
+import com.example.ui.auth.authStateFlow
+import com.google.firebase.auth.FirebaseAuth
+
 class MainActivity : ComponentActivity() {
 
     private val viewModel: RestroomViewModel by viewModels {
@@ -46,38 +53,49 @@ class MainActivity : ComponentActivity() {
         locationHelper = LocationHelper(this)
 
         setContent {
-            MyApplicationTheme {
-                val permissionLauncher = rememberLauncherForActivityResult(
-                    contract = ActivityResultContracts.RequestMultiplePermissions()
-                ) { permissions ->
-                    val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-                    val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-                    if (fineGranted || coarseGranted) {
-                        detectUserLocation()
-                        startLiveLocationUpdates()
-                    }
-                }
+            val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+            MyApplicationTheme(
+                palette = appSettings.themePalette,
+                darkModeOption = appSettings.darkModeOption
+            ) {
+                val auth = remember { FirebaseAuth.getInstance() }
+                val currentUser by auth.authStateFlow().collectAsStateWithLifecycle(initialValue = auth.currentUser)
 
-                LaunchedEffect(Unit) {
-                    val fineCheck = ContextCompat.checkSelfPermission(
-                        this@MainActivity,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    )
-                    if (fineCheck != PackageManager.PERMISSION_GRANTED) {
-                        permissionLauncher.launch(
-                            arrayOf(
-                                Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
-                            )
+                if (currentUser == null) {
+                    SignInScreen(onSignInSuccess = { /* Automatically navigates upon authStateFlow emission */ })
+                } else {
+                    val permissionLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.RequestMultiplePermissions()
+                    ) { permissions ->
+                        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+                        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+                        if (fineGranted || coarseGranted) {
+                            detectUserLocation()
+                            startLiveLocationUpdates()
+                        }
+                    }
+
+                    LaunchedEffect(Unit) {
+                        val fineCheck = ContextCompat.checkSelfPermission(
+                            this@MainActivity,
+                            Manifest.permission.ACCESS_FINE_LOCATION
                         )
-                    } else {
-                        detectUserLocation()
-                        startLiveLocationUpdates()
+                        if (fineCheck != PackageManager.PERMISSION_GRANTED) {
+                            permissionLauncher.launch(
+                                arrayOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
+                            )
+                        } else {
+                            detectUserLocation()
+                            startLiveLocationUpdates()
+                        }
                     }
-                }
 
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    HomeScreen(viewModel = viewModel)
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        HomeScreen(viewModel = viewModel)
+                    }
                 }
             }
         }

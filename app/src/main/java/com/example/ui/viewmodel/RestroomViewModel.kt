@@ -6,6 +6,10 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.data.model.AppSettings
+import com.example.data.model.AppThemePalette
+import com.example.data.model.DarkModeOption
+import com.example.data.model.AppLanguage
 import com.example.data.model.OfflineCacheMetadataEntity
 import com.example.data.model.RestroomEntity
 import com.example.data.model.RestroomType
@@ -84,6 +88,21 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
 
     fun setShowInvalidApiKeyDialog(show: Boolean) {
         _showInvalidApiKeyDialog.value = show
+    }
+
+    private val _appSettings = MutableStateFlow(AppSettings())
+    val appSettings: StateFlow<AppSettings> = _appSettings
+
+    fun setThemePalette(palette: AppThemePalette) {
+        _appSettings.value = _appSettings.value.copy(themePalette = palette)
+    }
+
+    fun setDarkModeOption(option: DarkModeOption) {
+        _appSettings.value = _appSettings.value.copy(darkModeOption = option)
+    }
+
+    fun setLanguage(language: AppLanguage) {
+        _appSettings.value = _appSettings.value.copy(language = language)
     }
 
     private val _isLocating = MutableStateFlow(false)

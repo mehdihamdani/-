@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.CloudDone
@@ -79,7 +80,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.credentials.CredentialManager
+import com.example.ui.auth.signOut
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -96,6 +100,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.data.location.LocationHelper
 import com.example.data.model.RestroomType
+import androidx.compose.material.icons.filled.Person
+import com.example.ui.components.MapSearchBar
 import com.example.ui.components.AddRestroomDialog
 import com.example.ui.components.FloatingFilterPanel
 import com.example.ui.components.GoogleRestroomMap
@@ -105,6 +111,15 @@ import com.example.ui.components.ProjectStudySheet
 import com.example.ui.components.RestroomCard
 import com.example.ui.components.RestroomDetailSheet
 import com.example.ui.components.getTypeColor
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.VolunteerActivism
+import com.example.ui.screens.DonationsScreen
+import com.example.ui.screens.SettingsScreen
+import com.example.util.AppStrings
+import com.example.ui.screens.UserProfileScreen
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.RahaBlue
 import com.example.ui.theme.RahaGreen
@@ -138,6 +153,9 @@ fun HomeScreen(
     val showOfflineCacheDialog by viewModel.showOfflineCacheDialog.collectAsStateWithLifecycle()
     val showInvalidApiKeyDialog by viewModel.showInvalidApiKeyDialog.collectAsStateWithLifecycle()
 
+    val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
+    val currentLang = appSettings.language
+
     val locationHelper = remember { LocationHelper(context) }
     var hasLocationPermission by remember {
         mutableStateOf(locationHelper.hasLocationPermission())
@@ -163,8 +181,10 @@ fun HomeScreen(
         }
     }
 
-    var selectedTab by remember { mutableIntStateOf(0) } // 0: Map, 1: List, 2: Favorites
+    var selectedTab by remember { mutableIntStateOf(0) } // 0: Map, 1: List, 2: Favorites, 3: Donations, 4: Settings, 5: Profile
     var isSearchVisible by remember { mutableStateOf(false) }
+    var showAccountDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val studySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -172,6 +192,76 @@ fun HomeScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 6.dp,
+                modifier = Modifier
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .testTag("bottom_navigation_bar")
+            ) {
+                NavigationBarItem(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    icon = { Icon(Icons.Default.Map, contentDescription = null) },
+                    label = { Text(AppStrings.navMap(currentLang), fontWeight = FontWeight.Bold, fontSize = 11.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color.White,
+                        selectedTextColor = TealPrimary,
+                        indicatorColor = TealPrimary
+                    ),
+                    modifier = Modifier.testTag("bottom_nav_map")
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    icon = { Icon(Icons.Default.FormatListBulleted, contentDescription = null) },
+                    label = { Text(AppStrings.navRestrooms(currentLang), fontWeight = FontWeight.Bold, fontSize = 11.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color.White,
+                        selectedTextColor = TealPrimary,
+                        indicatorColor = TealPrimary
+                    ),
+                    modifier = Modifier.testTag("bottom_nav_list")
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 },
+                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
+                    label = { Text(AppStrings.navFavorites(currentLang), fontWeight = FontWeight.Bold, fontSize = 11.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color.White,
+                        selectedTextColor = TealPrimary,
+                        indicatorColor = TealPrimary
+                    ),
+                    modifier = Modifier.testTag("bottom_nav_favorites")
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 3,
+                    onClick = { selectedTab = 3 },
+                    icon = { Icon(Icons.Default.VolunteerActivism, contentDescription = null) },
+                    label = { Text(AppStrings.navDonations(currentLang), fontWeight = FontWeight.Bold, fontSize = 11.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color.White,
+                        selectedTextColor = TealPrimary,
+                        indicatorColor = TealPrimary
+                    ),
+                    modifier = Modifier.testTag("bottom_nav_donations")
+                )
+                NavigationBarItem(
+                    selected = selectedTab == 4,
+                    onClick = { selectedTab = 4 },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                    label = { Text(AppStrings.navSettings(currentLang), fontWeight = FontWeight.Bold, fontSize = 11.sp) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color.White,
+                        selectedTextColor = TealPrimary,
+                        indicatorColor = TealPrimary
+                    ),
+                    modifier = Modifier.testTag("bottom_nav_settings")
+                )
+            }
+        },
         topBar = {
             TopAppBar(
                 title = {
@@ -236,15 +326,17 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    // Search toggle
-                    IconButton(
-                        onClick = { isSearchVisible = !isSearchVisible },
-                        modifier = Modifier.testTag("search_toggle_button")
-                    ) {
-                        Icon(
-                            imageVector = if (isSearchVisible) Icons.Default.Clear else Icons.Default.Search,
-                            contentDescription = "بحث"
-                        )
+                    // Search toggle (only on map/list)
+                    if (selectedTab in 0..2) {
+                        IconButton(
+                            onClick = { isSearchVisible = !isSearchVisible },
+                            modifier = Modifier.testTag("search_toggle_button")
+                        ) {
+                            Icon(
+                                imageVector = if (isSearchVisible) Icons.Default.Clear else Icons.Default.Search,
+                                contentDescription = "بحث"
+                            )
+                        }
                     }
 
                     // Offline Cache & Local Storage Status Button
@@ -270,6 +362,18 @@ fun HomeScreen(
                             tint = TealPrimary
                         )
                     }
+
+                    // User Account & Profile Screen Button
+                    IconButton(
+                        onClick = { selectedTab = if (selectedTab == 5) 0 else 5 },
+                        modifier = Modifier.testTag("account_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = "الملف الشخصي والحساب",
+                            tint = if (selectedTab == 5) RahaGreen else TealPrimary
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -277,22 +381,24 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { viewModel.setShowAddDialog(true) },
-                containerColor = TealPrimary,
-                contentColor = Color.White,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .testTag("fab_add_restroom")
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            if (selectedTab in 0..2) {
+                FloatingActionButton(
+                    onClick = { viewModel.setShowAddDialog(true) },
+                    containerColor = TealPrimary,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .testTag("fab_add_restroom")
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "إضافة")
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("إضافة", fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "إضافة")
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("إضافة", fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -559,7 +665,7 @@ fun HomeScreen(
                 )
             }
 
-            // Tab Navigation: Map vs List vs Favorites
+            // Tab Navigation: Map vs List vs Favorites vs Profile
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = MaterialTheme.colorScheme.surface,
@@ -575,14 +681,14 @@ fun HomeScreen(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
                     icon = { Icon(Icons.Default.Map, contentDescription = null) },
-                    text = { Text("خريطة تفاعلية", fontWeight = FontWeight.SemiBold) },
+                    text = { Text("خريطة", fontWeight = FontWeight.SemiBold) },
                     modifier = Modifier.testTag("tab_map")
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
                     icon = { Icon(Icons.Default.FormatListBulleted, contentDescription = null) },
-                    text = { Text("الأقرب إليك (${filteredRestrooms.size})", fontWeight = FontWeight.SemiBold) },
+                    text = { Text("الأقرب (${filteredRestrooms.size})", fontWeight = FontWeight.SemiBold) },
                     modifier = Modifier.testTag("tab_list")
                 )
                 Tab(
@@ -591,6 +697,13 @@ fun HomeScreen(
                     icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
                     text = { Text("المفضلة", fontWeight = FontWeight.SemiBold) },
                     modifier = Modifier.testTag("tab_favorites")
+                )
+                Tab(
+                    selected = selectedTab == 3,
+                    onClick = { selectedTab = 3 },
+                    icon = { Icon(Icons.Default.Person, contentDescription = null) },
+                    text = { Text("الملف الشخصي", fontWeight = FontWeight.SemiBold) },
+                    modifier = Modifier.testTag("tab_profile")
                 )
             }
 
@@ -602,101 +715,118 @@ fun HomeScreen(
             ) {
                 when (selectedTab) {
                     0 -> {
-                        if (mapProvider == MapProviderType.GOOGLE_MAPS) {
-                            GoogleRestroomMap(
-                                userLocation = userLocation,
-                                restrooms = filteredRestrooms,
-                                selectedRestroom = selectedRestroom,
-                                filterState = filterState,
-                                onRestroomSelected = { viewModel.selectRestroom(it) },
-                                onNavigateClick = { viewModel.openInGoogleMaps(context, it) },
-                                onWilayaChange = { name, lat, lng ->
-                                    viewModel.setUserLocation(lat, lng, name)
-                                },
-                                onLocateUserClick = {
-                                    if (hasLocationPermission) {
-                                        viewModel.requestGpsLocation(locationHelper)
-                                    } else {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            if (mapProvider == MapProviderType.GOOGLE_MAPS) {
+                                GoogleRestroomMap(
+                                    userLocation = userLocation,
+                                    restrooms = filteredRestrooms,
+                                    selectedRestroom = selectedRestroom,
+                                    filterState = filterState,
+                                    onRestroomSelected = { viewModel.selectRestroom(it) },
+                                    onNavigateClick = { viewModel.openInGoogleMaps(context, it) },
+                                    onWilayaChange = { name, lat, lng ->
+                                        viewModel.setUserLocation(lat, lng, name)
+                                    },
+                                    onLocateUserClick = {
+                                        if (hasLocationPermission) {
+                                            viewModel.requestGpsLocation(locationHelper)
+                                        } else {
+                                            permissionLauncher.launch(
+                                                arrayOf(
+                                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                                )
+                                            )
+                                        }
+                                    },
+                                    isLocating = isLocating,
+                                    hasLocationPermission = hasLocationPermission,
+                                    onRequestPermission = {
                                         permissionLauncher.launch(
                                             arrayOf(
                                                 Manifest.permission.ACCESS_FINE_LOCATION,
                                                 Manifest.permission.ACCESS_COARSE_LOCATION
                                             )
                                         )
-                                    }
-                                },
-                                isLocating = isLocating,
-                                hasLocationPermission = hasLocationPermission,
-                                onRequestPermission = {
-                                    permissionLauncher.launch(
-                                        arrayOf(
-                                            Manifest.permission.ACCESS_FINE_LOCATION,
-                                            Manifest.permission.ACCESS_COARSE_LOCATION
-                                        )
-                                    )
-                                },
-                                onSwitchToOfflineMap = {
-                                    viewModel.setMapProvider(MapProviderType.OFFLINE_VECTOR)
-                                },
-                                onToggleAccessible = { viewModel.toggleAccessibleOnly() },
-                                onToggleCleanliness = { viewModel.toggleCleanlinessOnly() },
-                                onToggleChangingTable = { viewModel.toggleChangingTableOnly() },
-                                onToggleFreeOnly = { viewModel.toggleFreeOnly() },
-                                onToggleWomenOnly = { viewModel.toggleWomenOnly() },
-                                onToggleWuduOnly = { viewModel.toggleWuduOnly() },
-                                onToggleShowerOnly = { viewModel.toggleShowerOnly() },
-                                onToggleMosques = { viewModel.toggleMosquesVisibility() },
-                                onToggleRestAreas = { viewModel.toggleRestAreasVisibility() },
-                                onTogglePublicToilets = { viewModel.togglePublicToiletsVisibility() },
-                                onResetAll = { viewModel.resetAllFilters() }
-                            )
-                        } else {
-                            InteractiveRestroomMap(
-                                userLocation = userLocation,
-                                restrooms = filteredRestrooms,
-                                selectedRestroom = selectedRestroom,
-                                filterState = filterState,
-                                onRestroomSelected = { viewModel.selectRestroom(it) },
-                                onNavigateClick = { viewModel.openInGoogleMaps(context, it) },
-                                onWilayaChange = { name, lat, lng ->
-                                    viewModel.setUserLocation(lat, lng, name)
-                                },
-                                onSwitchToGoogleMap = {
-                                    viewModel.setMapProvider(MapProviderType.GOOGLE_MAPS)
-                                },
-                                onLocateUserClick = {
-                                    if (hasLocationPermission) {
-                                        viewModel.requestGpsLocation(locationHelper)
-                                    } else {
+                                    },
+                                    onSwitchToOfflineMap = {
+                                        viewModel.setMapProvider(MapProviderType.OFFLINE_VECTOR)
+                                    },
+                                    onToggleAccessible = { viewModel.toggleAccessibleOnly() },
+                                    onToggleCleanliness = { viewModel.toggleCleanlinessOnly() },
+                                    onToggleChangingTable = { viewModel.toggleChangingTableOnly() },
+                                    onToggleFreeOnly = { viewModel.toggleFreeOnly() },
+                                    onToggleWomenOnly = { viewModel.toggleWomenOnly() },
+                                    onToggleWuduOnly = { viewModel.toggleWuduOnly() },
+                                    onToggleShowerOnly = { viewModel.toggleShowerOnly() },
+                                    onToggleMosques = { viewModel.toggleMosquesVisibility() },
+                                    onToggleRestAreas = { viewModel.toggleRestAreasVisibility() },
+                                    onTogglePublicToilets = { viewModel.togglePublicToiletsVisibility() },
+                                    onResetAll = { viewModel.resetAllFilters() }
+                                )
+                            } else {
+                                InteractiveRestroomMap(
+                                    userLocation = userLocation,
+                                    restrooms = filteredRestrooms,
+                                    selectedRestroom = selectedRestroom,
+                                    filterState = filterState,
+                                    onRestroomSelected = { viewModel.selectRestroom(it) },
+                                    onNavigateClick = { viewModel.openInGoogleMaps(context, it) },
+                                    onWilayaChange = { name, lat, lng ->
+                                        viewModel.setUserLocation(lat, lng, name)
+                                    },
+                                    onSwitchToGoogleMap = {
+                                        viewModel.setMapProvider(MapProviderType.GOOGLE_MAPS)
+                                    },
+                                    onLocateUserClick = {
+                                        if (hasLocationPermission) {
+                                            viewModel.requestGpsLocation(locationHelper)
+                                        } else {
+                                            permissionLauncher.launch(
+                                                arrayOf(
+                                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                                )
+                                            )
+                                        }
+                                    },
+                                    isLocating = isLocating,
+                                    hasLocationPermission = hasLocationPermission,
+                                    onRequestPermission = {
                                         permissionLauncher.launch(
                                             arrayOf(
                                                 Manifest.permission.ACCESS_FINE_LOCATION,
                                                 Manifest.permission.ACCESS_COARSE_LOCATION
                                             )
                                         )
-                                    }
+                                    },
+                                    onToggleAccessible = { viewModel.toggleAccessibleOnly() },
+                                    onToggleCleanliness = { viewModel.toggleCleanlinessOnly() },
+                                    onToggleChangingTable = { viewModel.toggleChangingTableOnly() },
+                                    onToggleFreeOnly = { viewModel.toggleFreeOnly() },
+                                    onToggleWomenOnly = { viewModel.toggleWomenOnly() },
+                                    onToggleWuduOnly = { viewModel.toggleWuduOnly() },
+                                    onToggleShowerOnly = { viewModel.toggleShowerOnly() },
+                                    onToggleMosques = { viewModel.toggleMosquesVisibility() },
+                                    onToggleRestAreas = { viewModel.toggleRestAreasVisibility() },
+                                    onTogglePublicToilets = { viewModel.togglePublicToiletsVisibility() },
+                                    onResetAll = { viewModel.resetAllFilters() }
+                                )
+                            }
+
+                            // Top floating search bar on Map view (Search by Algerian Wilaya, city, or district)
+                            MapSearchBar(
+                                searchQuery = filterState.searchQuery,
+                                onSearchQueryChange = { viewModel.setSearchQuery(it) },
+                                onWilayaSelected = { wilaya ->
+                                    viewModel.setUserLocation(wilaya.latitude, wilaya.longitude, "ولاية ${wilaya.arabicName}")
+                                    viewModel.setSelectedWilaya(wilaya.arabicName)
+                                    viewModel.setSearchQuery(wilaya.arabicName)
                                 },
-                                isLocating = isLocating,
-                                hasLocationPermission = hasLocationPermission,
-                                onRequestPermission = {
-                                    permissionLauncher.launch(
-                                        arrayOf(
-                                            Manifest.permission.ACCESS_FINE_LOCATION,
-                                            Manifest.permission.ACCESS_COARSE_LOCATION
-                                        )
-                                    )
-                                },
-                                onToggleAccessible = { viewModel.toggleAccessibleOnly() },
-                                onToggleCleanliness = { viewModel.toggleCleanlinessOnly() },
-                                onToggleChangingTable = { viewModel.toggleChangingTableOnly() },
-                                onToggleFreeOnly = { viewModel.toggleFreeOnly() },
-                                onToggleWomenOnly = { viewModel.toggleWomenOnly() },
-                                onToggleWuduOnly = { viewModel.toggleWuduOnly() },
-                                onToggleShowerOnly = { viewModel.toggleShowerOnly() },
-                                onToggleMosques = { viewModel.toggleMosquesVisibility() },
-                                onToggleRestAreas = { viewModel.toggleRestAreasVisibility() },
-                                onTogglePublicToilets = { viewModel.togglePublicToiletsVisibility() },
-                                onResetAll = { viewModel.resetAllFilters() }
+                                currentWilayaName = userLocation.cityName,
+                                modifier = Modifier
+                                    .align(Alignment.TopCenter)
+                                    .testTag("map_view_top_search_bar")
                             )
                         }
                     }
@@ -753,22 +883,78 @@ fun HomeScreen(
                             }
                         }
                     }
+                    3 -> {
+                        // Donations & Mosque Projects Screen (تبرعات لتطبيق راحة وللمساجد)
+                        DonationsScreen(
+                            currentLanguage = currentLang
+                        )
+                    }
+                    4 -> {
+                        // Settings Screen (5 Themes, Dark Mode, 3 Languages)
+                        SettingsScreen(
+                            settings = appSettings,
+                            onThemePaletteChange = { palette ->
+                                viewModel.setThemePalette(palette)
+                            },
+                            onDarkModeChange = { mode ->
+                                viewModel.setDarkModeOption(mode)
+                            },
+                            onLanguageChange = { lang ->
+                                viewModel.setLanguage(lang)
+                            },
+                            onOpenOfflineDialog = {
+                                viewModel.setShowOfflineCacheDialog(true)
+                            },
+                            onOpenStudyDialog = {
+                                viewModel.setShowStudyDialog(true)
+                            }
+                        )
+                    }
+                    5 -> {
+                        // User Profile View
+                        val userAddedRestrooms = filteredRestrooms
+                            .map { it.restroom }
+                            .filter { it.isUserAdded }
+
+                        UserProfileScreen(
+                            userRestrooms = userAddedRestrooms,
+                            onRestroomClick = { restroom ->
+                                viewModel.selectRestroom(restroom)
+                                selectedTab = 0
+                            },
+                            onAddNewRestroomClick = {
+                                viewModel.setShowAddDialog(true)
+                            },
+                            onSignOutClick = {
+                                signOut(
+                                    context = context,
+                                    credentialManager = CredentialManager.create(context),
+                                    onSignOutComplete = {
+                                        selectedTab = 0
+                                    },
+                                    scope = coroutineScope
+                                )
+                            }
+                        )
+                    }
                 }
 
-                // Floating Category Filter Panel overlaying the bottom of the screen
-                FloatingFilterPanel(
-                    showMosques = filterState.showMosques,
-                    showPublicToilets = filterState.showPublicToilets,
-                    showRestAreas = filterState.showRestAreas,
-                    onToggleMosques = { viewModel.toggleMosquesVisibility() },
-                    onTogglePublicToilets = { viewModel.togglePublicToiletsVisibility() },
-                    onToggleRestAreas = { viewModel.toggleRestAreasVisibility() },
-                    onResetAll = { viewModel.resetVisibilityToggles() },
-                    activeCount = filteredRestrooms.size,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 8.dp)
-                )
+                // Floating Category Filter Panel overlaying the bottom of the screen (only on Map, List, or Favorites: 0, 1, 2)
+                if (selectedTab in 0..2) {
+                    FloatingFilterPanel(
+                        showMosques = filterState.showMosques,
+                        showPublicToilets = filterState.showPublicToilets,
+                        showRestAreas = filterState.showRestAreas,
+                        onToggleMosques = { viewModel.toggleMosquesVisibility() },
+                        onTogglePublicToilets = { viewModel.togglePublicToiletsVisibility() },
+                        onToggleRestAreas = { viewModel.toggleRestAreasVisibility() },
+                        onResetAll = { viewModel.resetVisibilityToggles() },
+                        activeCount = filteredRestrooms.size,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 8.dp)
+                    )
+                }
             }
         }
     }
