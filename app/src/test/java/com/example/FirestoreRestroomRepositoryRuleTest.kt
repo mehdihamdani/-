@@ -24,7 +24,7 @@ class FirestoreRestroomRepositoryRuleTest : FirestoreEmulatorTestBase() {
         val restroom = FirestoreRestroom(
             id = "test_r1",
             name = "Alger Centre Restroom",
-            nameAr = "مرحاض الجزائر الوسطى",
+            nameAr = "دورة مياه الجزائر الوسطى",
             latitude = 36.77,
             longitude = 3.06,
             province = "الجزائر",

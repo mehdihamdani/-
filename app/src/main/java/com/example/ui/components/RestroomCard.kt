@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Shower
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Train
+import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Wc
@@ -263,6 +264,15 @@ fun RestroomCard(
                     )
                 }
 
+                // Donation Account Badge
+                if (restroom.donationCcp.isNotBlank()) {
+                    StatusBadge(
+                        text = "تبرع جاري CCP",
+                        color = MosqueEmerald,
+                        icon = Icons.Default.VolunteerActivism
+                    )
+                }
+
                 // Women section
                 if (restroom.hasWomenSection) {
                     StatusBadge(
@@ -396,6 +406,7 @@ fun StatusBadge(
 fun getTypeColor(type: RestroomType): Color {
     return when (type) {
         RestroomType.MOSQUE -> MosqueEmerald
+        RestroomType.MUSALLA -> MosqueEmerald
         RestroomType.HAMMAM -> HammamBronze
         RestroomType.NAFTAL_HIGHWAY -> NaftalFlame
         RestroomType.TRANSPORT_HUB -> TransportBlue
@@ -408,6 +419,7 @@ fun getTypeColor(type: RestroomType): Color {
 fun getTypeIcon(type: RestroomType): ImageVector {
     return when (type) {
         RestroomType.MOSQUE -> Icons.Default.Mosque
+        RestroomType.MUSALLA -> Icons.Default.Mosque
         RestroomType.HAMMAM -> Icons.Default.HotTub
         RestroomType.NAFTAL_HIGHWAY -> Icons.Default.LocalGasStation
         RestroomType.TRANSPORT_HUB -> Icons.Default.Train

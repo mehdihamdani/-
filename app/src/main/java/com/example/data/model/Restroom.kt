@@ -4,13 +4,14 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 enum class RestroomType(val arabicName: String, val frenchName: String) {
-    MOSQUE("مسجد ووضوء", "Mosquée & Ablutions"),
+    MOSQUE("مسجد", "Mosquée"),
+    MUSALLA("مصلى", "Salle de prière / Musalla"),
     HAMMAM("حمام شعبي / دوش", "Hammam traditionnel"),
     NAFTAL_HIGHWAY("محطة نفطال / طريق سريع", "Station Naftal / Autoroute"),
     TRANSPORT_HUB("محطة نقل (سوجرال/ميترو/قطار)", "Gare / Station de transport"),
     MALL("مركز تجاري (مول)", "Centre commercial"),
-    PUBLIC_MUNICIPAL("مرحاض عمومي بلدي", "Toilette publique municipale"),
-    PRIVATE_COMMERCIAL("مرحاض خواص", "Toilettes privées")
+    PUBLIC_MUNICIPAL("دورة مياه عمومية بلدية", "Toilette publique municipale"),
+    PRIVATE_COMMERCIAL("دورة مياه خواص", "Toilettes privées")
 }
 
 @Entity(tableName = "restrooms")
@@ -39,6 +40,7 @@ data class RestroomEntity(
     val openingHours: String = "24/7",
     val address: String = "",
     val notes: String = "",
+    val donationCcp: String = "",
     val isFavorite: Boolean = false,
     val isUserAdded: Boolean = false,
     val waterCutReported: Boolean = false,

@@ -492,7 +492,7 @@ fun InteractiveRestroomMap(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "⚠️ لا توجد مراحيض تطابق هذه الفلاتر",
+                            text = "⚠️ لا توجد دورات مياه تطابق هذه الفلاتر",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )

@@ -18,4 +18,12 @@ class ExampleRobolectricTest {
     val appName = context.getString(R.string.app_name)
     assertEquals("راحة", appName)
   }
+
+  @Test
+  fun `settings screen instantiation test`() {
+    val settings = com.example.data.model.AppSettings()
+    assert(settings.themePalette != null)
+    assert(settings.darkModeOption != null)
+    assert(settings.language != null)
+  }
 }

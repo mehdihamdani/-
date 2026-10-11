@@ -115,8 +115,33 @@ class RestroomRepository(
         dao.setWaterCutStatus(id, isCut)
     }
 
-    suspend fun submitRating(id: Long, rating: Float) = withContext(Dispatchers.IO) {
-        dao.addReviewRating(id, rating)
+    suspend fun submitRating(id: Long, rating: Float, cleanlinessRating: Float = rating) = withContext(Dispatchers.IO) {
+        val review = ReviewEntity(
+            restroomId = id,
+            authorName = "تقييم بالنجوم لمواطن",
+            rating = rating.coerceIn(1.0f, 5.0f),
+            cleanlinessRating = cleanlinessRating.coerceIn(1.0f, 5.0f),
+            comment = "تقييم جودة ونظافة المكان بالنجوم",
+            hasWaterAvailable = true,
+            hasSoapPaper = true,
+            timestamp = System.currentTimeMillis()
+        )
+        reviewDao?.insertReview(review)
+        if (reviewDao != null) {
+            val avgRating = reviewDao.getAverageRating(id) ?: rating
+            val avgCleanliness = reviewDao.getAverageCleanlinessRating(id) ?: cleanlinessRating
+            val count = reviewDao.countReviewsForRestroom(id)
+            val roundedRating = Math.round(avgRating * 10f) / 10f
+            val roundedCleanliness = Math.round(avgCleanliness * 10f) / 10f
+            dao.updateRatingsAndReviewsCount(
+                id = id,
+                rating = roundedRating,
+                cleanlinessRating = roundedCleanliness,
+                reviewsCount = count
+            )
+        } else {
+            dao.addReviewRating(id, rating)
+        }
     }
 
     suspend fun submitReview(

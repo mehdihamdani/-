@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import android.Manifest
 import android.content.Context
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -30,6 +31,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
@@ -182,9 +184,13 @@ fun HomeScreen(
     }
 
     var selectedTab by remember { mutableIntStateOf(0) } // 0: Map, 1: List, 2: Favorites, 3: Donations, 4: Settings, 5: Profile
-    var isSearchVisible by remember { mutableStateOf(false) }
     var showAccountDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+
+    // Handle physical/gesture back button on devices like Samsung Galaxy S10
+    BackHandler(enabled = selectedTab != 0) {
+        selectedTab = 0
+    }
 
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val studySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -264,6 +270,17 @@ fun HomeScreen(
         },
         topBar = {
             TopAppBar(
+                navigationIcon = {
+                    if (selectedTab != 0) {
+                        IconButton(onClick = { selectedTab = 0 }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "الرجوع للخريطة",
+                                tint = TealPrimary
+                            )
+                        }
+                    }
+                },
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -326,18 +343,6 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    // Search toggle (only on map/list)
-                    if (selectedTab in 0..2) {
-                        IconButton(
-                            onClick = { isSearchVisible = !isSearchVisible },
-                            modifier = Modifier.testTag("search_toggle_button")
-                        ) {
-                            Icon(
-                                imageVector = if (isSearchVisible) Icons.Default.Clear else Icons.Default.Search,
-                                contentDescription = "بحث"
-                            )
-                        }
-                    }
 
                     // Offline Cache & Local Storage Status Button
                     IconButton(
@@ -408,35 +413,6 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Search Input Row (Expandable)
-            AnimatedVisibility(visible = isSearchVisible) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 2.dp,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = filterState.searchQuery,
-                        onValueChange = { viewModel.setSearchQuery(it) },
-                        placeholder = { Text("ابحث بالاسم، البلدية، الحي أو المسجد...") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        trailingIcon = {
-                            if (filterState.searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.setSearchQuery("") }) {
-                                    Icon(Icons.Default.Clear, contentDescription = "مسح")
-                                }
-                            }
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                            .testTag("search_input_field")
-                    )
-                }
-            }
-
             // Offline Mode Active Banner
             AnimatedVisibility(visible = isOfflineMode) {
                 Surface(
@@ -479,8 +455,8 @@ fun HomeScreen(
                 }
             }
 
-            // Quick Emergency Nearest Card (Shown if available)
-            if (nearestRestroom != null && selectedTab != 0) {
+            // Quick Emergency Nearest Card (Shown if available on list view)
+            if (nearestRestroom != null && selectedTab == 1) {
                 Surface(
                     color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
                     shape = RoundedCornerShape(14.dp),
@@ -549,14 +525,15 @@ fun HomeScreen(
                 }
             }
 
-            // Horizontal Filter Chips Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            // Horizontal Filter Chips Row (Only visible on Map and List tabs: 0 and 1)
+            if (selectedTab in 0..1) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                 // All Types Chip
                 FilterChip(
                     selected = filterState.selectedType == null,
@@ -572,9 +549,20 @@ fun HomeScreen(
                 FilterChip(
                     selected = filterState.selectedType == RestroomType.MOSQUE,
                     onClick = { viewModel.setSelectedType(RestroomType.MOSQUE) },
-                    label = { Text("مساجد ووضوء") },
+                    label = { Text("مساجد") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = getTypeColor(RestroomType.MOSQUE),
+                        selectedLabelColor = Color.White
+                    )
+                )
+
+                // Musalla
+                FilterChip(
+                    selected = filterState.selectedType == RestroomType.MUSALLA,
+                    onClick = { viewModel.setSelectedType(RestroomType.MUSALLA) },
+                    label = { Text("مصليات") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = getTypeColor(RestroomType.MUSALLA),
                         selectedLabelColor = Color.White
                     )
                 )
@@ -611,11 +599,11 @@ fun HomeScreen(
                     label = { Text("مراكز تجارية") }
                 )
 
-                // Private Restroom (مراحيض خواص)
+                // Private Restroom (دورات مياه خواص)
                 FilterChip(
                     selected = filterState.selectedType == RestroomType.PRIVATE_COMMERCIAL,
                     onClick = { viewModel.setSelectedType(RestroomType.PRIVATE_COMMERCIAL) },
-                    label = { Text("مراحيض خواص") },
+                    label = { Text("دورات مياه خواص") },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = getTypeColor(RestroomType.PRIVATE_COMMERCIAL),
                         selectedLabelColor = Color.White
@@ -664,46 +652,22 @@ fun HomeScreen(
                     label = { Text("دوش ساخن") }
                 )
             }
+            }
 
-            // Tab Navigation: Map vs List vs Favorites vs Profile
-            TabRow(
-                selectedTabIndex = selectedTab,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = TealPrimary,
-                indicator = { tabPositions ->
-                    TabRowDefaults.SecondaryIndicator(
-                        Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                        color = TealPrimary
-                    )
-                }
-            ) {
-                Tab(
-                    selected = selectedTab == 0,
-                    onClick = { selectedTab = 0 },
-                    icon = { Icon(Icons.Default.Map, contentDescription = null) },
-                    text = { Text("خريطة", fontWeight = FontWeight.SemiBold) },
-                    modifier = Modifier.testTag("tab_map")
-                )
-                Tab(
-                    selected = selectedTab == 1,
-                    onClick = { selectedTab = 1 },
-                    icon = { Icon(Icons.Default.FormatListBulleted, contentDescription = null) },
-                    text = { Text("الأقرب (${filteredRestrooms.size})", fontWeight = FontWeight.SemiBold) },
-                    modifier = Modifier.testTag("tab_list")
-                )
-                Tab(
-                    selected = selectedTab == 2,
-                    onClick = { selectedTab = 2 },
-                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
-                    text = { Text("المفضلة", fontWeight = FontWeight.SemiBold) },
-                    modifier = Modifier.testTag("tab_favorites")
-                )
-                Tab(
-                    selected = selectedTab == 3,
-                    onClick = { selectedTab = 3 },
-                    icon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    text = { Text("الملف الشخصي", fontWeight = FontWeight.SemiBold) },
-                    modifier = Modifier.testTag("tab_profile")
+            // Search Bar placed exactly where the previous tab bar was (Search by Algerian Wilaya, city, or district)
+            if (selectedTab in 0..2) {
+                MapSearchBar(
+                    searchQuery = filterState.searchQuery,
+                    onSearchQueryChange = { viewModel.setSearchQuery(it) },
+                    onWilayaSelected = { wilaya ->
+                        viewModel.setUserLocation(wilaya.latitude, wilaya.longitude, "ولاية ${wilaya.arabicName}")
+                        viewModel.setSelectedWilaya(wilaya.arabicName)
+                        viewModel.setSearchQuery(wilaya.arabicName)
+                    },
+                    currentWilayaName = userLocation.cityName,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("main_screen_search_bar")
                 )
             }
 
@@ -813,21 +777,6 @@ fun HomeScreen(
                                     onResetAll = { viewModel.resetAllFilters() }
                                 )
                             }
-
-                            // Top floating search bar on Map view (Search by Algerian Wilaya, city, or district)
-                            MapSearchBar(
-                                searchQuery = filterState.searchQuery,
-                                onSearchQueryChange = { viewModel.setSearchQuery(it) },
-                                onWilayaSelected = { wilaya ->
-                                    viewModel.setUserLocation(wilaya.latitude, wilaya.longitude, "ولاية ${wilaya.arabicName}")
-                                    viewModel.setSelectedWilaya(wilaya.arabicName)
-                                    viewModel.setSearchQuery(wilaya.arabicName)
-                                },
-                                currentWilayaName = userLocation.cityName,
-                                modifier = Modifier
-                                    .align(Alignment.TopCenter)
-                                    .testTag("map_view_top_search_bar")
-                            )
                         }
                     }
                     1 -> {
@@ -862,7 +811,7 @@ fun HomeScreen(
                         if (favItems.isEmpty()) {
                             EmptyStateNotice(
                                 title = "قائمة المفضلة فارغة",
-                                subtitle = "انقر على رمز القلب في أي مرحاض أو حمام لإضافته إلى قائمة المفضلة والوصول إليه بسرعة."
+                                subtitle = "انقر على رمز القلب في أي دورة مياه أو حمام لإضافتها إلى قائمة المفضلة والوصول إليها بسرعة."
                             )
                         } else {
                             LazyColumn(
@@ -907,6 +856,9 @@ fun HomeScreen(
                             },
                             onOpenStudyDialog = {
                                 viewModel.setShowStudyDialog(true)
+                            },
+                            onBack = {
+                                selectedTab = 0
                             }
                         )
                     }
@@ -991,10 +943,10 @@ fun HomeScreen(
     if (showAddDialog) {
         AddRestroomDialog(
             onDismiss = { viewModel.setShowAddDialog(false) },
-            onSubmit = { name, nameFr, wilaya, commune, type, isFree, price, hasWater, hasSoap, pmr, women, shower, wudu, changingTable, hours, addr, notes ->
+            onSubmit = { name, nameFr, wilaya, commune, type, isFree, price, hasWater, hasSoap, pmr, women, shower, wudu, changingTable, hours, addr, notes, donationCcp ->
                 viewModel.addNewRestroom(
                     name, nameFr, wilaya, commune, type, isFree, price,
-                    hasWater, hasSoap, pmr, women, shower, wudu, changingTable, 4.5f, hours, addr, notes
+                    hasWater, hasSoap, pmr, women, shower, wudu, changingTable, 4.5f, hours, addr, notes, donationCcp
                 )
             }
         )

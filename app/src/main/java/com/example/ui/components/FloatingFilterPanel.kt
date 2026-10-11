@@ -165,10 +165,10 @@ fun FloatingFilterPanel(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // 1. Mosques (مساجد ووضوء)
+                // 1. Mosques & Musallas (مساجد ومصليات)
                 FilterCategoryToggleItem(
                     title = "مساجد",
-                    subtitle = "ووضوء",
+                    subtitle = "ومصليات",
                     icon = Icons.Default.Mosque,
                     themeColor = MosqueEmerald,
                     isActive = showMosques,
@@ -177,9 +177,9 @@ fun FloatingFilterPanel(
                     modifier = Modifier.weight(1f)
                 )
 
-                // 2. Public Toilets (مراحيض عمومية)
+                // 2. Public Toilets (دورات مياه عمومية)
                 FilterCategoryToggleItem(
-                    title = "مراحيض",
+                    title = "دورات مياه",
                     subtitle = "عمومية",
                     icon = Icons.Default.Wc,
                     themeColor = TealPrimary,

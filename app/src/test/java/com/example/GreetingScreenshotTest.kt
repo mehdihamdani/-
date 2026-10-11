@@ -26,11 +26,27 @@ class GreetingScreenshotTest {
       MyApplicationTheme {
         EmptyStateNotice(
           title = "راحة - RAHA",
-          subtitle = "دليلك الذكي للمراحيض العمومية والحمامات ونقاط الاستراحة في الجزائر"
+          subtitle = "دليلك الذكي لدورات المياه العمومية والحمامات ونقاط الاستراحة في الجزائر"
         )
       }
     }
 
     composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/greeting.png")
+  }
+
+  @Test
+  fun settings_screen_render() {
+    composeTestRule.setContent {
+      MyApplicationTheme {
+        com.example.ui.screens.SettingsScreen(
+          settings = com.example.data.model.AppSettings(),
+          onThemePaletteChange = {},
+          onDarkModeChange = {},
+          onLanguageChange = {},
+          onOpenOfflineDialog = {},
+          onOpenStudyDialog = {}
+        )
+      }
+    }
   }
 }

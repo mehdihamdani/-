@@ -56,7 +56,7 @@ test("Authenticated: can create restroom with matching createdBy", async () => {
     aliceDb.collection("restrooms").doc("r1").set({
       id: "r1",
       name: "Public Restroom",
-      nameAr: "مرحاض عمومي",
+      nameAr: "دورة مياه عمومية",
       latitude: 36.75,
       longitude: 3.05,
       province: "الجزائر",

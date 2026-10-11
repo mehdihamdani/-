@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.AddLocationAlt
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -47,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.data.model.AlgerianWilayas
 import com.example.data.model.RestroomType
+import com.example.ui.theme.MosqueEmerald
 import com.example.ui.theme.TealPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,7 +72,8 @@ fun AddRestroomDialog(
         hasChangingTable: Boolean,
         openingHours: String,
         address: String,
-        notes: String
+        notes: String,
+        donationCcp: String
     ) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
@@ -90,6 +93,7 @@ fun AddRestroomDialog(
     var openingHours by remember { mutableStateOf("أوقات الصلوات") }
     var address by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
+    var donationCcp by remember { mutableStateOf("") }
 
     var typeMenuExpanded by remember { mutableStateOf(false) }
     var wilayaMenuExpanded by remember { mutableStateOf(false) }
@@ -125,7 +129,7 @@ fun AddRestroomDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "إضافة مرحاض أو حمام جديد",
+                            text = "إضافة دورة مياه أو حمام جديد",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                     }
@@ -182,10 +186,11 @@ fun AddRestroomDialog(
                                         hasShower = true
                                         isFree = false
                                         priceText = "200"
-                                    } else if (type == RestroomType.MOSQUE) {
+                                    } else if (type == RestroomType.MOSQUE || type == RestroomType.MUSALLA) {
                                         hasWudu = true
                                         isFree = true
                                         priceText = "0"
+                                        openingHours = "أوقات الصلوات"
                                     } else if (type == RestroomType.PRIVATE_COMMERCIAL) {
                                         hasShower = false
                                         isFree = false
@@ -398,6 +403,27 @@ fun AddRestroomDialog(
                     maxLines = 3
                 )
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Donation Current Account (CCP / BaridiMob)
+                OutlinedTextField(
+                    value = donationCcp,
+                    onValueChange = { donationCcp = it },
+                    label = { Text("الحساب الجاري للتبرع (CCP / BaridiMob) - اختياري") },
+                    placeholder = { Text("مثال: 0021458798 مفتاح 45 أو RIP BaridiMob") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.VolunteerActivism,
+                            contentDescription = null,
+                            tint = MosqueEmerald
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("donation_ccp_input"),
+                    singleLine = true
+                )
+
                 Spacer(modifier = Modifier.height(18.dp))
 
                 // Buttons
@@ -429,7 +455,8 @@ fun AddRestroomDialog(
                                     hasChangingTable,
                                     openingHours,
                                     address,
-                                    notes
+                                    notes,
+                                    donationCcp
                                 )
                             }
                         },

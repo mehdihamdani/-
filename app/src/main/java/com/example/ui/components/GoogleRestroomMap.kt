@@ -460,7 +460,7 @@ fun GoogleRestroomMap(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "⚠️ لا توجد مراحيض تطابق هذه الفلاتر",
+                            text = "⚠️ لا توجد دورات مياه تطابق هذه الفلاتر",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
@@ -484,7 +484,7 @@ fun GoogleRestroomMap(
                         color = Color.Black.copy(alpha = 0.65f)
                     ) {
                         Text(
-                            text = "📍 ${restrooms.size} نقطة راحة ومرحاض على الخريطة",
+                            text = "📍 ${restrooms.size} نقطة راحة ودورة مياه على الخريطة",
                             color = Color.White,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
@@ -712,6 +712,7 @@ fun GoogleRestroomMap(
 fun getGoogleMarkerHue(type: RestroomType): Float {
     return when (type) {
         RestroomType.MOSQUE -> BitmapDescriptorFactory.HUE_GREEN
+        RestroomType.MUSALLA -> BitmapDescriptorFactory.HUE_GREEN
         RestroomType.HAMMAM -> BitmapDescriptorFactory.HUE_ORANGE
         RestroomType.NAFTAL_HIGHWAY -> BitmapDescriptorFactory.HUE_AZURE
         RestroomType.TRANSPORT_HUB -> BitmapDescriptorFactory.HUE_VIOLET

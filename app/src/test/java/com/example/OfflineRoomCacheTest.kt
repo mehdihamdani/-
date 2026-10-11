@@ -117,7 +117,7 @@ class OfflineRoomCacheTest {
     fun testOfflineBasicMetadataAvailable() = runBlocking {
         val testItem = RestroomEntity(
             id = 201,
-            name = "مرحاض عمومي وهران الوسط",
+            name = "دورة مياه عمومية وهران الوسط",
             wilaya = "وهران",
             commune = "وهران",
             type = RestroomType.PUBLIC_MUNICIPAL,

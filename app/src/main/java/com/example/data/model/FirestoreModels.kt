@@ -22,6 +22,7 @@ data class FirestoreRestroom(
     val rating: Double = 5.0,
     val reviewsCount: Long = 0L,
     val cleanlinessRating: Double = 5.0,
+    val donationCcp: String = "",
     val createdBy: String = "",
     val createdAt: Timestamp? = null,
     val updatedAt: Timestamp? = null

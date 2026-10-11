@@ -332,7 +332,7 @@ fun UserProfileScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             StatBoxItem(
-                                title = "مراحيض مضافة",
+                                title = "دورات مياه مضافة",
                                 value = profileData.contributionsCount.toString(),
                                 icon = Icons.Default.Add,
                                 tint = TealPrimary
@@ -367,7 +367,7 @@ fun UserProfileScreen(
             }
         }
 
-        // 2. Sub-Tabs Navigation (بياناتي الشخصية | مراحيضي المضافة | سجل المساهمات)
+        // 2. Sub-Tabs Navigation (بياناتي الشخصية | دورات المياه المضافة | سجل المساهمات)
         item {
             TabRow(
                 selectedTabIndex = activeSubTab,
@@ -391,7 +391,7 @@ fun UserProfileScreen(
                 Tab(
                     selected = activeSubTab == 1,
                     onClick = { activeSubTab = 1 },
-                    text = { Text("مراحيضي (${profileData.contributionsCount})", fontWeight = FontWeight.Bold) },
+                    text = { Text("دورات المياه (${profileData.contributionsCount})", fontWeight = FontWeight.Bold) },
                     icon = { Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.testTag("tab_my_restrooms")
                 )
@@ -808,7 +808,7 @@ fun UserProfileScreen(
                     ) {
                         Column {
                             Text(
-                                text = "المراحيض التي ساهمت بإضافتها",
+                                text = "دورات المياه التي ساهمت بإضافتها",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -840,7 +840,7 @@ fun UserProfileScreen(
                     listOf(
                         RestroomEntity(
                             id = 901,
-                            name = "مرحاض خواص عصري - شارع ديدوش مراد",
+                            name = "دورة مياه خواص عصرية - شارع ديدوش مراد",
                             nameFr = "Toilettes Privées Didouche Mourad",
                             wilaya = "الجزائر العاصمة",
                             commune = "سيدي امحمد",
@@ -910,7 +910,7 @@ fun UserProfileScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "تتبع نقاطك ومشاركاتك في تحسين وتحديث شبكة المراحيض بالجزائر",
+                            text = "تتبع نقاطك ومشاركاتك في تحسين وتحديث شبكة دورات المياه بالجزائر",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -950,7 +950,7 @@ fun UserProfileScreen(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         TimelineItem(
-                            action = "أضفت مرحاض خواص جديد",
+                            action = "أضفت دورة مياه خواص جديدة",
                             place = "شارع ديدوش مراد (الجزائر العاصمة)",
                             date = "منذ يومين",
                             points = "+50 نقطة",

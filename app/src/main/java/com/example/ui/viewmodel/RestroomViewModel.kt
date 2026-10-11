@@ -355,9 +355,13 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
         }
     }
 
-    fun rateRestroom(restroom: RestroomEntity, rating: Float) {
+    fun rateRestroom(restroom: RestroomEntity, rating: Float, cleanlinessRating: Float = rating) {
         viewModelScope.launch {
-            repository.submitRating(restroom.id, rating)
+            repository.submitRating(restroom.id, rating, cleanlinessRating)
+            val updated = repository.getRestroomById(restroom.id)
+            if (updated != null && _selectedRestroom.value?.id == restroom.id) {
+                _selectedRestroom.value = updated
+            }
         }
     }
 
@@ -405,7 +409,8 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
         cleanlinessRating: Float = 4.5f,
         openingHours: String,
         address: String,
-        notes: String
+        notes: String,
+        donationCcp: String = ""
     ) {
         viewModelScope.launch {
             val userLoc = _userLocation.value
@@ -432,6 +437,7 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
                 openingHours = openingHours.ifBlank { "24/7" },
                 address = address,
                 notes = notes,
+                donationCcp = donationCcp,
                 isUserAdded = true
             )
             repository.addRestroom(newRestroom)
@@ -463,7 +469,7 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
             putExtra(Intent.EXTRA_TEXT, shareText)
             type = "text/plain"
         }
-        context.startActivity(Intent.createChooser(sendIntent, "مشاركة موقع المرحاض / الحمام"))
+        context.startActivity(Intent.createChooser(sendIntent, "مشاركة موقع دورة المياه / الحمام"))
     }
 
     companion object {
@@ -500,7 +506,7 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
                     // Category filter
                     if (filters.selectedType != null && item.type != filters.selectedType) return@filter false
                     // Group visibility toggles (Mosques, Public Toilets, Rest Areas)
-                    val isMosque = item.type == RestroomType.MOSQUE
+                    val isMosque = item.type == RestroomType.MOSQUE || item.type == RestroomType.MUSALLA
                     val isPublicToilet = item.type == RestroomType.PUBLIC_MUNICIPAL || item.type == RestroomType.MALL || item.type == RestroomType.HAMMAM || item.type == RestroomType.PRIVATE_COMMERCIAL
                     val isRestArea = item.type == RestroomType.NAFTAL_HIGHWAY || item.type == RestroomType.TRANSPORT_HUB
 

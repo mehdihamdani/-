@@ -474,7 +474,7 @@ fun MapFilterSheet(
                 FilterChip(
                     selected = filterState.showMosques,
                     onClick = onToggleMosques,
-                    label = { Text("المساجد") },
+                    label = { Text("المساجد والمصليات") },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Mosque,
@@ -504,7 +504,7 @@ fun MapFilterSheet(
                 FilterChip(
                     selected = filterState.showPublicToilets,
                     onClick = onTogglePublicToilets,
-                    label = { Text("المراحيض") },
+                    label = { Text("دورات المياه") },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Wc,

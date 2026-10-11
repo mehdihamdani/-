@@ -29,7 +29,8 @@ object InitialRestroomsData {
             cleanlinessRating = 4.9f,
             openingHours = "مفتوح يومياً 04:30 - 22:30",
             address = "طريق سيدي عبد الله السريع، المحمدية",
-            notes = "مرافق وضوء ودورات مياه عصرية مكيفة وعالية النظافة مع مصاعد وممرات خاصة بذوي الهمم."
+            notes = "مرافق وضوء ودورات مياه عصرية مكيفة وعالية النظافة مع مصاعد وممرات خاصة بذوي الهمم.",
+            donationCcp = "0021458963 مفتاح 22"
         ),
         RestroomEntity(
             id = 2,
@@ -123,7 +124,7 @@ object InitialRestroomsData {
             hasWudu = true,
             openingHours = "الرجال: 06:00 - 13:00 / النساء: 13:30 - 19:00",
             address = "شارع طرابلس، القبة، الجزائر",
-            notes = "حمام بخاري تقليدي ودوش ساخن ومراحيض نظيفة متكاملة."
+            notes = "حمام بخاري تقليدي ودوش ساخن ودورات مياه نظيفة متكاملة."
         ),
         RestroomEntity(
             id = 6,
@@ -146,7 +147,7 @@ object InitialRestroomsData {
             hasWudu = true,
             openingHours = "24/7 مفتوح دائماً",
             address = "الطريق الوطني رقم 11، اتجاه تيبازة",
-            notes = "محطة استراحة كاملة تضم متجراً ومقهى ومصلى ومراحيض مجانية للمسافرين."
+            notes = "محطة استراحة كاملة تضم متجراً ومقهى ومصلى ودورات مياه مجانية للمسافرين."
         ),
         RestroomEntity(
             id = 7,
@@ -173,7 +174,7 @@ object InitialRestroomsData {
         ),
         RestroomEntity(
             id = 8,
-            name = "مرحاض بلدي عمومي ساحة الأمير عبد القادر",
+            name = "دورة مياه بلدية عمومية ساحة الأمير عبد القادر",
             nameFr = "Sanitaires Publics Place Emir Abdelkader",
             wilaya = "الجزائر العاصمة",
             commune = "الجزائر الوسطى",
@@ -192,7 +193,7 @@ object InitialRestroomsData {
             hasWudu = false,
             openingHours = "07:30 - 19:30",
             address = "أسفل مدرجات ساحة الأمير عبد القادر، ديدوش مراد",
-            notes = "مرحاض عمومي بلدي يشرف عليه حارس، رسم الدخول رمزي 10 دج."
+            notes = "دورة مياه عمومية بلدية يشرف عليها حارس، رسم الدخول رمزي 10 دج."
         ),
         // Oran
         RestroomEntity(
@@ -216,7 +217,8 @@ object InitialRestroomsData {
             hasWudu = true,
             openingHours = "مفتوح يومياً أوقات الصلوات",
             address = "جمال الدين، وهران",
-            notes = "صرح كبير يضم قاعات وضوء شاسعة ومراحيض ممتازة النظافة."
+            notes = "صرح كبير يضم قاعات وضوء شاسعة ودورات مياه ممتازة النظافة.",
+            donationCcp = "0031852479 مفتاح 45"
         ),
         RestroomEntity(
             id = 10,
@@ -356,7 +358,31 @@ object InitialRestroomsData {
             hasShower = false,
             hasWudu = true,
             openingHours = "05:00 - 20:00",
-            address = "حي سيدي ابراهيم، عنابة",
+            address = "حي سيدي ابراهيم، عنابة"
+        ),
+        RestroomEntity(
+            id = 16,
+            name = "مصلى ونقطة استراحة يسر - بومرداس",
+            nameFr = "Musalla & Point de Repos Isser",
+            wilaya = "بومرداس",
+            commune = "يسر",
+            type = RestroomType.MUSALLA,
+            latitude = 36.7210,
+            longitude = 3.6680,
+            isFree = true,
+            priceDzd = 0,
+            rating = 4.6f,
+            reviewsCount = 31,
+            hasWater = true,
+            hasSoapPaper = true,
+            isAccessiblePmr = true,
+            hasWomenSection = true,
+            hasShower = false,
+            hasWudu = true,
+            openingHours = "24/7 مفتوح دائماً للمسافرين",
+            address = "الطريق الوطني رقم 12، يسر، بومرداس",
+            notes = "مصلى هادئ ونظيف ومرافق وضوء مهيأة للمسافرين نحو تيزي وزو والجزائر العاصمة.",
+            donationCcp = "0023456789 مفتاح 67"
         )
     )
 

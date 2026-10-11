@@ -15,12 +15,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Accessible
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.filled.ChildCare
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Close
@@ -75,6 +81,7 @@ import androidx.compose.material3.OutlinedTextField
 import com.example.data.model.RestroomEntity
 import com.example.data.model.ReviewEntity
 import com.example.ui.theme.AlertRed
+import com.example.ui.theme.MosqueEmerald
 import com.example.ui.theme.RahaGreen
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.TealPrimary
@@ -95,6 +102,7 @@ fun RestroomDetailSheet(
     onRateRestroom: (Float) -> Unit = {},
     onSubmitReview: (authorName: String, rating: Float, cleanlinessRating: Float, comment: String, hasWater: Boolean, hasSoap: Boolean) -> Unit
 ) {
+    val context = LocalContext.current
     var isWritingReview by remember { mutableStateOf(false) }
     var reviewAuthor by remember { mutableStateOf("") }
     var userOverallRating by remember { mutableFloatStateOf(5.0f) }
@@ -330,6 +338,64 @@ fun RestroomDetailSheet(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Donation Account (CCP / BaridiMob) Card
+            if (restroom.donationCcp.isNotBlank()) {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = MosqueEmerald.copy(alpha = 0.1f),
+                    border = BorderStroke(1.dp, MosqueEmerald.copy(alpha = 0.4f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("donation_ccp_card")
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Icon(
+                                imageVector = Icons.Default.VolunteerActivism,
+                                contentDescription = null,
+                                tint = MosqueEmerald,
+                                modifier = Modifier.size(26.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "الحساب الجاري للتبرع وصيانة المرفق:",
+                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MosqueEmerald
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = restroom.donationCcp,
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                        IconButton(
+                            onClick = {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                val clip = ClipData.newPlainText("Donation Account", restroom.donationCcp)
+                                clipboard.setPrimaryClip(clip)
+                                Toast.makeText(context, "تم نسخ رقم الحساب للتبرع", Toast.LENGTH_SHORT).show()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "نسخ رقم الحساب",
+                                tint = MosqueEmerald
+                            )
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))

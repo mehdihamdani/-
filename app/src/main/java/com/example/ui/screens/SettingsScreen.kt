@@ -60,6 +60,10 @@ import com.example.ui.theme.RahaGreen
 import com.example.ui.theme.TealPrimary
 import com.example.util.AppStrings
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.IconButton
+
 /**
  * Settings Screen:
  * 1. 5 Color Theme Palettes selection.
@@ -75,8 +79,14 @@ fun SettingsScreen(
     onLanguageChange: (AppLanguage) -> Unit,
     onOpenOfflineDialog: () -> Unit,
     onOpenStudyDialog: () -> Unit,
+    onBack: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    // Intercept system back button to return to Map instead of closing the app
+    BackHandler {
+        onBack()
+    }
+
     val currentLang = settings.language
 
     LazyColumn(
@@ -105,18 +115,63 @@ fun SettingsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    // Back navigation bar in header
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color.White.copy(alpha = 0.2f),
+                            modifier = Modifier.clickable { onBack() }
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "الرجوع للخريطة",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "الرجوع",
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = "الإعدادات",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.width(60.dp))
+                    }
+
                     Surface(
                         shape = CircleShape,
                         color = Color.White,
                         shadowElevation = 8.dp,
-                        modifier = Modifier.size(64.dp)
+                        modifier = Modifier.size(60.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = null,
                                 tint = TealPrimary,
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                     }
@@ -166,7 +221,7 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    AppThemePalette.values().forEach { palette ->
+                    AppThemePalette.entries.forEach { palette ->
                         val isSelected = settings.themePalette == palette
                         val paletteName = when (currentLang) {
                             AppLanguage.AR -> palette.arabicName
@@ -177,10 +232,7 @@ fun SettingsScreen(
                         Surface(
                             shape = RoundedCornerShape(14.dp),
                             color = if (isSelected) palette.containerColor.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                            border = androidx.compose.foundation.BorderStroke(
-                                width = if (isSelected) 2.dp else 1.dp,
-                                color = if (isSelected) palette.primaryColor else Color.Transparent
-                            ),
+                            border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, palette.primaryColor) else null,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp)
@@ -195,8 +247,8 @@ fun SettingsScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    // Visual color dots
-                                    Row(horizontalArrangement = Arrangement.spacedBy((-6).dp)) {
+                                    // Visual color dots with safe overlapping Box layout
+                                    Box(modifier = Modifier.size(width = 38.dp, height = 24.dp)) {
                                         Box(
                                             modifier = Modifier
                                                 .size(24.dp)
@@ -206,6 +258,7 @@ fun SettingsScreen(
                                         )
                                         Box(
                                             modifier = Modifier
+                                                .padding(start = 14.dp)
                                                 .size(24.dp)
                                                 .clip(CircleShape)
                                                 .background(palette.secondaryColor)
@@ -264,7 +317,7 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    DarkModeOption.values().forEach { option ->
+                    DarkModeOption.entries.forEach { option ->
                         val isSelected = settings.darkModeOption == option
                         val optionName = when (currentLang) {
                             AppLanguage.AR -> option.arabicName
@@ -280,10 +333,7 @@ fun SettingsScreen(
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = if (isSelected) TealPrimary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                            border = androidx.compose.foundation.BorderStroke(
-                                width = if (isSelected) 1.5.dp else 0.dp,
-                                color = if (isSelected) TealPrimary else Color.Transparent
-                            ),
+                            border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, TealPrimary) else null,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp)
@@ -349,16 +399,13 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    AppLanguage.values().forEach { lang ->
+                    AppLanguage.entries.forEach { lang ->
                         val isSelected = settings.language == lang
 
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = if (isSelected) TealPrimary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                            border = androidx.compose.foundation.BorderStroke(
-                                width = if (isSelected) 1.5.dp else 0.dp,
-                                color = if (isSelected) TealPrimary else Color.Transparent
-                            ),
+                            border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, TealPrimary) else null,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp)
@@ -487,7 +534,7 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "دليلك الذكي للمراحيض والحمامات ومرافق الوضوء بالجزائر",
+                    text = "دليلك الذكي لدورات المياه والحمامات ومرافق الوضوء بالجزائر",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )

@@ -323,7 +323,7 @@ fun SignInScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Text(
-                    text = "مراحيض الجزائر",
+                    text = "دليل دورات المياه",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -331,7 +331,7 @@ fun SignInScreen(
                 )
 
                 Text(
-                    text = "دليل ومجتمع المراحيض العمومية والخاصة في الـ 58 ولاية",
+                    text = "دليل ومجتمع دورات المياه العمومية والخاصة في الـ 58 ولاية",
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -349,7 +349,7 @@ fun SignInScreen(
                     Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         FeatureRow(
                             icon = Icons.Default.LocationOn,
-                            title = "العثور على أقرب مرحاض",
+                            title = "العثور على أقرب دورة مياه",
                             subtitle = "خريطة تفاعلية أوفلاين مع مسارات دقيقة"
                         )
                         FeatureRow(

@@ -14,7 +14,7 @@ object AppStrings {
     }
 
     fun navRestrooms(lang: AppLanguage): String = when (lang) {
-        AppLanguage.AR -> "المراحيض"
+        AppLanguage.AR -> "دورات المياه"
         AppLanguage.FR -> "Toilettes"
         AppLanguage.EN -> "Restrooms"
     }
