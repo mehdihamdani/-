@@ -98,7 +98,7 @@ fun AddRestroomDialog(
     var typeMenuExpanded by remember { mutableStateOf(false) }
     var wilayaMenuExpanded by remember { mutableStateOf(false) }
     var wilayaSearchQuery by remember { mutableStateOf("") }
-    val algerianWilayas = AlgerianWilayas.all58Wilayas
+    val algerianWilayas = AlgerianWilayas.all69Wilayas
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -206,7 +206,7 @@ fun AddRestroomDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Wilaya Dropdown (58 Algerian Wilayas with search)
+                // Wilaya Dropdown (69 Algerian Wilayas with search)
                 ExposedDropdownMenuBox(
                     expanded = wilayaMenuExpanded,
                     onExpandedChange = { wilayaMenuExpanded = it }
@@ -215,7 +215,7 @@ fun AddRestroomDialog(
                         value = wilaya,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("الولاية (58 ولاية) *") },
+                        label = { Text("الولاية (69 ولاية) *") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = wilayaMenuExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()

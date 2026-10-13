@@ -88,7 +88,10 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.launch
 
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.rememberModalBottomSheetState
+import com.example.data.model.AlgerianWilayas
 import com.example.ui.viewmodel.FilterState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -124,6 +127,7 @@ fun GoogleRestroomMap(
     var showWilayaMenu by remember { mutableStateOf(false) }
     var showMapTypeMenu by remember { mutableStateOf(false) }
     var showFilterSheet by remember { mutableStateOf(false) }
+    var wilayaSearchText by remember { mutableStateOf("") }
     val filterSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val cameraPositionState = rememberCameraPositionState {
@@ -156,123 +160,66 @@ fun GoogleRestroomMap(
         }
     }
 
-    val algerianCities = listOf(
-        Triple("الجزائر العاصمة (Alger)", 36.7538, 3.0588),
-        Triple("وهران (Oran)", 35.6987, -0.6345),
-        Triple("قسنطينة (Constantine)", 36.3498, 6.6192),
-        Triple("سطيف (Sétif)", 36.1912, 5.4078),
-        Triple("عنابة (Annaba)", 36.8870, 7.7450),
-        Triple("البليدة (Blida)", 36.4700, 2.8300),
-        Triple("تلمسان (Tlemcen)", 34.8783, -1.3150),
-        Triple("بجاية (Béjaïa)", 36.7559, 5.0843),
-        Triple("بسكرة (Biskra)", 34.8504, 5.7281)
-    )
-
     Box(
         modifier = modifier
             .fillMaxSize()
             .testTag("google_map_container")
     ) {
-        if (com.example.util.MapsKeyValidator.isKeyValid()) {
-            // Google Maps View
-            GoogleMap(
-                modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState,
-                properties = MapProperties(
-                    isMyLocationEnabled = hasLocationPermission,
-                    mapType = currentMapType
-                ),
-                uiSettings = MapUiSettings(
-                    zoomControlsEnabled = false,
-                    myLocationButtonEnabled = false,
-                    compassEnabled = true,
-                    mapToolbarEnabled = false
-                ),
-                onMapClick = {
-                    onRestroomSelected(null)
-                }
-            ) {
-                // User location halo marker
-                Circle(
-                    center = LatLng(userLocation.latitude, userLocation.longitude),
-                    radius = 70.0,
-                    fillColor = Color(0x330077B6),
-                    strokeColor = Color(0xFF0077B6),
-                    strokeWidth = 2f
-                )
+        // Interactive Google Maps SDK View
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(
+                isMyLocationEnabled = hasLocationPermission,
+                mapType = currentMapType,
+                isBuildingEnabled = true,
+                isIndoorEnabled = true
+            ),
+            uiSettings = MapUiSettings(
+                zoomControlsEnabled = false,
+                myLocationButtonEnabled = false,
+                compassEnabled = true,
+                mapToolbarEnabled = true,
+                rotationGesturesEnabled = true,
+                scrollGesturesEnabled = true,
+                tiltGesturesEnabled = true,
+                zoomGesturesEnabled = true
+            ),
+            onMapClick = {
+                onRestroomSelected(null)
+            }
+        ) {
+            // Current User Location Halo & Marker
+            Circle(
+                center = LatLng(userLocation.latitude, userLocation.longitude),
+                radius = 80.0,
+                fillColor = Color(0x330077B6),
+                strokeColor = Color(0xFF0077B6),
+                strokeWidth = 2f
+            )
+
+            Marker(
+                state = MarkerState(position = LatLng(userLocation.latitude, userLocation.longitude)),
+                title = "موقعي الحالي",
+                snippet = "${userLocation.cityName} (نقطة ارتكاز البحث)",
+                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+            )
+
+            // Markers showing registered restrooms based on user location
+            restrooms.forEach { item ->
+                val restroom = item.restroom
+                val isSelected = selectedRestroom?.id == restroom.id
 
                 Marker(
-                    state = MarkerState(position = LatLng(userLocation.latitude, userLocation.longitude)),
-                    title = "موقعي الحالي",
-                    snippet = userLocation.cityName,
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
-                )
-
-                // Rest stop markers
-                restrooms.forEach { item ->
-                    val restroom = item.restroom
-                    val isSelected = selectedRestroom?.id == restroom.id
-
-                    Marker(
-                        state = MarkerState(position = LatLng(restroom.latitude, restroom.longitude)),
-                        title = restroom.name,
-                        snippet = "${restroom.wilaya} • ${item.formattedDistance} • ${if (restroom.isFree) "مجاني" else "${restroom.priceDzd} دج"}",
-                        icon = BitmapDescriptorFactory.defaultMarker(getGoogleMarkerHue(restroom.type)),
-                        onClick = {
-                            onRestroomSelected(if (isSelected) null else restroom)
-                            true
-                        }
-                    )
-                }
-            }
-        } else {
-            // Graceful Fallback Card when API key is missing or invalid (e.g. 'chlef')
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFF0D1B2A))
-                    .padding(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Map,
-                            contentDescription = null,
-                            tint = TealPrimary,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "مفتاح Google Maps يحتاج إلى تهيئة",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = com.example.util.MapsKeyValidator.getErrorMessage(),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = onSwitchToOfflineMap,
-                            colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("التبديل إلى الخريطة التفاعلية (تعمل 100% بدون إنترنت)")
-                        }
+                    state = MarkerState(position = LatLng(restroom.latitude, restroom.longitude)),
+                    title = restroom.name,
+                    snippet = "${restroom.wilaya} • يبعد ${item.formattedDistance} • ${if (restroom.isFree) "مجاني" else "${restroom.priceDzd} دج"} • نظافة: ${restroom.cleanlinessRating}/5★",
+                    icon = BitmapDescriptorFactory.defaultMarker(getGoogleMarkerHue(restroom.type)),
+                    onClick = {
+                        onRestroomSelected(if (isSelected) null else restroom)
+                        false
                     }
-                }
+                )
             }
         }
 
@@ -325,17 +272,41 @@ fun GoogleRestroomMap(
 
                         DropdownMenu(
                             expanded = showWilayaMenu,
-                            onDismissRequest = { showWilayaMenu = false }
+                            onDismissRequest = {
+                                showWilayaMenu = false
+                                wilayaSearchText = ""
+                            },
+                            modifier = Modifier.heightIn(max = 350.dp)
                         ) {
-                            algerianCities.forEach { (city, lat, lng) ->
+                            OutlinedTextField(
+                                value = wilayaSearchText,
+                                onValueChange = { wilayaSearchText = it },
+                                placeholder = { Text("ابحث في الـ 69 ولاية...") },
+                                singleLine = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                            val listToDisplay = if (wilayaSearchText.isBlank()) {
+                                AlgerianWilayas.all69Wilayas
+                            } else {
+                                val q = wilayaSearchText.trim().lowercase()
+                                AlgerianWilayas.all69Wilayas.filter {
+                                    it.fullSearchableText.contains(q) ||
+                                    it.arabicName.contains(q) ||
+                                    it.code.toString() == q
+                                }
+                            }
+                            listToDisplay.forEach { wilaya ->
                                 DropdownMenuItem(
-                                    text = { Text(city) },
+                                    text = { Text(wilaya.displayName) },
                                     onClick = {
                                         showWilayaMenu = false
-                                        onWilayaChange(city, lat, lng)
+                                        wilayaSearchText = ""
+                                        onWilayaChange(wilaya.arabicName, wilaya.latitude, wilaya.longitude)
                                         coroutineScope.launch {
                                             cameraPositionState.animate(
-                                                CameraUpdateFactory.newLatLngZoom(LatLng(lat, lng), 13f)
+                                                CameraUpdateFactory.newLatLngZoom(LatLng(wilaya.latitude, wilaya.longitude), 13f)
                                             )
                                         }
                                     }

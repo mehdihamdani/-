@@ -5,6 +5,7 @@ import com.example.R
 import com.example.data.firebase.OperationType
 import com.example.data.firebase.handleFirestoreError
 import com.example.data.model.FirestoreFavorite
+import com.example.data.model.FirestoreMosqueDonationAccount
 import com.example.data.model.FirestoreRestroom
 import com.example.data.model.FirestoreReview
 import com.example.data.model.FirestoreUserProfile
@@ -73,33 +74,19 @@ class FirestoreRestroomRepository(
     }
 
     fun observeUserFavorites(userId: String): Flow<List<String>> {
-        return db.collection("users").document(userId).collection("favorites")
+        val verifiedUid = requireUserId(userId)
+        return db.collection("users")
+            .document(verifiedUid)
+            .collection("favorites")
             .snapshots()
             .map { snapshot ->
                 snapshot.documents.map { it.id }
             }
             .catch { e ->
-                handleFirestoreError(e as? Exception ?: Exception(e), OperationType.LIST, "users/$userId/favorites")
+                handleFirestoreError(e as? Exception ?: Exception(e), OperationType.LIST, "users/$verifiedUid/favorites")
                 emit(emptyList())
             }
             .flowOn(Dispatchers.IO)
-    }
-
-    suspend fun saveUserProfile(userId: String, displayName: String, email: String) = withContext(Dispatchers.IO) {
-        val verifiedUid = requireUserId(userId)
-        val userRef = db.collection("users").document(verifiedUid)
-        val data = mapOf(
-            "userId" to verifiedUid,
-            "displayName" to displayName.ifBlank { "مستخدم" },
-            "email" to email.ifBlank { "user@dzrestrooms.app" },
-            "createdAt" to FieldValue.serverTimestamp()
-        )
-        try {
-            userRef.set(data).await()
-        } catch (e: Exception) {
-            handleFirestoreError(e, OperationType.WRITE, userRef.path)
-            throw e
-        }
     }
 
     suspend fun addRestroom(userId: String, restroom: FirestoreRestroom): String = withContext(Dispatchers.IO) {
@@ -130,6 +117,7 @@ class FirestoreRestroomRepository(
         )
         if (restroom.nameAr.isNotBlank()) data["nameAr"] = restroom.nameAr
         if (restroom.address.isNotBlank()) data["address"] = restroom.address
+        if (restroom.donationCcp.isNotBlank()) data["donationCcp"] = restroom.donationCcp
 
         try {
             docRef.set(data).await()
@@ -194,6 +182,100 @@ class FirestoreRestroomRepository(
             }
         } catch (e: Exception) {
             handleFirestoreError(e, if (isFavorite) OperationType.CREATE else OperationType.DELETE, favRef.path)
+            throw e
+        }
+    }
+
+    // =========================================================================
+    // MOSQUE DONATION ACCOUNTS (ADMIN-ONLY REVIEW SECTION)
+    // =========================================================================
+
+    /**
+     * Observes pending or recorded mosque donation accounts.
+     * Note: Firestore security rules enforce that only administrators can read.
+     */
+    fun observeMosqueDonationAccounts(): Flow<List<FirestoreMosqueDonationAccount>> {
+        return db.collection("mosque_donation_accounts")
+            .snapshots()
+            .map { snapshot ->
+                snapshot.toObjects(
+                    FirestoreMosqueDonationAccount::class.java,
+                    DocumentSnapshot.ServerTimestampBehavior.ESTIMATE
+                )
+            }
+            .catch { e ->
+                handleFirestoreError(e as? Exception ?: Exception(e), OperationType.LIST, "mosque_donation_accounts")
+                emit(emptyList())
+            }
+            .flowOn(Dispatchers.IO)
+    }
+
+    /**
+     * Seeds initial unverified mosque donation account records if not already present.
+     * Checks before writing to prevent duplicate records or overwriting existing edits.
+     * Preserves CCP, key, and RIP strictly as strings with leading zeros.
+     */
+    suspend fun seedInitialMosqueAccountsIfMissing(records: List<FirestoreMosqueDonationAccount>) = withContext(Dispatchers.IO) {
+        for (rec in records) {
+            val docRef = db.collection("mosque_donation_accounts").document(rec.id)
+            try {
+                val existing = docRef.get().await()
+                if (!existing.exists()) {
+                    val map = mutableMapOf<String, Any?>(
+                        "id" to rec.id,
+                        "mosque_name" to rec.mosque_name,
+                        "location_description" to rec.location_description,
+                        "ccp" to rec.ccp,
+                        "account_key" to rec.account_key,
+                        "rip" to rec.rip,
+                        "source" to rec.source,
+                        "account_holder_name" to rec.account_holder_name,
+                        "source_checked_at" to rec.source_checked_at,
+                        "verification_status" to rec.verification_status,
+                        "donations_enabled" to rec.donations_enabled,
+                        "verified_at" to rec.verified_at,
+                        "committee_consent_confirmed" to rec.committee_consent_confirmed,
+                        "document_name" to rec.document_name,
+                        "document_attached_at" to rec.document_attached_at,
+                        "admin_notes" to rec.admin_notes,
+                        "created_at" to FieldValue.serverTimestamp(),
+                        "updated_at" to FieldValue.serverTimestamp()
+                    )
+                    docRef.set(map).await()
+                }
+            } catch (e: Exception) {
+                // If not admin or other error, handled via security rules and logged
+                handleFirestoreError(e, OperationType.CREATE, docRef.path)
+            }
+        }
+    }
+
+    /**
+     * Updates an account's verification and audit fields by an administrator.
+     * Uploading a document or recording the legal beneficiary name does NOT enable donations.
+     */
+    suspend fun updateMosqueAccountAudit(
+        accountId: String,
+        accountHolderName: String?,
+        committeeConsentConfirmed: Boolean,
+        documentName: String?,
+        adminNotes: String
+    ) = withContext(Dispatchers.IO) {
+        val docRef = db.collection("mosque_donation_accounts").document(accountId)
+        val updates = mutableMapOf<String, Any?>(
+            "account_holder_name" to accountHolderName,
+            "committee_consent_confirmed" to committeeConsentConfirmed,
+            "admin_notes" to adminNotes,
+            "updated_at" to FieldValue.serverTimestamp()
+        )
+        if (!documentName.isNullOrBlank()) {
+            updates["document_name"] = documentName
+            updates["document_attached_at"] = FieldValue.serverTimestamp()
+        }
+        try {
+            docRef.update(updates).await()
+        } catch (e: Exception) {
+            handleFirestoreError(e, OperationType.UPDATE, docRef.path)
             throw e
         }
     }

@@ -28,7 +28,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -77,17 +77,20 @@ fun MapSearchBar(
     // Popular Algerian cities for fast one-tap navigation
     val popularWilayas = remember {
         listOf(
-            AlgerianWilayas.all58Wilayas.find { it.code == 16 } ?: AlgerianWilayas.all58Wilayas[15], // Alger
-            AlgerianWilayas.all58Wilayas.find { it.code == 31 } ?: AlgerianWilayas.all58Wilayas[30], // Oran
-            AlgerianWilayas.all58Wilayas.find { it.code == 25 } ?: AlgerianWilayas.all58Wilayas[24], // Constantine
-            AlgerianWilayas.all58Wilayas.find { it.code == 19 } ?: AlgerianWilayas.all58Wilayas[18], // Setif
-            AlgerianWilayas.all58Wilayas.find { it.code == 23 } ?: AlgerianWilayas.all58Wilayas[22], // Annaba
-            AlgerianWilayas.all58Wilayas.find { it.code == 9 } ?: AlgerianWilayas.all58Wilayas[8],   // Blida
-            AlgerianWilayas.all58Wilayas.find { it.code == 2 } ?: AlgerianWilayas.all58Wilayas[1],   // Chlef
-            AlgerianWilayas.all58Wilayas.find { it.code == 13 } ?: AlgerianWilayas.all58Wilayas[12], // Tlemcen
-            AlgerianWilayas.all58Wilayas.find { it.code == 5 } ?: AlgerianWilayas.all58Wilayas[4],   // Batna
-            AlgerianWilayas.all58Wilayas.find { it.code == 6 } ?: AlgerianWilayas.all58Wilayas[5],   // Bejaia
-            AlgerianWilayas.all58Wilayas.find { it.code == 30 } ?: AlgerianWilayas.all58Wilayas[29]  // Ouargla
+            AlgerianWilayas.all69Wilayas.find { it.code == 16 } ?: AlgerianWilayas.all69Wilayas[15], // Alger
+            AlgerianWilayas.all69Wilayas.find { it.code == 31 } ?: AlgerianWilayas.all69Wilayas[30], // Oran
+            AlgerianWilayas.all69Wilayas.find { it.code == 25 } ?: AlgerianWilayas.all69Wilayas[24], // Constantine
+            AlgerianWilayas.all69Wilayas.find { it.code == 19 } ?: AlgerianWilayas.all69Wilayas[18], // Setif
+            AlgerianWilayas.all69Wilayas.find { it.code == 23 } ?: AlgerianWilayas.all69Wilayas[22], // Annaba
+            AlgerianWilayas.all69Wilayas.find { it.code == 9 } ?: AlgerianWilayas.all69Wilayas[8],   // Blida
+            AlgerianWilayas.all69Wilayas.find { it.code == 68 } ?: AlgerianWilayas.all69Wilayas[67], // Bou Saada
+            AlgerianWilayas.all69Wilayas.find { it.code == 2 } ?: AlgerianWilayas.all69Wilayas[1],   // Chlef
+            AlgerianWilayas.all69Wilayas.find { it.code == 13 } ?: AlgerianWilayas.all69Wilayas[12], // Tlemcen
+            AlgerianWilayas.all69Wilayas.find { it.code == 5 } ?: AlgerianWilayas.all69Wilayas[4],   // Batna
+            AlgerianWilayas.all69Wilayas.find { it.code == 59 } ?: AlgerianWilayas.all69Wilayas[58], // Aflou
+            AlgerianWilayas.all69Wilayas.find { it.code == 60 } ?: AlgerianWilayas.all69Wilayas[59], // Barika
+            AlgerianWilayas.all69Wilayas.find { it.code == 6 } ?: AlgerianWilayas.all69Wilayas[5],   // Bejaia
+            AlgerianWilayas.all69Wilayas.find { it.code == 30 } ?: AlgerianWilayas.all69Wilayas[29]  // Ouargla
         )
     }
 
@@ -96,12 +99,12 @@ fun MapSearchBar(
             emptyList()
         } else {
             val q = searchQuery.trim().lowercase()
-            AlgerianWilayas.all58Wilayas.filter { wilaya ->
+            AlgerianWilayas.all69Wilayas.filter { wilaya ->
                 wilaya.fullSearchableText.contains(q) ||
                 wilaya.arabicName.contains(q) ||
                 wilaya.frenchName.lowercase().contains(q) ||
                 wilaya.code.toString() == q
-            }.take(8)
+            }.take(10)
         }
     }
 
@@ -198,7 +201,7 @@ fun MapSearchBar(
                             .fillMaxWidth()
                             .background(MaterialTheme.colorScheme.surface)
                     ) {
-                        Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -254,7 +257,7 @@ fun MapSearchBar(
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
-                                Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                             }
                         }
                     }

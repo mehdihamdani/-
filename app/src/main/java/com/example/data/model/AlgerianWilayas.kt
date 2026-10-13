@@ -1,7 +1,7 @@
 package com.example.data.model
 
 /**
- * Data model for Algerian Wilayas (58 Wilayas).
+ * Data model for Algerian Wilayas (Official 69 Wilayas according to Law 26-06).
  */
 data class WilayaInfo(
     val code: Int,
@@ -18,10 +18,10 @@ data class WilayaInfo(
 }
 
 /**
- * Official registry of all 58 Algerian Wilayas.
+ * Official registry of all 69 Algerian Wilayas (1 to 69).
  */
 object AlgerianWilayas {
-    val all58Wilayas: List<WilayaInfo> = listOf(
+    val all69Wilayas: List<WilayaInfo> = listOf(
         WilayaInfo(1, "أدرار", "Adrar", 27.8742, -0.2939),
         WilayaInfo(2, "الشلف", "Chlef", 36.1653, 1.3345),
         WilayaInfo(3, "الأغواط", "Laghouat", 33.8000, 2.8651),
@@ -79,16 +79,38 @@ object AlgerianWilayas {
         WilayaInfo(55, "تقرت", "Touggourt", 33.1053, 6.0583),
         WilayaInfo(56, "جانت", "Djanet", 24.5539, 9.4847),
         WilayaInfo(57, "المغير", "El M'Ghair", 33.9500, 5.9167),
-        WilayaInfo(58, "المنيعة", "El Meniaa", 30.5847, 2.8797)
+        WilayaInfo(58, "المنيعة", "El Meniaa", 30.5847, 2.8797),
+        // 11 Newly established wilayas (Law 26-06)
+        WilayaInfo(59, "أفلو", "Aflou", 34.1167, 2.1000),
+        WilayaInfo(60, "بريكة", "Barika", 35.3894, 5.3658),
+        WilayaInfo(61, "القنطرة", "El Kantara", 35.2253, 5.7022),
+        WilayaInfo(62, "بئر العاتر", "Bir El Ater", 34.7500, 8.0500),
+        WilayaInfo(63, "العريشة", "El Aricha", 34.2269, -1.3861),
+        WilayaInfo(64, "قصر الشلالة", "Ksar Chellala", 35.1719, 2.3197),
+        WilayaInfo(65, "عين وسارة", "Aïn Oussara", 35.4500, 2.9000),
+        WilayaInfo(66, "مسعد", "Messaad", 34.1667, 3.5000),
+        WilayaInfo(67, "قصر البخاري", "Ksar El Boukhari", 35.8833, 2.7500),
+        WilayaInfo(68, "بوسعادة", "Bou Saâda", 35.2833, 4.1833),
+        WilayaInfo(69, "الأبيض سيدي الشيخ", "El Abiodh Sidi Cheikh", 32.8936, 0.5472)
     )
 
-    val namesList: List<String> = all58Wilayas.map { it.arabicName }
+    // Backwards-compatible alias so older references keep working
+    val all58Wilayas: List<WilayaInfo> get() = all69Wilayas
+
+    val namesList: List<String> = all69Wilayas.map { it.arabicName }
 
     fun findByName(name: String): WilayaInfo? {
-        return all58Wilayas.find { 
-            it.arabicName.equals(name, ignoreCase = true) || 
+        val trimmed = name.trim().removePrefix("ولاية ").trim()
+        return all69Wilayas.find {
+            it.arabicName.equals(trimmed, ignoreCase = true) ||
+            it.arabicName.equals(name, ignoreCase = true) ||
             it.displayName.equals(name, ignoreCase = true) ||
+            it.frenchName.equals(trimmed, ignoreCase = true) ||
             it.frenchName.equals(name, ignoreCase = true)
         }
+    }
+
+    fun findByCode(code: Int): WilayaInfo? {
+        return all69Wilayas.find { it.code == code }
     }
 }

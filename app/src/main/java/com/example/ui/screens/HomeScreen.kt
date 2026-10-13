@@ -128,6 +128,9 @@ import com.example.ui.theme.RahaGreen
 import com.example.ui.theme.RahaGreenContainer
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.TealPrimary
+import androidx.compose.material.icons.filled.AdminPanelSettings
+import com.example.data.repository.FirestoreRestroomRepository
+import com.example.ui.components.MosqueAccountReviewDialog
 import com.example.ui.viewmodel.MapProviderType
 import com.example.ui.viewmodel.RestroomViewModel
 
@@ -154,6 +157,23 @@ fun HomeScreen(
     val isOfflineMode by viewModel.isOfflineMode.collectAsStateWithLifecycle()
     val showOfflineCacheDialog by viewModel.showOfflineCacheDialog.collectAsStateWithLifecycle()
     val showInvalidApiKeyDialog by viewModel.showInvalidApiKeyDialog.collectAsStateWithLifecycle()
+    val showMosqueReviewDialog by viewModel.showMosqueReviewDialog.collectAsStateWithLifecycle()
+    val mosqueDonationAccounts by viewModel.mosqueDonationAccounts.collectAsStateWithLifecycle()
+    val isAdminUser = viewModel.isAdminUser
+
+    val firestoreRepo = remember {
+        try {
+            FirestoreRestroomRepository(context)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    LaunchedEffect(isAdminUser) {
+        if (isAdminUser && firestoreRepo != null) {
+            viewModel.syncMosqueAccountsWithFirestore(firestoreRepo)
+        }
+    }
 
     val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
     val currentLang = appSettings.language
@@ -366,6 +386,20 @@ fun HomeScreen(
                             contentDescription = "دراسة المشروع الشاملة",
                             tint = TealPrimary
                         )
+                    }
+
+                    // Admin-only Mosque Donation Review Button
+                    if (isAdminUser) {
+                        IconButton(
+                            onClick = { viewModel.setShowMosqueReviewDialog(true) },
+                            modifier = Modifier.testTag("admin_mosque_review_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AdminPanelSettings,
+                                contentDescription = "تدقيق حسابات التبرع للمساجد (إدارة)",
+                                tint = Color(0xFFE65100)
+                            )
+                        }
                     }
 
                     // User Account & Profile Screen Button
@@ -1017,6 +1051,25 @@ fun HomeScreen(
                 ) {
                     Text("متابعة بالخريطة التفاعلية (بدون إنترنت)")
                 }
+            }
+        )
+    }
+
+    // Administrator-only Mosque Donation Account Review Dialog
+    if (showMosqueReviewDialog) {
+        MosqueAccountReviewDialog(
+            accounts = mosqueDonationAccounts,
+            isAdmin = isAdminUser,
+            onDismiss = { viewModel.setShowMosqueReviewDialog(false) },
+            onSaveAudit = { accountId, holderName, consentConfirmed, docName, notes ->
+                viewModel.updateMosqueAccountAudit(
+                    firestoreRepo = firestoreRepo,
+                    accountId = accountId,
+                    holderName = holderName,
+                    consentConfirmed = consentConfirmed,
+                    docName = docName,
+                    adminNotes = notes
+                )
             }
         )
     }

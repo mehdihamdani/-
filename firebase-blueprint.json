@@ -8,6 +8,7 @@
         "userId": { "type": "string", "description": "Unique user ID matching Auth UID" },
         "displayName": { "type": "string", "description": "User display name" },
         "email": { "type": "string", "description": "User email address" },
+        "isAdmin": { "type": "boolean", "description": "Whether the user has administrator privileges" },
         "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when user profile was created" }
       },
       "required": ["userId", "displayName", "email", "createdAt"]
@@ -46,6 +47,7 @@
         "rating": { "type": "number", "description": "Average rating out of 5" },
         "reviewsCount": { "type": "number", "description": "Total reviews count" },
         "cleanlinessRating": { "type": "number", "description": "Average cleanliness rating" },
+        "donationCcp": { "type": "string", "description": "Donation CCP reference if configured" },
         "createdBy": { "type": "string", "description": "User ID of creator" },
         "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
         "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
@@ -69,6 +71,41 @@
         "createdAt": { "type": "string", "format": "date-time", "description": "Review submission timestamp" }
       },
       "required": ["id", "restroomId", "userId", "authorName", "rating", "cleanlinessRating", "createdAt"]
+    },
+    "MosqueDonationAccount": {
+      "title": "MosqueDonationAccount",
+      "description": "Unverified mosque donation account record kept strictly for review by administrators",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique deterministic account record ID preventing duplicates" },
+        "mosque_name": { "type": "string", "description": "Official or known mosque name" },
+        "location_description": { "type": "string", "description": "Neighborhood, city, and wilaya description" },
+        "ccp": { "type": "string", "description": "CCP account number preserved strictly as string with leading zeros" },
+        "account_key": { "type": "string", "description": "CCP account key preserved strictly as string" },
+        "rip": { "type": "string", "description": "RIP identifier preserved strictly as string with leading zeros (or null)" },
+        "source": { "type": "string", "description": "Online source reference link (e.g. Mawaqit)" },
+        "account_holder_name": { "type": "string", "description": "Beneficiary legal name once confirmed, initially null" },
+        "source_checked_at": { "type": "string", "description": "Date when source was checked (YYYY-MM-DD)" },
+        "verification_status": { "type": "string", "description": "Status: pending, under_review, verified, rejected" },
+        "donations_enabled": { "type": "boolean", "description": "Safety gate: donations enabled only after full verification, initially false" },
+        "verified_at": { "type": "string", "format": "date-time", "description": "Timestamp of formal verification, initially null" },
+        "committee_consent_confirmed": { "type": "boolean", "description": "Confirmation of mosque committee written consent" },
+        "document_name": { "type": "string", "description": "Attached bank or CCP document filename or reference" },
+        "document_attached_at": { "type": "string", "format": "date-time", "description": "Timestamp when document was recorded" },
+        "admin_notes": { "type": "string", "description": "Auditor notes on status and checks" },
+        "created_at": { "type": "string", "format": "date-time", "description": "Record creation timestamp" },
+        "updated_at": { "type": "string", "format": "date-time", "description": "Last audit update timestamp" }
+      },
+      "required": [
+        "id",
+        "mosque_name",
+        "ccp",
+        "account_key",
+        "source",
+        "source_checked_at",
+        "verification_status",
+        "donations_enabled"
+      ]
     }
   },
   "firestore": {
@@ -87,6 +124,10 @@
     "/reviews/{reviewId}": {
       "schema": { "$ref": "#/entities/Review" },
       "description": "Community reviews and cleanliness ratings"
+    },
+    "/mosque_donation_accounts/{accountId}": {
+      "schema": { "$ref": "#/entities/MosqueDonationAccount" },
+      "description": "Mosque donation accounts under review by administrators"
     }
   }
 }

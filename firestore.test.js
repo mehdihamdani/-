@@ -10,6 +10,8 @@ let testEnv;
 const PROJECT_ID = process.env.GCP_PROJECT || "demo-no-project";
 const ALICE_UID = "alice_123";
 const BOB_UID = "bob_456";
+const ADMIN_UID = "admin_mehdi_789";
+const ADMIN_EMAIL = "mehdi.hamdani.net@gmail.com";
 
 const [emulatorHost, emulatorPortStr] = (process.env.FIRESTORE_EMULATOR_HOST || "127.0.0.1:8085").split(":");
 const emulatorPort = parseInt(emulatorPortStr, 10);
@@ -145,4 +147,73 @@ test("User isolation: Alice can access her own profile and favorites, but not Bo
 
   // Alice cannot read Bob's profile
   await assertFails(aliceDb.collection("users").doc(BOB_UID).get());
+});
+
+// --- MOSQUE DONATION ACCOUNTS TESTS ---
+
+test("Non-administrator: cannot read mosque donation accounts", async () => {
+  const aliceDb = testEnv.authenticatedContext(ALICE_UID, { email: "alice@example.com" }).firestore();
+  await assertFails(aliceDb.collection("mosque_donation_accounts").get());
+  await assertFails(aliceDb.collection("mosque_donation_accounts").doc("mosque_omar_chlef").get());
+});
+
+test("Non-administrator: cannot create or edit mosque donation accounts", async () => {
+  const bobDb = testEnv.authenticatedContext(BOB_UID, { email: "bob@example.com" }).firestore();
+  await assertFails(
+    bobDb.collection("mosque_donation_accounts").doc("mosque_omar_chlef").set({
+      id: "mosque_omar_chlef",
+      mosque_name: "Omar Ibn Abd Al-Aziz Mosque",
+      ccp: "0021004204",
+      account_key: "55",
+      rip: null,
+      source: "https://mawaqit.net/ar/masjid-omar-bn-abd-laaziz-chlef-02045-algeria",
+      account_holder_name: null,
+      source_checked_at: "2026-10-13",
+      verification_status: "pending",
+      donations_enabled: false,
+      verified_at: null,
+    })
+  );
+});
+
+test("Administrator: can read, create, and audit mosque donation accounts with leading zeros preserved", async () => {
+  const adminDb = testEnv.authenticatedContext(ADMIN_UID, { email: ADMIN_EMAIL }).firestore();
+
+  const record1 = {
+    id: "mosque_omar_chlef",
+    mosque_name: "Omar Ibn Abd Al-Aziz Mosque",
+    location_description: "El Ikhoua Abbad neighborhood, Chlef",
+    ccp: "0021004204", // leading zeros preserved as string
+    account_key: "55",
+    rip: null,
+    source: "https://mawaqit.net/ar/masjid-omar-bn-abd-laaziz-chlef-02045-algeria",
+    account_holder_name: null,
+    source_checked_at: "2026-10-13",
+    verification_status: "pending",
+    donations_enabled: false,
+    verified_at: null,
+    committee_consent_confirmed: false,
+    document_name: null,
+    created_at: new Date(),
+  };
+
+  await assertSucceeds(
+    adminDb.collection("mosque_donation_accounts").doc("mosque_omar_chlef").set(record1)
+  );
+
+  // Admin can read back
+  const docSnap = await adminDb.collection("mosque_donation_accounts").doc("mosque_omar_chlef").get();
+  if (docSnap.data().ccp !== "0021004204") {
+    throw new Error("Leading zeros in CCP were altered!");
+  }
+
+  // Admin can update audit info
+  await assertSucceeds(
+    adminDb.collection("mosque_donation_accounts").doc("mosque_omar_chlef").update({
+      account_holder_name: "Association Religieuse Mosquée Omar Ibn Abd Al-Aziz",
+      committee_consent_confirmed: true,
+      document_name: "releve_ccp_chlef_2026.pdf",
+      admin_notes: "Checked official stamp from Religious Affairs direction.",
+    })
+  );
 });

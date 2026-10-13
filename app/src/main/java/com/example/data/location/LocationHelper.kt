@@ -19,6 +19,7 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import com.example.data.model.AlgerianWilayas
 import java.util.Locale
 
 class LocationHelper(private val context: Context) {
@@ -144,31 +145,13 @@ class LocationHelper(private val context: Context) {
     }
 
     private fun matchAlgerianWilaya(lat: Double, lng: Double): String {
-        val wilayas = listOf(
-            Triple("الجزائر العاصمة", 36.7538, 3.0588),
-            Triple("البليدة", 36.4700, 2.8300),
-            Triple("بومرداس", 36.7667, 3.4667),
-            Triple("تيبازة", 36.5925, 2.4475),
-            Triple("وهران", 35.6987, -0.6345),
-            Triple("قسنطينة", 36.3498, 6.6192),
-            Triple("سطيف", 36.1912, 5.4078),
-            Triple("عنابة", 36.8870, 7.7450),
-            Triple("تلمسان", 34.8783, -1.3150),
-            Triple("باتنة", 35.5560, 6.1741),
-            Triple("بجاية", 36.7559, 5.0843),
-            Triple("تيزي وزو", 36.7118, 4.0459),
-            Triple("الشلف", 36.1653, 1.3345),
-            Triple("بسكرة", 34.8504, 5.7281),
-            Triple("ورقلة", 31.9530, 5.3300),
-            Triple("غرداية", 32.4909, 3.6735)
-        )
         var closest = "موقعي الحالي"
         var minDist = Double.MAX_VALUE
-        for ((name, wLat, wLng) in wilayas) {
-            val d = Math.hypot(lat - wLat, lng - wLng)
+        for (w in AlgerianWilayas.all69Wilayas) {
+            val d = Math.hypot(lat - w.latitude, lng - w.longitude)
             if (d < minDist) {
                 minDist = d
-                closest = name
+                closest = "ولاية ${w.arabicName}"
             }
         }
         return if (minDist < 0.6) closest else "موقعي الحالي"

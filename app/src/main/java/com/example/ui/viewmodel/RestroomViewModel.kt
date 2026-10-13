@@ -15,7 +15,11 @@ import com.example.data.model.RestroomEntity
 import com.example.data.model.RestroomType
 import com.example.data.model.ReviewEntity
 import com.example.data.model.UserLocation
+import com.example.data.model.FirestoreMosqueDonationAccount
+import com.example.data.model.InitialMosqueDonationAccounts
+import com.example.data.repository.FirestoreRestroomRepository
 import com.example.data.repository.RestroomRepository
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -78,9 +82,7 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
     )
     val userLocation: StateFlow<UserLocation> = _userLocation
 
-    private val _mapProvider = MutableStateFlow(
-        if (com.example.util.MapsKeyValidator.isKeyValid()) MapProviderType.GOOGLE_MAPS else MapProviderType.OFFLINE_VECTOR
-    )
+    private val _mapProvider = MutableStateFlow(MapProviderType.GOOGLE_MAPS)
     val mapProvider: StateFlow<MapProviderType> = _mapProvider
 
     private val _showInvalidApiKeyDialog = MutableStateFlow(false)
@@ -146,6 +148,22 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
 
     private val _showOfflineCacheDialog = MutableStateFlow(false)
     val showOfflineCacheDialog: StateFlow<Boolean> = _showOfflineCacheDialog
+
+    private val _showMosqueReviewDialog = MutableStateFlow(false)
+    val showMosqueReviewDialog: StateFlow<Boolean> = _showMosqueReviewDialog
+
+    private val _mosqueDonationAccounts = MutableStateFlow<List<FirestoreMosqueDonationAccount>>(
+        InitialMosqueDonationAccounts.unverifiedRecords
+    )
+    val mosqueDonationAccounts: StateFlow<List<FirestoreMosqueDonationAccount>> = _mosqueDonationAccounts
+
+    val isAdminUser: Boolean
+        get() {
+            val user = FirebaseAuth.getInstance().currentUser ?: return false
+            val email = user.email ?: ""
+            return email.equals("mehdi.hamdani.net@gmail.com", ignoreCase = true) ||
+                    email.endsWith("@admin.raha.dz", ignoreCase = true)
+        }
 
     val offlineCacheMetadata: StateFlow<OfflineCacheMetadataEntity?> = repository.cacheMetadataFlow
         .stateIn(
@@ -442,6 +460,66 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
             )
             repository.addRestroom(newRestroom)
             _showAddDialog.value = false
+        }
+    }
+
+    fun setShowMosqueReviewDialog(show: Boolean) {
+        _showMosqueReviewDialog.value = show
+    }
+
+    fun syncMosqueAccountsWithFirestore(firestoreRepo: FirestoreRestroomRepository) {
+        viewModelScope.launch {
+            if (isAdminUser) {
+                try {
+                    // Seed initial records if missing without overwriting
+                    firestoreRepo.seedInitialMosqueAccountsIfMissing(InitialMosqueDonationAccounts.unverifiedRecords)
+                    // Collect real-time updates
+                    firestoreRepo.observeMosqueDonationAccounts().collect { remoteList ->
+                        if (remoteList.isNotEmpty()) {
+                            _mosqueDonationAccounts.value = remoteList
+                        }
+                    }
+                } catch (_: Exception) {
+                    // Retain initial local unverified records if offline or permission denied
+                }
+            }
+        }
+    }
+
+    fun updateMosqueAccountAudit(
+        firestoreRepo: FirestoreRestroomRepository?,
+        accountId: String,
+        holderName: String?,
+        consentConfirmed: Boolean,
+        docName: String?,
+        adminNotes: String
+    ) {
+        viewModelScope.launch {
+            // Update in-memory state immediately
+            val current = _mosqueDonationAccounts.value.toMutableList()
+            val idx = current.indexOfFirst { it.id == accountId }
+            if (idx >= 0) {
+                val updated = current[idx].copy(
+                    account_holder_name = holderName,
+                    committee_consent_confirmed = consentConfirmed,
+                    document_name = docName,
+                    admin_notes = adminNotes
+                )
+                current[idx] = updated
+                _mosqueDonationAccounts.value = current
+            }
+            // Persist to Firestore if available
+            firestoreRepo?.let { repo ->
+                try {
+                    repo.updateMosqueAccountAudit(
+                        accountId = accountId,
+                        accountHolderName = holderName,
+                        committeeConsentConfirmed = consentConfirmed,
+                        documentName = docName,
+                        adminNotes = adminNotes
+                    )
+                } catch (_: Exception) {}
+            }
         }
     }
 

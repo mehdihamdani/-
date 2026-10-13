@@ -79,10 +79,13 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import com.example.data.model.AlgerianWilayas
 import androidx.compose.material3.rememberModalBottomSheetState
 import com.example.ui.theme.RahaBlue
 import com.example.ui.theme.RahaGreen
@@ -121,6 +124,7 @@ fun InteractiveRestroomMap(
     var zoomScale by remember { mutableFloatStateOf(1.2f) }
     var showWilayaMenu by remember { mutableStateOf(false) }
     var showFilterSheet by remember { mutableStateOf(false) }
+    var wilayaSearchText by remember { mutableStateOf("") }
     val filterSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -141,16 +145,6 @@ fun InteractiveRestroomMap(
             repeatMode = RepeatMode.Restart
         ),
         label = "pulseAlpha"
-    )
-
-    val algerianCities = listOf(
-        Triple("الجزائر العاصمة (Alger)", 36.7538, 3.0588),
-        Triple("وهران (Oran)", 35.6987, -0.6345),
-        Triple("قسنطينة (Constantine)", 36.3498, 6.6192),
-        Triple("سطيف (Sétif)", 36.1912, 5.4078),
-        Triple("عنابة (Annaba)", 36.8870, 7.7450),
-        Triple("البليدة (Blida)", 36.4700, 2.8300),
-        Triple("تلمسان (Tlemcen)", 34.8783, -1.3150)
     )
 
     BoxWithConstraints(
@@ -391,16 +385,40 @@ fun InteractiveRestroomMap(
 
                         DropdownMenu(
                             expanded = showWilayaMenu,
-                            onDismissRequest = { showWilayaMenu = false }
+                            onDismissRequest = {
+                                showWilayaMenu = false
+                                wilayaSearchText = ""
+                            },
+                            modifier = Modifier.heightIn(max = 350.dp)
                         ) {
-                            algerianCities.forEach { (city, lat, lng) ->
+                            OutlinedTextField(
+                                value = wilayaSearchText,
+                                onValueChange = { wilayaSearchText = it },
+                                placeholder = { Text("ابحث في الـ 69 ولاية...") },
+                                singleLine = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                            val listToDisplay = if (wilayaSearchText.isBlank()) {
+                                AlgerianWilayas.all69Wilayas
+                            } else {
+                                val q = wilayaSearchText.trim().lowercase()
+                                AlgerianWilayas.all69Wilayas.filter {
+                                    it.fullSearchableText.contains(q) ||
+                                    it.arabicName.contains(q) ||
+                                    it.code.toString() == q
+                                }
+                            }
+                            listToDisplay.forEach { wilaya ->
                                 DropdownMenuItem(
-                                    text = { Text(city) },
+                                    text = { Text(wilaya.displayName) },
                                     onClick = {
                                         showWilayaMenu = false
+                                        wilayaSearchText = ""
                                         panOffsetX = 0f
                                         panOffsetY = 0f
-                                        onWilayaChange(city, lat, lng)
+                                        onWilayaChange(wilaya.arabicName, wilaya.latitude, wilaya.longitude)
                                     }
                                 )
                             }

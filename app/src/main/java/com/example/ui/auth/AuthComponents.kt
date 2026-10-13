@@ -331,7 +331,7 @@ fun SignInScreen(
                 )
 
                 Text(
-                    text = "دليل ومجتمع دورات المياه العمومية والخاصة في الـ 58 ولاية",
+                    text = "دليل ومجتمع دورات المياه العمومية والخاصة في الـ 69 ولاية",
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,

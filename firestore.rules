@@ -10,6 +10,18 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token != null && request.auth.token.admin == true) ||
+        (request.auth.token.email != null && (
+          request.auth.token.email == 'mehdi.hamdani.net@gmail.com' ||
+          request.auth.token.email.matches('.*@admin\\.raha\\.dz$')
+        )) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true)
+      );
+    }
+
     function isValidId(id) {
       return id is string && id.size() > 0 && id.size() <= 128;
     }
@@ -18,6 +30,7 @@ service cloud.firestore {
       return data.userId is string && data.userId == request.auth.uid &&
              data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100 &&
              data.email is string && data.email.size() <= 200 &&
+             (!('isAdmin' in data) || data.isAdmin is bool) &&
              data.createdAt is timestamp && data.createdAt <= request.time;
     }
 
@@ -46,6 +59,7 @@ service cloud.firestore {
              (!('rating' in data) || (data.rating is number && data.rating >= 0.0 && data.rating <= 5.0)) &&
              (!('reviewsCount' in data) || (data.reviewsCount is int && data.reviewsCount >= 0)) &&
              (!('cleanlinessRating' in data) || (data.cleanlinessRating is number && data.cleanlinessRating >= 0.0 && data.cleanlinessRating <= 5.0)) &&
+             (!('donationCcp' in data) || (data.donationCcp is string && data.donationCcp.size() <= 100)) &&
              data.createdBy is string &&
              data.createdAt is timestamp && data.createdAt <= request.time &&
              (!('updatedAt' in data) || (data.updatedAt is timestamp && data.updatedAt <= request.time));
@@ -64,11 +78,34 @@ service cloud.firestore {
              data.createdAt is timestamp && data.createdAt <= request.time;
     }
 
+    function isValidMosqueDonationAccount(data) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.mosque_name is string && data.mosque_name.size() >= 2 && data.mosque_name.size() <= 200 &&
+             (!('location_description' in data) || (data.location_description is string && data.location_description.size() <= 300)) &&
+             data.ccp is string && data.ccp.size() >= 1 && data.ccp.size() <= 30 &&
+             data.account_key is string && data.account_key.size() >= 1 && data.account_key.size() <= 10 &&
+             (!('rip' in data) || data.rip == null || (data.rip is string && data.rip.size() >= 1 && data.rip.size() <= 34)) &&
+             data.source is string && data.source.size() >= 5 && data.source.size() <= 500 &&
+             (!('account_holder_name' in data) || data.account_holder_name == null || (data.account_holder_name is string && data.account_holder_name.size() <= 200)) &&
+             data.source_checked_at is string && data.source_checked_at.size() == 10 &&
+             data.verification_status is string && data.verification_status in ['pending', 'under_review', 'verified', 'rejected'] &&
+             data.donations_enabled is bool &&
+             (!('verified_at' in data) || data.verified_at == null || data.verified_at is timestamp) &&
+             (!('committee_consent_confirmed' in data) || data.committee_consent_confirmed is bool) &&
+             (!('document_name' in data) || data.document_name == null || (data.document_name is string && data.document_name.size() <= 250)) &&
+             (!('document_attached_at' in data) || data.document_attached_at == null || data.document_attached_at is timestamp) &&
+             (!('admin_notes' in data) || (data.admin_notes is string && data.admin_notes.size() <= 2000)) &&
+             (!('created_at' in data) || (data.created_at is timestamp && data.created_at <= request.time)) &&
+             (!('updated_at' in data) || (data.updated_at is timestamp && data.updated_at <= request.time));
+    }
+
     match /users/{userId} {
       allow get, list: if isSignedIn() && isOwner(userId);
       allow create: if isSignedIn() && isOwner(userId) && isValidUserProfile(request.resource.data);
       allow update: if isSignedIn() && isOwner(userId) && isValidUserProfile(request.resource.data) &&
-                       request.resource.data.userId == resource.data.userId;
+                       request.resource.data.userId == resource.data.userId &&
+                       // Prevent self-elevation to admin unless already admin
+                       (!('isAdmin' in request.resource.data) || request.resource.data.isAdmin == resource.data.get('isAdmin', false) || isAdmin());
       allow delete: if isSignedIn() && isOwner(userId);
 
       match /favorites/{restroomId} {
@@ -102,6 +139,16 @@ service cloud.firestore {
                        request.resource.data.userId == request.auth.uid &&
                        isValidReview(request.resource.data);
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Mosque donation accounts:
+    // Read: Allowed for authenticated administrators (under review only, not public payment destinations)
+    // Create/Update/Delete: Strictly protected and restricted to administrators with valid schema validation
+    match /mosque_donation_accounts/{accountId} {
+      allow get, list: if isAdmin();
+      allow create: if isAdmin() && isValidMosqueDonationAccount(request.resource.data);
+      allow update: if isAdmin() && isValidMosqueDonationAccount(request.resource.data);
+      allow delete: if isAdmin();
     }
   }
 }

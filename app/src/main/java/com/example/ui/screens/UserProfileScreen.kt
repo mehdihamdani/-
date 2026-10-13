@@ -54,7 +54,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -337,7 +337,7 @@ fun UserProfileScreen(
                                 icon = Icons.Default.Add,
                                 tint = TealPrimary
                             )
-                            Divider(
+                            VerticalDivider(
                                 modifier = Modifier
                                     .height(30.dp)
                                     .width(1.dp),
@@ -349,7 +349,7 @@ fun UserProfileScreen(
                                 icon = Icons.Default.RateReview,
                                 tint = RahaBlue
                             )
-                            Divider(
+                            VerticalDivider(
                                 modifier = Modifier
                                     .height(30.dp)
                                     .width(1.dp),
@@ -641,7 +641,7 @@ fun UserProfileScreen(
                                     value = editWilaya,
                                     onValueChange = {},
                                     readOnly = true,
-                                    label = { Text("الولاية (من بين 58 ولاية)") },
+                                    label = { Text("الولاية (من بين 69 ولاية)") },
                                     leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
                                     trailingIcon = {
                                         IconButton(onClick = { isWilayaDropdownOpen = true }) {
@@ -661,11 +661,11 @@ fun UserProfileScreen(
                                     modifier = Modifier
                                         .fillMaxWidth(0.85f)
                                         .height(300.dp)
-                                ) {
+                                 ) {
                                     OutlinedTextField(
                                         value = wilayaFilterText,
                                         onValueChange = { wilayaFilterText = it },
-                                        placeholder = { Text("ابحث في الـ 58 ولاية...") },
+                                        placeholder = { Text("ابحث في الـ 69 ولاية...") },
                                         singleLine = true,
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -673,10 +673,10 @@ fun UserProfileScreen(
                                     )
 
                                     val filteredList = if (wilayaFilterText.isBlank()) {
-                                        AlgerianWilayas.all58Wilayas
+                                        AlgerianWilayas.all69Wilayas
                                     } else {
                                         val q = wilayaFilterText.lowercase()
-                                        AlgerianWilayas.all58Wilayas.filter { it.fullSearchableText.contains(q) }
+                                        AlgerianWilayas.all69Wilayas.filter { it.fullSearchableText.contains(q) }
                                     }
 
                                     filteredList.forEach { wilaya ->
