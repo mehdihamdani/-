@@ -134,13 +134,13 @@ fun SettingsScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "الرجوع للخريطة",
+                                    contentDescription = AppStrings.back(currentLang),
                                     tint = Color.White,
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "الرجوع",
+                                    text = AppStrings.back(currentLang),
                                     style = MaterialTheme.typography.labelMedium.copy(
                                         color = Color.White,
                                         fontWeight = FontWeight.Bold
@@ -150,7 +150,7 @@ fun SettingsScreen(
                         }
 
                         Text(
-                            text = "الإعدادات",
+                            text = AppStrings.navSettings(currentLang),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold
@@ -189,7 +189,7 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "خصص مظهر التطبيق، الألوان، الوضع الليلي واللغة حسب رغبتك",
+                        text = AppStrings.settingsSubtitle(currentLang),
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = Color.White.copy(alpha = 0.9f)
                         )
@@ -282,7 +282,7 @@ fun SettingsScreen(
                                 if (isSelected) {
                                     Icon(
                                         imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = "محدد",
+                                        contentDescription = AppStrings.selected(currentLang),
                                         tint = palette.primaryColor,
                                         modifier = Modifier.size(22.dp)
                                     )
@@ -434,7 +434,7 @@ fun SettingsScreen(
                                 if (isSelected) {
                                     Icon(
                                         imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = "محدد",
+                                        contentDescription = AppStrings.selected(currentLang),
                                         tint = TealPrimary,
                                         modifier = Modifier.size(20.dp)
                                     )
@@ -458,7 +458,7 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "بيانات التطبيق وأدوات النظام",
+                        text = AppStrings.appDataAndTools(currentLang),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -482,11 +482,11 @@ fun SettingsScreen(
                                 Icon(imageVector = Icons.Default.Storage, contentDescription = null, tint = TealPrimary)
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column {
-                                    Text("التخزين المحلي Room بدون إنترنت", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
-                                    Text("إدارة البيانات والمزامنة غير المتصلة", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(AppStrings.offlineRoomStorage(currentLang), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
+                                    Text(AppStrings.offlineRoomStorageSub(currentLang), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
-                            Text("فتح ←", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = TealPrimary)
+                            Text(AppStrings.openButton(currentLang), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = TealPrimary)
                         }
                     }
 
@@ -509,11 +509,11 @@ fun SettingsScreen(
                                 Icon(imageVector = Icons.Default.Description, contentDescription = null, tint = RahaBlue)
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column {
-                                    Text("دراسة الجدوى الشاملة للمشروع", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
-                                    Text("النموذج الاقتصادي والاستدامة بالجزائر", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(AppStrings.feasibilityStudy(currentLang), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
+                                    Text(AppStrings.feasibilityStudySub(currentLang), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
-                            Text("عرض ←", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = RahaBlue)
+                            Text(AppStrings.viewButton(currentLang), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = RahaBlue)
                         }
                     }
                 }
@@ -529,12 +529,12 @@ fun SettingsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "راحة (RAHA) - الإصدار 2.4.0 🇩🇿",
+                    text = AppStrings.appVersionInfo(currentLang),
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "دليلك الذكي لدورات المياه والحمامات ومرافق الوضوء بالجزائر",
+                    text = AppStrings.appSubtitle(currentLang),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )

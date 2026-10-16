@@ -38,6 +38,7 @@ data class FirestoreReview(
     val comment: String = "",
     val hasWaterAvailable: Boolean = true,
     val hasSoapPaper: Boolean = false,
+    val imageUrl: String? = null,
     val createdAt: Timestamp? = null
 )
 

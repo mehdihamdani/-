@@ -25,6 +25,7 @@ data class ReviewEntity(
     val comment: String,
     val hasWaterAvailable: Boolean = true,
     val hasSoapPaper: Boolean = true,
+    val imageUri: String? = null,
     val timestamp: Long = System.currentTimeMillis()
 ) {
     /**

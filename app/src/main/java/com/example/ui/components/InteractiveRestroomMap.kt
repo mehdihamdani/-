@@ -90,6 +90,9 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import com.example.ui.theme.RahaBlue
 import com.example.ui.theme.RahaGreen
 import com.example.ui.viewmodel.FilterState
+import com.example.data.model.AppLanguage
+import com.example.util.LocalAppLanguage
+import com.example.util.AppStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,6 +120,7 @@ fun InteractiveRestroomMap(
     onToggleRestAreas: (() -> Unit)? = null,
     onTogglePublicToilets: (() -> Unit)? = null,
     onResetAll: (() -> Unit)? = null,
+    onOpenOfflineCache: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var panOffsetX by remember { mutableFloatStateOf(0f) }
@@ -126,6 +130,7 @@ fun InteractiveRestroomMap(
     var showFilterSheet by remember { mutableStateOf(false) }
     var wilayaSearchText by remember { mutableStateOf("") }
     val filterSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val lang = LocalAppLanguage.current
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseRadius by infiniteTransition.animateFloat(
@@ -371,7 +376,7 @@ fun InteractiveRestroomMap(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "المدينة: ${userLocation.cityName}",
+                            text = "${AppStrings.yourLocation(lang)}: ${userLocation.cityName}",
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -391,10 +396,15 @@ fun InteractiveRestroomMap(
                             },
                             modifier = Modifier.heightIn(max = 350.dp)
                         ) {
+                            val wilayaSearchPlaceholder = when (lang) {
+                                AppLanguage.AR -> "ابحث في الـ 69 ولاية..."
+                                AppLanguage.FR -> "Rechercher parmi les 69 wilayas..."
+                                AppLanguage.EN -> "Search across 69 provinces..."
+                            }
                             OutlinedTextField(
                                 value = wilayaSearchText,
                                 onValueChange = { wilayaSearchText = it },
-                                placeholder = { Text("ابحث في الـ 69 ولاية...") },
+                                placeholder = { Text(wilayaSearchPlaceholder) },
                                 singleLine = true,
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -411,8 +421,9 @@ fun InteractiveRestroomMap(
                                 }
                             }
                             listToDisplay.forEach { wilaya ->
+                                val displayName = if (lang == AppLanguage.AR) wilaya.displayName else "${wilaya.code} - ${wilaya.frenchName}"
                                 DropdownMenuItem(
-                                    text = { Text(wilaya.displayName) },
+                                    text = { Text(displayName) },
                                     onClick = {
                                         showWilayaMenu = false
                                         wilayaSearchText = ""
@@ -427,25 +438,39 @@ fun InteractiveRestroomMap(
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    // Offline Room Cache Indicator Badge
+                    // Offline Room Cache Indicator Badge (Clickable to manage regions)
                     Surface(
                         shape = RoundedCornerShape(20.dp),
                         color = Color(0xFF1E392A).copy(alpha = 0.92f),
-                        shadowElevation = 4.dp
+                        shadowElevation = 4.dp,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { onOpenOfflineCache?.invoke() }
+                            .testTag("map_offline_badge_button")
                     ) {
+                        val offlineDesc = when (lang) {
+                            AppLanguage.AR -> "محفوظ محلياً بدون إنترنت"
+                            AppLanguage.FR -> "Enregistré localement hors-ligne"
+                            AppLanguage.EN -> "Locally cached offline"
+                        }
+                        val offlineLabel = when (lang) {
+                            AppLanguage.AR -> "أوفلاين"
+                            AppLanguage.FR -> "Hors-ligne"
+                            AppLanguage.EN -> "Offline"
+                        }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.CloudDone,
-                                contentDescription = "محفوظ محلياً بدون إنترنت",
+                                contentDescription = offlineDesc,
                                 tint = Color(0xFF52B788),
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "أوفلاين",
+                                text = offlineLabel,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                                 color = Color(0xFFD8F3DC)
                             )
@@ -458,6 +483,11 @@ fun InteractiveRestroomMap(
                             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
                             shadowElevation = 4.dp
                         ) {
+                            val switchGmapsDesc = when (lang) {
+                                AppLanguage.AR -> "التبديل إلى خرائط Google"
+                                AppLanguage.FR -> "Basculer vers Google Maps"
+                                AppLanguage.EN -> "Switch to Google Maps"
+                            }
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
@@ -466,13 +496,13 @@ fun InteractiveRestroomMap(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Map,
-                                    contentDescription = "التبديل إلى خرائط Google",
+                                    contentDescription = switchGmapsDesc,
                                     tint = RahaBlue,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "خرائط Google",
+                                    text = "Google Maps",
                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -576,9 +606,14 @@ fun InteractiveRestroomMap(
                 ),
                 modifier = Modifier.size(42.dp)
             ) {
+                val zoomInDesc = when (lang) {
+                    AppLanguage.AR -> "تكبير الخريطة"
+                    AppLanguage.FR -> "Zoomer"
+                    AppLanguage.EN -> "Zoom in"
+                }
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "تكبير الخريطة",
+                    contentDescription = zoomInDesc,
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
@@ -591,9 +626,14 @@ fun InteractiveRestroomMap(
                 ),
                 modifier = Modifier.size(42.dp)
             ) {
+                val zoomOutDesc = when (lang) {
+                    AppLanguage.AR -> "تصغير الخريطة"
+                    AppLanguage.FR -> "Dézoomer"
+                    AppLanguage.EN -> "Zoom out"
+                }
                 Icon(
                     imageVector = Icons.Default.Remove,
-                    contentDescription = "تصغير الخريطة",
+                    contentDescription = zoomOutDesc,
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
@@ -610,9 +650,14 @@ fun InteractiveRestroomMap(
                 ),
                 modifier = Modifier.size(42.dp)
             ) {
+                val resetDesc = when (lang) {
+                    AppLanguage.AR -> "إعادة ضبط الموقع"
+                    AppLanguage.FR -> "Recentrer la carte"
+                    AppLanguage.EN -> "Reset map position"
+                }
                 Icon(
                     imageVector = Icons.Default.LocationSearching,
-                    contentDescription = "إعادة ضبط الموقع",
+                    contentDescription = resetDesc,
                     tint = Color.White
                 )
             }
@@ -656,8 +701,13 @@ fun InteractiveRestroomMap(
                             }
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
+                                val displayName = when (lang) {
+                                    AppLanguage.AR -> selectedRestroom.name
+                                    AppLanguage.FR -> selectedRestroom.nameFr ?: selectedRestroom.name
+                                    AppLanguage.EN -> selectedRestroom.nameFr ?: selectedRestroom.name
+                                }
                                 Text(
-                                    text = selectedRestroom.name,
+                                    text = displayName,
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -674,7 +724,12 @@ fun InteractiveRestroomMap(
                             onClick = { onRestroomSelected(null) },
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(imageVector = Icons.Default.Close, contentDescription = "إغلاق")
+                            val closeDesc = when (lang) {
+                                AppLanguage.AR -> "إغلاق"
+                                AppLanguage.FR -> "Fermer"
+                                AppLanguage.EN -> "Close"
+                            }
+                            Icon(imageVector = Icons.Default.Close, contentDescription = closeDesc)
                         }
                     }
 
@@ -685,8 +740,14 @@ fun InteractiveRestroomMap(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        val feeText = if (selectedRestroom.isFree) {
+                            AppStrings.free(lang)
+                        } else {
+                            val cur = if (lang == AppLanguage.AR) "دج" else "DZD"
+                            "${selectedRestroom.priceDzd} $cur"
+                        }
                         StatusBadge(
-                            text = if (selectedRestroom.isFree) "مجاني" else "${selectedRestroom.priceDzd} دج",
+                            text = feeText,
                             color = if (selectedRestroom.isFree) Color(0xFF2B9348) else MaterialTheme.colorScheme.tertiary
                         )
                         StatusBadge(
@@ -694,7 +755,12 @@ fun InteractiveRestroomMap(
                             color = Color(0xFFE67E22)
                         )
                         if (selectedRestroom.hasWater && !selectedRestroom.waterCutReported) {
-                            StatusBadge(text = "ماء متوفر", color = WaterBlue)
+                            val waterText = when (lang) {
+                                AppLanguage.AR -> "ماء متوفر"
+                                AppLanguage.FR -> "Eau disponible"
+                                AppLanguage.EN -> "Running water"
+                            }
+                            StatusBadge(text = waterText, color = WaterBlue)
                         }
 
                         Spacer(modifier = Modifier.weight(1f))
@@ -704,7 +770,12 @@ fun InteractiveRestroomMap(
                         ) {
                             Icon(imageVector = Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("انطلق", fontWeight = FontWeight.Bold)
+                            val navText = when (lang) {
+                                AppLanguage.AR -> "انطلق"
+                                AppLanguage.FR -> "Itinéraire"
+                                AppLanguage.EN -> "Navigate"
+                            }
+                            Text(navText, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

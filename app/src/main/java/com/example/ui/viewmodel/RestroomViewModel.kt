@@ -17,6 +17,9 @@ import com.example.data.model.ReviewEntity
 import com.example.data.model.UserLocation
 import com.example.data.model.FirestoreMosqueDonationAccount
 import com.example.data.model.InitialMosqueDonationAccounts
+import com.example.data.model.AlgerianRegion
+import com.example.data.model.AlgerianRegions
+import com.example.data.local.RegionalRestroomsCatalogue
 import com.example.data.repository.FirestoreRestroomRepository
 import com.example.data.repository.RestroomRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -82,7 +85,10 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
     )
     val userLocation: StateFlow<UserLocation> = _userLocation
 
-    private val _mapProvider = MutableStateFlow(MapProviderType.GOOGLE_MAPS)
+    private val _mapProvider = MutableStateFlow(
+        if (com.example.util.MapsKeyValidator.isKeyValid()) MapProviderType.GOOGLE_MAPS
+        else MapProviderType.OFFLINE_VECTOR
+    )
     val mapProvider: StateFlow<MapProviderType> = _mapProvider
 
     private val _showInvalidApiKeyDialog = MutableStateFlow(false)
@@ -151,6 +157,12 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
 
     private val _showMosqueReviewDialog = MutableStateFlow(false)
     val showMosqueReviewDialog: StateFlow<Boolean> = _showMosqueReviewDialog
+
+    private val _cachedRegionIds = MutableStateFlow<Set<String>>(setOf(AlgerianRegions.REGION_CENTRE.id))
+    val cachedRegionIds: StateFlow<Set<String>> = _cachedRegionIds
+
+    private val _regionDownloadProgress = MutableStateFlow<Map<String, Float>>(emptyMap())
+    val regionDownloadProgress: StateFlow<Map<String, Float>> = _regionDownloadProgress
 
     private val _mosqueDonationAccounts = MutableStateFlow<List<FirestoreMosqueDonationAccount>>(
         InitialMosqueDonationAccounts.unverifiedRecords
@@ -320,6 +332,49 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
         }
     }
 
+    fun downloadRegion(region: AlgerianRegion) {
+        viewModelScope.launch {
+            val id = region.id
+            _regionDownloadProgress.value = _regionDownloadProgress.value + (id to 0.2f)
+            kotlinx.coroutines.delay(120)
+            _regionDownloadProgress.value = _regionDownloadProgress.value + (id to 0.6f)
+            kotlinx.coroutines.delay(120)
+            _regionDownloadProgress.value = _regionDownloadProgress.value + (id to 0.95f)
+
+            val restrooms = RegionalRestroomsCatalogue.getRestroomsForRegion(id)
+            repository.cacheRestStops(restrooms)
+
+            kotlinx.coroutines.delay(80)
+            _cachedRegionIds.value = _cachedRegionIds.value + id
+            _regionDownloadProgress.value = _regionDownloadProgress.value - id
+            _locationMessage.value = "تم تنزيل خريطة وبيانات ${region.nameAr} بنجاح للعمل بدون إنترنت (${restrooms.size} مرافق)"
+        }
+    }
+
+    fun removeCachedRegion(region: AlgerianRegion) {
+        viewModelScope.launch {
+            val id = region.id
+            val restrooms = RegionalRestroomsCatalogue.getRestroomsForRegion(id)
+            repository.removeRestStopsByIds(restrooms.map { it.id })
+            _cachedRegionIds.value = _cachedRegionIds.value - id
+            _locationMessage.value = "تمت إزالة التخزين المحلي لمنطقة ${region.nameAr}"
+        }
+    }
+
+    fun downloadAllRegions() {
+        viewModelScope.launch {
+            for (reg in AlgerianRegions.allRegions) {
+                _regionDownloadProgress.value = _regionDownloadProgress.value + (reg.id to 0.5f)
+            }
+            val allRestrooms = RegionalRestroomsCatalogue.getAllRegionalRestrooms()
+            repository.cacheRestStops(allRestrooms)
+            kotlinx.coroutines.delay(200)
+            _cachedRegionIds.value = AlgerianRegions.allRegions.map { it.id }.toSet()
+            _regionDownloadProgress.value = emptyMap()
+            _locationMessage.value = "تم تنزيل جميع خرائط ومرافق مناطق الجزائر الـ 5 (${allRestrooms.size} مرفقاً) بنجاح"
+        }
+    }
+
     fun setUserLocation(lat: Double, lng: Double, cityName: String) {
         _userLocation.value = UserLocation(lat, lng, cityName)
         viewModelScope.launch {
@@ -390,7 +445,8 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
         cleanlinessRating: Float,
         comment: String,
         hasWaterAvailable: Boolean,
-        hasSoapPaper: Boolean
+        hasSoapPaper: Boolean,
+        imageUri: String? = null
     ) {
         viewModelScope.launch {
             repository.submitReview(
@@ -400,7 +456,8 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
                 cleanlinessRating = cleanlinessRating,
                 comment = comment,
                 hasWaterAvailable = hasWaterAvailable,
-                hasSoapPaper = hasSoapPaper
+                hasSoapPaper = hasSoapPaper,
+                imageUri = imageUri
             )
             val updated = repository.getRestroomById(restroomId)
             if (updated != null && _selectedRestroom.value?.id == restroomId) {

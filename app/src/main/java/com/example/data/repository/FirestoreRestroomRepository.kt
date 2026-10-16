@@ -145,6 +145,7 @@ class FirestoreRestroomRepository(
             "createdAt" to FieldValue.serverTimestamp()
         )
         if (review.comment.isNotBlank()) data["comment"] = review.comment.trim()
+        if (!review.imageUrl.isNullOrBlank()) data["imageUrl"] = review.imageUrl.trim()
 
         try {
             reviewRef.set(data).await()

@@ -47,9 +47,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.data.model.AlgerianWilayas
+import com.example.data.model.AppLanguage
 import com.example.data.model.RestroomType
 import com.example.ui.theme.MosqueEmerald
 import com.example.ui.theme.TealPrimary
+import com.example.util.AppStrings
+import com.example.util.LocalAppLanguage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,6 +102,7 @@ fun AddRestroomDialog(
     var wilayaMenuExpanded by remember { mutableStateOf(false) }
     var wilayaSearchQuery by remember { mutableStateOf("") }
     val algerianWilayas = AlgerianWilayas.all69Wilayas
+    val lang = LocalAppLanguage.current
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -129,17 +133,17 @@ fun AddRestroomDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "إضافة دورة مياه أو حمام جديد",
+                            text = AppStrings.addDialogTitle(lang),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                     }
                     IconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "إلغاء")
+                        Icon(imageVector = Icons.Default.Close, contentDescription = AppStrings.cancel(lang))
                     }
                 }
 
                 Text(
-                    text = "ساهم في إثراء الدليل ومساعدة المواطنين والمسافرين في الجزائر.",
+                    text = AppStrings.addDialogSubtitle(lang),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -147,10 +151,15 @@ fun AddRestroomDialog(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 // Name
+                val namePlaceholder = when (lang) {
+                    AppLanguage.AR -> "اسم المكان (مثال: مسجد الفرقان أو حمام النور) *"
+                    AppLanguage.FR -> "Nom du lieu (ex : Mosquée El Forkane ou Hammam Ennour) *"
+                    AppLanguage.EN -> "Facility name (e.g. El Forkane Mosque or Ennour Hammam) *"
+                }
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("اسم المكان (مثال: مسجد الفرقان أو حمام النور) *") },
+                    label = { Text(namePlaceholder) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -163,10 +172,10 @@ fun AddRestroomDialog(
                     onExpandedChange = { typeMenuExpanded = it }
                 ) {
                     OutlinedTextField(
-                        value = selectedType.arabicName,
+                        value = selectedType.getDisplayName(lang),
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("نوع المرفق *") },
+                        label = { Text(AppStrings.facilityTypeLabel(lang)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeMenuExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -178,7 +187,7 @@ fun AddRestroomDialog(
                     ) {
                         RestroomType.entries.forEach { type ->
                             DropdownMenuItem(
-                                text = { Text(type.arabicName) },
+                                text = { Text(type.getDisplayName(lang)) },
                                 onClick = {
                                     selectedType = type
                                     typeMenuExpanded = false
@@ -190,7 +199,7 @@ fun AddRestroomDialog(
                                         hasWudu = true
                                         isFree = true
                                         priceText = "0"
-                                        openingHours = "أوقات الصلوات"
+                                        openingHours = if (lang == AppLanguage.AR) "أوقات الصلوات" else "Heures de prière"
                                     } else if (type == RestroomType.PRIVATE_COMMERCIAL) {
                                         hasShower = false
                                         isFree = false
@@ -211,11 +220,12 @@ fun AddRestroomDialog(
                     expanded = wilayaMenuExpanded,
                     onExpandedChange = { wilayaMenuExpanded = it }
                 ) {
+                    val currentWilayaDisplay = AlgerianWilayas.getLocalizedWilayaName(wilaya, lang)
                     OutlinedTextField(
-                        value = wilaya,
+                        value = currentWilayaDisplay,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("الولاية (69 ولاية) *") },
+                        label = { Text(AppStrings.wilayaLabel(lang)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = wilayaMenuExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -230,10 +240,15 @@ fun AddRestroomDialog(
                         }
                     ) {
                         // Search box inside dropdown
+                        val searchWilayaHint = when (lang) {
+                            AppLanguage.AR -> "ابحث برقم أو اسم الولاية..."
+                            AppLanguage.FR -> "Rechercher par code ou nom de wilaya..."
+                            AppLanguage.EN -> "Search by code or province name..."
+                        }
                         OutlinedTextField(
                             value = wilayaSearchQuery,
                             onValueChange = { wilayaSearchQuery = it },
-                            placeholder = { Text("ابحث برقم أو اسم الولاية...") },
+                            placeholder = { Text(searchWilayaHint) },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Search,
@@ -269,8 +284,13 @@ fun AddRestroomDialog(
                         }
 
                         if (filteredWilayas.isEmpty()) {
+                            val noMatchText = when (lang) {
+                                AppLanguage.AR -> "لا توجد ولاية مطابقة"
+                                AppLanguage.FR -> "Aucune wilaya correspondante"
+                                AppLanguage.EN -> "No matching province"
+                            }
                             DropdownMenuItem(
-                                text = { Text("لا توجد ولاية مطابقة", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                                text = { Text(noMatchText, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                                 onClick = {}
                             )
                         } else {
@@ -282,12 +302,14 @@ fun AddRestroomDialog(
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
+                                            val primaryName = if (lang == AppLanguage.AR) w.displayName else "${w.code} - ${w.frenchName}"
+                                            val secondaryName = if (lang == AppLanguage.AR) w.frenchName else w.arabicName
                                             Text(
-                                                text = w.displayName,
+                                                text = primaryName,
                                                 fontWeight = if (wilaya == w.arabicName) FontWeight.Bold else FontWeight.Normal
                                             )
                                             Text(
-                                                text = w.frenchName,
+                                                text = secondaryName,
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
@@ -310,7 +332,7 @@ fun AddRestroomDialog(
                 OutlinedTextField(
                     value = commune,
                     onValueChange = { commune = it },
-                    label = { Text("البلدية أو الحي (مثال: بئر مراد رايس)") },
+                    label = { Text(AppStrings.communeLabel(lang)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -329,14 +351,14 @@ fun AddRestroomDialog(
                             if (it) priceText = "0"
                         }
                     )
-                    Text("دخول مجاني", style = MaterialTheme.typography.bodyMedium)
+                    Text(AppStrings.free(lang), style = MaterialTheme.typography.bodyMedium)
 
                     if (!isFree) {
                         Spacer(modifier = Modifier.width(16.dp))
                         OutlinedTextField(
                             value = priceText,
                             onValueChange = { priceText = it },
-                            label = { Text("السعر (دج)") },
+                            label = { Text(AppStrings.priceLabel(lang)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f),
                             singleLine = true
@@ -348,37 +370,37 @@ fun AddRestroomDialog(
 
                 // Checkboxes for Amenities
                 Text(
-                    text = "المرافق المتوفرة:",
+                    text = AppStrings.availableAmenities(lang),
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = hasWater, onCheckedChange = { hasWater = it })
-                    Text("ماء جاري متوفر", style = MaterialTheme.typography.bodySmall)
+                    Text("💧 " + AppStrings.waterAvailable(lang), style = MaterialTheme.typography.bodySmall)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = hasSoapPaper, onCheckedChange = { hasSoapPaper = it })
-                    Text("صابون ومجفف أيدي", style = MaterialTheme.typography.bodySmall)
+                    Text("🧼 " + AppStrings.filterSoapPaper(lang), style = MaterialTheme.typography.bodySmall)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = hasWomenSection, onCheckedChange = { hasWomenSection = it })
-                    Text("قسم مخصص للنساء", style = MaterialTheme.typography.bodySmall)
+                    Text("🧕 " + AppStrings.womenSection(lang), style = MaterialTheme.typography.bodySmall)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = isAccessiblePmr, onCheckedChange = { isAccessiblePmr = it })
-                    Text("مهيأ لذوي الاحتياجات الخاصة", style = MaterialTheme.typography.bodySmall)
+                    Text("♿ " + AppStrings.accessiblePmr(lang), style = MaterialTheme.typography.bodySmall)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = hasWudu, onCheckedChange = { hasWudu = it })
-                    Text("مرافق وضوء", style = MaterialTheme.typography.bodySmall)
+                    Text("🕌 " + AppStrings.wuduAvailable(lang), style = MaterialTheme.typography.bodySmall)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = hasShower, onCheckedChange = { hasShower = it })
-                    Text("دوش / استحمام ساخن", style = MaterialTheme.typography.bodySmall)
+                    Text("🚿 " + AppStrings.hotShower(lang), style = MaterialTheme.typography.bodySmall)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = hasChangingTable, onCheckedChange = { hasChangingTable = it })
-                    Text("طاولة تغيير حفاضات للأطفال", style = MaterialTheme.typography.bodySmall)
+                    Text("👶 " + AppStrings.babyChanging(lang), style = MaterialTheme.typography.bodySmall)
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -387,7 +409,7 @@ fun AddRestroomDialog(
                 OutlinedTextField(
                     value = openingHours,
                     onValueChange = { openingHours = it },
-                    label = { Text("أوقات العمل (مثال: 24/7 أو 08:00 - 20:00)") },
+                    label = { Text(AppStrings.openingHours(lang)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -398,7 +420,7 @@ fun AddRestroomDialog(
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("ملاحظات إضافية حول النظافة أو الوصف") },
+                    label = { Text(AppStrings.notes(lang)) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 3
                 )
@@ -406,11 +428,16 @@ fun AddRestroomDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 // Donation Current Account (CCP / BaridiMob)
+                val ccpPlaceholder = when (lang) {
+                    AppLanguage.AR -> "مثال: 0021458798 مفتاح 45 أو RIP BaridiMob"
+                    AppLanguage.FR -> "Ex : 0021458798 clé 45 ou RIP BaridiMob"
+                    AppLanguage.EN -> "e.g. 0021458798 key 45 or BaridiMob RIP"
+                }
                 OutlinedTextField(
                     value = donationCcp,
                     onValueChange = { donationCcp = it },
-                    label = { Text("الحساب الجاري للتبرع (CCP / BaridiMob) - اختياري") },
-                    placeholder = { Text("مثال: 0021458798 مفتاح 45 أو RIP BaridiMob") },
+                    label = { Text(AppStrings.mosqueCcpNotice(lang)) },
+                    placeholder = { Text(ccpPlaceholder) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.VolunteerActivism,
@@ -432,7 +459,7 @@ fun AddRestroomDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("إلغاء")
+                        Text(AppStrings.cancel(lang))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
@@ -442,7 +469,7 @@ fun AddRestroomDialog(
                                     name,
                                     nameFr,
                                     wilaya,
-                                    commune.ifBlank { "وسط المدينة" },
+                                    commune.ifBlank { if (lang == AppLanguage.AR) "وسط المدينة" else "Centre-ville" },
                                     selectedType,
                                     isFree,
                                     priceText.toIntOrNull() ?: 0,
@@ -464,7 +491,7 @@ fun AddRestroomDialog(
                         colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
                         modifier = Modifier.testTag("confirm_add_restroom_button")
                     ) {
-                        Text("نشر وإضافة للمجتمع")
+                        Text(AppStrings.submitContribution(lang))
                     }
                 }
             }

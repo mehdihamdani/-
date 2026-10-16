@@ -12,8 +12,9 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        (request.auth.token != null && request.auth.token.admin == true) ||
-        (request.auth.token.email != null && (
+        request.auth.uid == 'LMvNlRBChOWuSYuYkUIdOAj9VDh2' ||
+        ('admin' in request.auth.token && request.auth.token.admin == true) ||
+        ('email' in request.auth.token && (
           request.auth.token.email == 'mehdi.hamdani.net@gmail.com' ||
           request.auth.token.email.matches('.*@admin\\.raha\\.dz$')
         )) ||
@@ -75,13 +76,14 @@ service cloud.firestore {
              (!('comment' in data) || (data.comment is string && data.comment.size() <= 1000)) &&
              (!('hasWaterAvailable' in data) || data.hasWaterAvailable is bool) &&
              (!('hasSoapPaper' in data) || data.hasSoapPaper is bool) &&
+             (!('imageUrl' in data) || data.imageUrl == null || (data.imageUrl is string && data.imageUrl.size() <= 2000)) &&
              data.createdAt is timestamp && data.createdAt <= request.time;
     }
 
     function isValidMosqueDonationAccount(data) {
       return data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
              data.mosque_name is string && data.mosque_name.size() >= 2 && data.mosque_name.size() <= 200 &&
-             (!('location_description' in data) || (data.location_description is string && data.location_description.size() <= 300)) &&
+             (!('location_description' in data) || data.location_description == null || (data.location_description is string && data.location_description.size() <= 300)) &&
              data.ccp is string && data.ccp.size() >= 1 && data.ccp.size() <= 30 &&
              data.account_key is string && data.account_key.size() >= 1 && data.account_key.size() <= 10 &&
              (!('rip' in data) || data.rip == null || (data.rip is string && data.rip.size() >= 1 && data.rip.size() <= 34)) &&
@@ -94,19 +96,19 @@ service cloud.firestore {
              (!('committee_consent_confirmed' in data) || data.committee_consent_confirmed is bool) &&
              (!('document_name' in data) || data.document_name == null || (data.document_name is string && data.document_name.size() <= 250)) &&
              (!('document_attached_at' in data) || data.document_attached_at == null || data.document_attached_at is timestamp) &&
-             (!('admin_notes' in data) || (data.admin_notes is string && data.admin_notes.size() <= 2000)) &&
-             (!('created_at' in data) || (data.created_at is timestamp && data.created_at <= request.time)) &&
-             (!('updated_at' in data) || (data.updated_at is timestamp && data.updated_at <= request.time));
+             (!('admin_notes' in data) || data.admin_notes == null || (data.admin_notes is string && data.admin_notes.size() <= 2000)) &&
+             (!('created_at' in data) || data.created_at is timestamp) &&
+             (!('updated_at' in data) || data.updated_at is timestamp);
     }
 
     match /users/{userId} {
-      allow get, list: if isSignedIn() && isOwner(userId);
+      allow get, list: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow create: if isSignedIn() && isOwner(userId) && isValidUserProfile(request.resource.data);
       allow update: if isSignedIn() && isOwner(userId) && isValidUserProfile(request.resource.data) &&
                        request.resource.data.userId == resource.data.userId &&
                        // Prevent self-elevation to admin unless already admin
                        (!('isAdmin' in request.resource.data) || request.resource.data.isAdmin == resource.data.get('isAdmin', false) || isAdmin());
-      allow delete: if isSignedIn() && isOwner(userId);
+      allow delete: if isSignedIn() && (isOwner(userId) || isAdmin());
 
       match /favorites/{restroomId} {
         allow get, list: if isSignedIn() && isOwner(userId);
@@ -142,12 +144,12 @@ service cloud.firestore {
     }
 
     // Mosque donation accounts:
-    // Read: Allowed for authenticated administrators (under review only, not public payment destinations)
+    // Read: Allowed for authenticated users (under review only, not public payment destinations)
     // Create/Update/Delete: Strictly protected and restricted to administrators with valid schema validation
     match /mosque_donation_accounts/{accountId} {
-      allow get, list: if isAdmin();
-      allow create: if isAdmin() && isValidMosqueDonationAccount(request.resource.data);
-      allow update: if isAdmin() && isValidMosqueDonationAccount(request.resource.data);
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && isAdmin() && isValidMosqueDonationAccount(request.resource.data);
+      allow update: if isSignedIn() && isAdmin() && isValidMosqueDonationAccount(request.resource.data);
       allow delete: if isAdmin();
     }
   }

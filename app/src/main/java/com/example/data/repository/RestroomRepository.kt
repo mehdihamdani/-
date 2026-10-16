@@ -65,6 +65,12 @@ class RestroomRepository(
         updateOfflineCacheStats(total, now)
     }
 
+    suspend fun removeRestStopsByIds(ids: List<Long>) = withContext(Dispatchers.IO) {
+        dao.deleteRestroomsByIds(ids)
+        val total = dao.countRestrooms()
+        updateOfflineCacheStats(total, System.currentTimeMillis())
+    }
+
     private suspend fun updateOfflineCacheStats(count: Int, timestamp: Long = System.currentTimeMillis()) {
         val wilayasCount = dao.countCachedWilayas()
         cacheMetadataDao?.saveMetadata(
@@ -151,7 +157,8 @@ class RestroomRepository(
         cleanlinessRating: Float,
         comment: String,
         hasWaterAvailable: Boolean,
-        hasSoapPaper: Boolean
+        hasSoapPaper: Boolean,
+        imageUri: String? = null
     ): Long = withContext(Dispatchers.IO) {
         val review = ReviewEntity(
             restroomId = restroomId,
@@ -161,6 +168,7 @@ class RestroomRepository(
             comment = comment.trim(),
             hasWaterAvailable = hasWaterAvailable,
             hasSoapPaper = hasSoapPaper,
+            imageUri = imageUri,
             timestamp = System.currentTimeMillis()
         )
         val insertedId = reviewDao?.insertReview(review) ?: 0L

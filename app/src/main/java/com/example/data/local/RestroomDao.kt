@@ -63,4 +63,7 @@ interface RestroomDao {
 
     @Query("DELETE FROM restrooms WHERE id = :id")
     suspend fun deleteRestroom(id: Long)
+
+    @Query("DELETE FROM restrooms WHERE id IN (:ids)")
+    suspend fun deleteRestroomsByIds(ids: List<Long>)
 }

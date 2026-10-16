@@ -42,6 +42,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.example.data.model.AppLanguage
+import com.example.util.LocalAppLanguage
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -108,6 +110,8 @@ fun MapSearchBar(
         }
     }
 
+    val lang = LocalAppLanguage.current
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -135,9 +139,14 @@ fun MapSearchBar(
                             .background(TealPrimary.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
+                        val searchContentDesc = when (lang) {
+                            AppLanguage.AR -> "بحث في الجزائر"
+                            AppLanguage.FR -> "Rechercher en Algérie"
+                            AppLanguage.EN -> "Search in Algeria"
+                        }
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "بحث في الجزائر",
+                            contentDescription = searchContentDesc,
                             tint = TealPrimary,
                             modifier = Modifier.size(20.dp)
                         )
@@ -152,8 +161,13 @@ fun MapSearchBar(
                             isExpanded = it.isNotBlank()
                         },
                         placeholder = {
+                            val placeholderText = when (lang) {
+                                AppLanguage.AR -> "ابحث بالولاية (مثلاً: وهران، سطيف...) أو الحي"
+                                AppLanguage.FR -> "Rechercher par wilaya (ex: Oran, Sétif...) ou quartier"
+                                AppLanguage.EN -> "Search by wilaya (e.g. Oran, Setif...) or district"
+                            }
                             Text(
-                                text = "ابحث بالولاية (مثلاً: وهران، سطيف...) أو الحي",
+                                text = placeholderText,
                                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                                 maxLines = 1,
@@ -173,6 +187,11 @@ fun MapSearchBar(
                     )
 
                     if (searchQuery.isNotEmpty()) {
+                        val clearDesc = when (lang) {
+                            AppLanguage.AR -> "مسح البحث"
+                            AppLanguage.FR -> "Effacer la recherche"
+                            AppLanguage.EN -> "Clear search"
+                        }
                         IconButton(
                             onClick = {
                                 onSearchQueryChange("")
@@ -182,7 +201,7 @@ fun MapSearchBar(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Clear,
-                                contentDescription = "مسح البحث",
+                                contentDescription = clearDesc,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -238,13 +257,23 @@ fun MapSearchBar(
                                     Spacer(modifier = Modifier.width(12.dp))
 
                                     Column(modifier = Modifier.weight(1f)) {
+                                        val wilayaHeader = when (lang) {
+                                            AppLanguage.AR -> "ولاية ${wilaya.arabicName}"
+                                            AppLanguage.FR -> "Wilaya de ${wilaya.frenchName}"
+                                            AppLanguage.EN -> "Wilaya of ${wilaya.frenchName}"
+                                        }
+                                        val wilayaSubheader = when (lang) {
+                                            AppLanguage.AR -> "${wilaya.frenchName} • انقر للانتقال على الخريطة"
+                                            AppLanguage.FR -> "${wilaya.arabicName} • Cliquer pour afficher sur la carte"
+                                            AppLanguage.EN -> "${wilaya.arabicName} • Tap to view on map"
+                                        }
                                         Text(
-                                            text = "ولاية ${wilaya.arabicName}",
+                                            text = wilayaHeader,
                                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
                                         Text(
-                                            text = "${wilaya.frenchName} • انقر للانتقال على الخريطة",
+                                            text = wilayaSubheader,
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -290,8 +319,13 @@ fun MapSearchBar(
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
+                    val quickCitiesLabel = when (lang) {
+                        AppLanguage.AR -> "مدن سريعة:"
+                        AppLanguage.FR -> "Villes rapides :"
+                        AppLanguage.EN -> "Quick cities:"
+                    }
                     Text(
-                        text = "مدن سريعة:",
+                        text = quickCitiesLabel,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -299,7 +333,7 @@ fun MapSearchBar(
             }
 
             popularWilayas.forEach { wilaya ->
-                val isSelected = currentWilayaName.contains(wilaya.arabicName)
+                val isSelected = currentWilayaName.contains(wilaya.arabicName) || currentWilayaName.contains(wilaya.frenchName)
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = if (isSelected) TealPrimary else MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
@@ -312,8 +346,9 @@ fun MapSearchBar(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
+                        val cityName = if (lang == AppLanguage.AR) wilaya.arabicName else wilaya.frenchName
                         Text(
-                            text = "${wilaya.arabicName} (${wilaya.code})",
+                            text = "$cityName (${wilaya.code})",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
                                 color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface

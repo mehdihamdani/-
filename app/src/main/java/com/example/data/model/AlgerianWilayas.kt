@@ -13,6 +13,12 @@ data class WilayaInfo(
     val displayName: String
         get() = "${String.format("%02d", code)} - $arabicName"
 
+    fun getDisplayName(lang: AppLanguage): String =
+        "${String.format("%02d", code)} - ${if (lang == AppLanguage.AR) arabicName else frenchName}"
+
+    fun getName(lang: AppLanguage): String =
+        if (lang == AppLanguage.AR) arabicName else frenchName
+
     val fullSearchableText: String
         get() = "$code $arabicName $frenchName".lowercase()
 }
@@ -113,4 +119,15 @@ object AlgerianWilayas {
     fun findByCode(code: Int): WilayaInfo? {
         return all69Wilayas.find { it.code == code }
     }
+
+    fun getLocalizedWilayaName(rawName: String, lang: AppLanguage): String {
+        val trimmed = rawName.trim().removePrefix("ولاية ").trim()
+        val info = findByName(trimmed) ?: findByName(rawName)
+        return if (info != null) {
+            info.getName(lang)
+        } else {
+            rawName
+        }
+    }
 }
+

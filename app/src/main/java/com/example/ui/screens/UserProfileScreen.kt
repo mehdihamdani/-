@@ -104,6 +104,9 @@ import com.example.ui.theme.RahaGreen
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.TealPrimary
 import com.example.ui.theme.WaterBlue
+import com.example.data.model.AppLanguage
+import com.example.util.AppStrings
+import com.example.util.LocalAppLanguage
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
@@ -124,6 +127,7 @@ fun UserProfileScreen(
     onSignOutClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lang = LocalAppLanguage.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val firebaseUser = remember { FirebaseAuth.getInstance().currentUser }
@@ -244,7 +248,7 @@ fun UserProfileScreen(
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = Icons.Default.Check,
-                                        contentDescription = "هوية معتمدة",
+                                        contentDescription = AppStrings.biometricIdVerified(lang),
                                         tint = Color.White,
                                         modifier = Modifier.size(18.dp)
                                     )
@@ -256,7 +260,7 @@ fun UserProfileScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = profileData.fullName,
+                        text = if (lang != AppLanguage.AR && profileData.fullNameFr.isNotBlank()) profileData.fullNameFr else profileData.fullName,
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.ExtraBold,
                             color = Color.White
@@ -290,8 +294,13 @@ fun UserProfileScreen(
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
+                                val badgeText = when (lang) {
+                                    AppLanguage.AR -> profileData.badgeTitle
+                                    AppLanguage.FR -> "Contributeur Vérifié 🇩🇿"
+                                    AppLanguage.EN -> "Verified Contributor 🇩🇿"
+                                }
                                 Text(
-                                    text = profileData.badgeTitle,
+                                    text = badgeText,
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = Color.White,
                                         fontWeight = FontWeight.Bold
@@ -305,7 +314,7 @@ fun UserProfileScreen(
                             color = if (profileData.isIdCardVerified) RahaGreen else Color(0xFFFF9800)
                         ) {
                             Text(
-                                text = if (profileData.isIdCardVerified) "هوية بيومترية موثقة 🇩🇿" else "هوية غير مسحوبة",
+                                text = if (profileData.isIdCardVerified) AppStrings.biometricIdVerified(lang) else AppStrings.biometricIdUnverified(lang),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     color = Color.White,
                                     fontWeight = FontWeight.Bold
@@ -332,7 +341,7 @@ fun UserProfileScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             StatBoxItem(
-                                title = "دورات مياه مضافة",
+                                title = AppStrings.statAddedPlaces(lang),
                                 value = profileData.contributionsCount.toString(),
                                 icon = Icons.Default.Add,
                                 tint = TealPrimary
@@ -344,7 +353,7 @@ fun UserProfileScreen(
                                 color = MaterialTheme.colorScheme.outlineVariant
                             )
                             StatBoxItem(
-                                title = "تقييمات ومراجعات",
+                                title = AppStrings.statReviews(lang),
                                 value = profileData.reviewsCount.toString(),
                                 icon = Icons.Default.RateReview,
                                 tint = RahaBlue
@@ -356,7 +365,7 @@ fun UserProfileScreen(
                                 color = MaterialTheme.colorScheme.outlineVariant
                             )
                             StatBoxItem(
-                                title = "نقاط المساهمة",
+                                title = AppStrings.statReputation(lang),
                                 value = profileData.reputationScore.toString(),
                                 icon = Icons.Default.Star,
                                 tint = Color(0xFFFFA000)
@@ -384,21 +393,21 @@ fun UserProfileScreen(
                 Tab(
                     selected = activeSubTab == 0,
                     onClick = { activeSubTab = 0 },
-                    text = { Text("البيانات والهوية", fontWeight = FontWeight.Bold) },
+                    text = { Text(AppStrings.tabIdentity(lang), fontWeight = FontWeight.Bold) },
                     icon = { Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.testTag("tab_personal_info")
                 )
                 Tab(
                     selected = activeSubTab == 1,
                     onClick = { activeSubTab = 1 },
-                    text = { Text("دورات المياه (${profileData.contributionsCount})", fontWeight = FontWeight.Bold) },
+                    text = { Text("${AppStrings.myContributions(lang)} (${profileData.contributionsCount})", fontWeight = FontWeight.Bold) },
                     icon = { Icon(Icons.Default.Map, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.testTag("tab_my_restrooms")
                 )
                 Tab(
                     selected = activeSubTab == 2,
                     onClick = { activeSubTab = 2 },
-                    text = { Text("سجل النشاط", fontWeight = FontWeight.Bold) },
+                    text = { Text(AppStrings.tabHistory(lang), fontWeight = FontWeight.Bold) },
                     icon = { Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.testTag("tab_contribution_history")
                 )
@@ -447,12 +456,17 @@ fun UserProfileScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "تسجيل وربط الحسابات المتاحة",
+                                text = AppStrings.linkedAccounts(lang),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+                            val connectedSub = when (lang) {
+                                AppLanguage.AR -> "يمكنك التسجيل وربط حسابك عبر Google أو Facebook أو TikTok أو بالمسح المباشر لبطاقة الهوية."
+                                AppLanguage.FR -> "Enregistrez et liez vos comptes Google, Facebook, TikTok ou numérisez votre carte d'identité."
+                                AppLanguage.EN -> "Register and link your Google, Facebook, TikTok accounts or scan your National ID card."
+                            }
                             Text(
-                                text = "يمكنك التسجيل وربط حسابك عبر Google أو Facebook أو TikTok أو بالمسح المباشر لبطاقة الهوية.",
+                                text = connectedSub,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -460,12 +474,18 @@ fun UserProfileScreen(
                             Spacer(modifier = Modifier.height(14.dp))
 
                             // Google Linking Row
+                            val notConnectedText = when (lang) {
+                                AppLanguage.AR -> "غير متصل"
+                                AppLanguage.FR -> "Non connecté"
+                                AppLanguage.EN -> "Not connected"
+                            }
                             SocialLinkRow(
-                                title = "حساب Google",
-                                subtitle = if (profileData.isGoogleLinked) profileData.email else "غير متصل",
+                                title = AppStrings.googleAccountLabel(lang),
+                                subtitle = if (profileData.isGoogleLinked) profileData.email else notConnectedText,
                                 isConnected = profileData.isGoogleLinked,
                                 badgeColor = Color(0xFF4285F4),
                                 iconLabel = "G",
+                                lang = lang,
                                 onToggle = {
                                     if (!profileData.isGoogleLinked) {
                                         profileData = profileData.copy(isGoogleLinked = true)
@@ -478,11 +498,12 @@ fun UserProfileScreen(
 
                             // Facebook Linking Row
                             SocialLinkRow(
-                                title = "حساب Facebook",
-                                subtitle = if (profileData.isFacebookLinked) "مرتبط بنجاح (Mehdi Hamdani)" else "انقر للربط وتسجيل الدخول",
+                                title = "Facebook",
+                                subtitle = if (profileData.isFacebookLinked) "Mehdi Hamdani" else notConnectedText,
                                 isConnected = profileData.isFacebookLinked,
                                 badgeColor = Color(0xFF1877F2),
                                 iconLabel = "f",
+                                lang = lang,
                                 onToggle = {
                                     val nextState = !profileData.isFacebookLinked
                                     profileData = profileData.copy(isFacebookLinked = nextState)
@@ -494,11 +515,12 @@ fun UserProfileScreen(
 
                             // TikTok Linking Row
                             SocialLinkRow(
-                                title = "حساب TikTok",
-                                subtitle = if (profileData.isTikTokLinked) "مرتبط بنجاح (@mehdi_dz)" else "انقر للربط بحساب تيك توك",
+                                title = "TikTok",
+                                subtitle = if (profileData.isTikTokLinked) "@mehdi_dz" else notConnectedText,
                                 isConnected = profileData.isTikTokLinked,
                                 badgeColor = Color(0xFF000000),
                                 iconLabel = "TT",
+                                lang = lang,
                                 onToggle = {
                                     val nextState = !profileData.isTikTokLinked
                                     profileData = profileData.copy(isTikTokLinked = nextState)
@@ -541,14 +563,19 @@ fun UserProfileScreen(
 
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "مسح بطاقة التعريف الوطنية (NIN)",
+                                            text = AppStrings.scanNationalId(lang),
                                             style = MaterialTheme.typography.titleSmall.copy(
                                                 fontWeight = FontWeight.Bold,
                                                 color = RahaGreen
                                             )
                                         )
+                                        val scannerSub = when (lang) {
+                                            AppLanguage.AR -> "استخراج تلقائي للاسم، اللقب، رقم التعريف، وتاريخ ومكان الميلاد"
+                                            AppLanguage.FR -> "Extraction automatique du nom, prénom, NIN et date de naissance"
+                                            AppLanguage.EN -> "Automatic extraction of name, NIN, birth date and place"
+                                        }
                                         Text(
-                                            text = "استخراج تلقائي للاسم، اللقب، رقم التعريف، وتاريخ ومكان الميلاد",
+                                            text = scannerSub,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -560,7 +587,12 @@ fun UserProfileScreen(
                                         colors = ButtonDefaults.buttonColors(containerColor = RahaGreen),
                                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                     ) {
-                                        Text("مسح الآن", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                        val scanNowLabel = when (lang) {
+                                            AppLanguage.AR -> "مسح الآن"
+                                            AppLanguage.FR -> "Scanner"
+                                            AppLanguage.EN -> "Scan"
+                                        }
+                                        Text(scanNowLabel, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -585,7 +617,7 @@ fun UserProfileScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "إدارة البيانات الشخصية",
+                                    text = AppStrings.tabIdentity(lang),
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -593,8 +625,13 @@ fun UserProfileScreen(
                                     shape = RoundedCornerShape(6.dp),
                                     color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                                 ) {
+                                    val editableLabel = when (lang) {
+                                        AppLanguage.AR -> "قابلة للتعديل"
+                                        AppLanguage.FR -> "Modifiable"
+                                        AppLanguage.EN -> "Editable"
+                                    }
                                     Text(
-                                        text = "قابلة للتعديل",
+                                        text = editableLabel,
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -608,7 +645,7 @@ fun UserProfileScreen(
                             OutlinedTextField(
                                 value = editFullName,
                                 onValueChange = { editFullName = it },
-                                label = { Text("الاسم واللقب") },
+                                label = { Text(AppStrings.fullName(lang)) },
                                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                                 singleLine = true,
                                 shape = RoundedCornerShape(12.dp),
@@ -623,7 +660,7 @@ fun UserProfileScreen(
                             OutlinedTextField(
                                 value = editPhone,
                                 onValueChange = { editPhone = it },
-                                label = { Text("رقم الهاتف (الجزائر)") },
+                                label = { Text(AppStrings.phoneNumber(lang)) },
                                 leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                                 singleLine = true,
@@ -635,13 +672,13 @@ fun UserProfileScreen(
 
                             Spacer(modifier = Modifier.height(10.dp))
 
-                            // Wilaya Dropdown (58 Wilayas)
+                            // Wilaya Dropdown (69 Wilayas)
                             Box(modifier = Modifier.fillMaxWidth()) {
                                 OutlinedTextField(
                                     value = editWilaya,
                                     onValueChange = {},
                                     readOnly = true,
-                                    label = { Text("الولاية (من بين 69 ولاية)") },
+                                    label = { Text(AppStrings.wilayaLabel(lang)) },
                                     leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
                                     trailingIcon = {
                                         IconButton(onClick = { isWilayaDropdownOpen = true }) {
@@ -665,7 +702,7 @@ fun UserProfileScreen(
                                     OutlinedTextField(
                                         value = wilayaFilterText,
                                         onValueChange = { wilayaFilterText = it },
-                                        placeholder = { Text("ابحث في الـ 69 ولاية...") },
+                                        placeholder = { Text(AppStrings.searchPlaceholder(lang)) },
                                         singleLine = true,
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -681,9 +718,9 @@ fun UserProfileScreen(
 
                                     filteredList.forEach { wilaya ->
                                         DropdownMenuItem(
-                                            text = { Text(wilaya.displayName) },
+                                            text = { Text(wilaya.getDisplayName(lang)) },
                                             onClick = {
-                                                editWilaya = wilaya.displayName
+                                                editWilaya = wilaya.getDisplayName(lang)
                                                 isWilayaDropdownOpen = false
                                                 wilayaFilterText = ""
                                             }
@@ -698,7 +735,7 @@ fun UserProfileScreen(
                             OutlinedTextField(
                                 value = editCommune,
                                 onValueChange = { editCommune = it },
-                                label = { Text("البلدية أو الحي") },
+                                label = { Text(AppStrings.communeLabel(lang)) },
                                 singleLine = true,
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
@@ -712,7 +749,7 @@ fun UserProfileScreen(
                             OutlinedTextField(
                                 value = editNin,
                                 onValueChange = { editNin = it },
-                                label = { Text("رقم التعريف الوطني البيومتري (NIN - 18 رقماً)") },
+                                label = { Text(AppStrings.ninField(lang)) },
                                 leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 singleLine = true,
@@ -732,7 +769,7 @@ fun UserProfileScreen(
                                 OutlinedTextField(
                                     value = editDateOfBirth,
                                     onValueChange = { editDateOfBirth = it },
-                                    label = { Text("تاريخ الميلاد") },
+                                    label = { Text(AppStrings.dobField(lang)) },
                                     singleLine = true,
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.weight(1.3f)
@@ -740,7 +777,7 @@ fun UserProfileScreen(
                                 OutlinedTextField(
                                     value = editBloodGroup,
                                     onValueChange = { editBloodGroup = it },
-                                    label = { Text("فصيلة الدم") },
+                                    label = { Text(AppStrings.bloodGroupField(lang)) },
                                     singleLine = true,
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.weight(0.7f)
@@ -761,8 +798,13 @@ fun UserProfileScreen(
                                         dateOfBirth = editDateOfBirth,
                                         bloodGroup = editBloodGroup
                                     )
-                                    saveSuccessMessage = "تم حفظ التعديلات وتحديث البيانات الشخصية بنجاح! ✅"
-                                    Toast.makeText(context, "تم حفظ البيانات بنجاح", Toast.LENGTH_SHORT).show()
+                                    val savedMsg = when (lang) {
+                                        AppLanguage.AR -> "تم حفظ التعديلات وتحديث البيانات الشخصية بنجاح! ✅"
+                                        AppLanguage.FR -> "Modifications enregistrées avec succès ! ✅"
+                                        AppLanguage.EN -> "Changes saved successfully! ✅"
+                                    }
+                                    saveSuccessMessage = savedMsg
+                                    Toast.makeText(context, savedMsg, Toast.LENGTH_SHORT).show()
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
                                 shape = RoundedCornerShape(12.dp),
@@ -772,7 +814,7 @@ fun UserProfileScreen(
                             ) {
                                 Icon(imageVector = Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("حفظ التعديلات", fontWeight = FontWeight.Bold)
+                                Text(AppStrings.saveChanges(lang), fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -791,7 +833,7 @@ fun UserProfileScreen(
                     ) {
                         Icon(imageVector = Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("تسجيل الخروج من الحساب", fontWeight = FontWeight.Bold)
+                        Text(AppStrings.signOut(lang), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -807,13 +849,23 @@ fun UserProfileScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
+                            val userRestroomsTitle = when (lang) {
+                                AppLanguage.AR -> "دورات المياه التي ساهمت بإضافتها"
+                                AppLanguage.FR -> "Sanitaires que vous avez ajoutés"
+                                AppLanguage.EN -> "Restrooms you contributed"
+                            }
+                            val userRestroomsSub = when (lang) {
+                                AppLanguage.AR -> "مساهماتك تساعد المسافرين والمواطنين في الجزائر"
+                                AppLanguage.FR -> "Vos contributions aident les voyageurs en Algérie"
+                                AppLanguage.EN -> "Your contributions help travelers in Algeria"
+                            }
                             Text(
-                                text = "دورات المياه التي ساهمت بإضافتها",
+                                text = userRestroomsTitle,
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "مساهماتك تساعد المسافرين والمواطنين في الجزائر",
+                                text = userRestroomsSub,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -828,7 +880,7 @@ fun UserProfileScreen(
                         ) {
                             Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("إضافة مرفق", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(AppStrings.addRestroom(lang), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -890,6 +942,7 @@ fun UserProfileScreen(
                 items(displayList, key = { it.id }) { restroom ->
                     UserAddedRestroomCard(
                         restroom = restroom,
+                        lang = lang,
                         onClick = { onRestroomClick(restroom) },
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
                     )
@@ -904,13 +957,23 @@ fun UserProfileScreen(
                             .fillMaxWidth()
                             .padding(16.dp)
                     ) {
+                        val historyTitle = when (lang) {
+                            AppLanguage.AR -> "سجل الأنشطة والمساهمات المجتمعية"
+                            AppLanguage.FR -> "Historique des activités et contributions"
+                            AppLanguage.EN -> "Activity History & Contributions"
+                        }
+                        val historySub = when (lang) {
+                            AppLanguage.AR -> "تتبع نقاطك ومشاركاتك في تحسين وتحديث شبكة دورات المياه بالجزائر"
+                            AppLanguage.FR -> "Suivez vos points et participations au réseau de sanitaires en Algérie"
+                            AppLanguage.EN -> "Track your points and contributions to improve Algeria's restrooms network"
+                        }
                         Text(
-                            text = "سجل الأنشطة والمساهمات المجتمعية",
+                            text = historyTitle,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "تتبع نقاطك ومشاركاتك في تحسين وتحديث شبكة دورات المياه بالجزائر",
+                            text = historySub,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -918,8 +981,13 @@ fun UserProfileScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Badges Showcase
+                        val badgesHeader = when (lang) {
+                            AppLanguage.AR -> "الأوسمة والشهادات المكتسبة 🏆"
+                            AppLanguage.FR -> "Badges & Certifications 🏆"
+                            AppLanguage.EN -> "Earned Badges & Certifications 🏆"
+                        }
                         Text(
-                            text = "الأوسمة والشهادات المكتسبة 🏆",
+                            text = badgesHeader,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             color = TealPrimary
                         )
@@ -932,55 +1000,185 @@ fun UserProfileScreen(
                                 .horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            BadgeCard(title = "مساهم معتمد", subtitle = "تم التحقق بالهوية 🇩🇿", icon = Icons.Default.Verified, tint = RahaGreen)
-                            BadgeCard(title = "سفير النظافة", subtitle = "أكثر من 10 تقييمات", icon = Icons.Default.Star, tint = Color(0xFFFFA000))
-                            BadgeCard(title = "حارس المياه", subtitle = "بلاغات دقيقة للحالة", icon = Icons.Default.WaterDrop, tint = WaterBlue)
-                            BadgeCard(title = "الرائد الأول", subtitle = "من أوائل المكتشفين", icon = Icons.Default.Badge, tint = RahaBlue)
+                            val b1Title = when (lang) {
+                                AppLanguage.AR -> "مساهم معتمد"
+                                AppLanguage.FR -> "Contributeur Vérifié"
+                                AppLanguage.EN -> "Verified Contributor"
+                            }
+                            val b1Sub = when (lang) {
+                                AppLanguage.AR -> "تم التحقق بالهوية 🇩🇿"
+                                AppLanguage.FR -> "Vérifié par CNI 🇩🇿"
+                                AppLanguage.EN -> "ID Verified 🇩🇿"
+                            }
+                            val b2Title = when (lang) {
+                                AppLanguage.AR -> "سفير النظافة"
+                                AppLanguage.FR -> "Ambassadeur Propreté"
+                                AppLanguage.EN -> "Cleanliness Ambassador"
+                            }
+                            val b2Sub = when (lang) {
+                                AppLanguage.AR -> "أكثر من 10 تقييمات"
+                                AppLanguage.FR -> "+10 avis partagés"
+                                AppLanguage.EN -> "10+ reviews shared"
+                            }
+                            val b3Title = when (lang) {
+                                AppLanguage.AR -> "حارس المياه"
+                                AppLanguage.FR -> "Gardien de l'eau"
+                                AppLanguage.EN -> "Water Guardian"
+                            }
+                            val b3Sub = when (lang) {
+                                AppLanguage.AR -> "بلاغات دقيقة للحالة"
+                                AppLanguage.FR -> "Signalements d'eau précis"
+                                AppLanguage.EN -> "Accurate water reports"
+                            }
+                            val b4Title = when (lang) {
+                                AppLanguage.AR -> "الرائد الأول"
+                                AppLanguage.FR -> "Premier Pionnier"
+                                AppLanguage.EN -> "First Pioneer"
+                            }
+                            val b4Sub = when (lang) {
+                                AppLanguage.AR -> "من أوائل المكتشفين"
+                                AppLanguage.FR -> "Parmi les explorateurs initiaux"
+                                AppLanguage.EN -> "Among early contributors"
+                            }
+
+                            BadgeCard(title = b1Title, subtitle = b1Sub, icon = Icons.Default.Verified, tint = RahaGreen)
+                            BadgeCard(title = b2Title, subtitle = b2Sub, icon = Icons.Default.Star, tint = Color(0xFFFFA000))
+                            BadgeCard(title = b3Title, subtitle = b3Sub, icon = Icons.Default.WaterDrop, tint = WaterBlue)
+                            BadgeCard(title = b4Title, subtitle = b4Sub, icon = Icons.Default.Badge, tint = RahaBlue)
                         }
 
                         Spacer(modifier = Modifier.height(20.dp))
 
                         // Contribution Timeline
+                        val recentActLabel = when (lang) {
+                            AppLanguage.AR -> "الأنشطة الأخيرة:"
+                            AppLanguage.FR -> "Activités récentes :"
+                            AppLanguage.EN -> "Recent Activities:"
+                        }
                         Text(
-                            text = "الأنشطة الأخيرة:",
+                            text = recentActLabel,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
 
+                        val act1 = when (lang) {
+                            AppLanguage.AR -> "أضفت دورة مياه خواص جديدة"
+                            AppLanguage.FR -> "Nouveaux sanitaires privés ajoutés"
+                            AppLanguage.EN -> "Added new private restroom"
+                        }
+                        val place1 = when (lang) {
+                            AppLanguage.AR -> "شارع ديدوش مراد (الجزائر العاصمة)"
+                            AppLanguage.FR -> "Rue Didouche Mourad (Alger)"
+                            AppLanguage.EN -> "Didouche Mourad St (Algiers)"
+                        }
+                        val time1 = when (lang) {
+                            AppLanguage.AR -> "منذ يومين"
+                            AppLanguage.FR -> "Il y a 2 jours"
+                            AppLanguage.EN -> "2 days ago"
+                        }
+                        val pts1 = when (lang) {
+                            AppLanguage.AR -> "+50 نقطة"
+                            AppLanguage.FR -> "+50 pts"
+                            AppLanguage.EN -> "+50 pts"
+                        }
+
                         TimelineItem(
-                            action = "أضفت دورة مياه خواص جديدة",
-                            place = "شارع ديدوش مراد (الجزائر العاصمة)",
-                            date = "منذ يومين",
-                            points = "+50 نقطة",
+                            action = act1,
+                            place = place1,
+                            date = time1,
+                            points = pts1,
                             icon = Icons.Default.Add,
                             tint = TealPrimary
                         )
 
+                        val act2 = when (lang) {
+                            AppLanguage.AR -> "قيّمت مستوى النظافة 5 نجوم"
+                            AppLanguage.FR -> "Note de propreté 5 étoiles donnée"
+                            AppLanguage.EN -> "Rated cleanliness 5 stars"
+                        }
+                        val place2 = when (lang) {
+                            AppLanguage.AR -> "جامع الجزائر الأعظم (المحمدية)"
+                            AppLanguage.FR -> "Grande Mosquée d'Alger (Mohammadia)"
+                            AppLanguage.EN -> "Great Mosque of Algiers"
+                        }
+                        val time2 = when (lang) {
+                            AppLanguage.AR -> "منذ 4 أيام"
+                            AppLanguage.FR -> "Il y a 4 jours"
+                            AppLanguage.EN -> "4 days ago"
+                        }
+                        val pts2 = when (lang) {
+                            AppLanguage.AR -> "+15 نقطة"
+                            AppLanguage.FR -> "+15 pts"
+                            AppLanguage.EN -> "+15 pts"
+                        }
+
                         TimelineItem(
-                            action = "قيّمت مستوى النظافة 5 نجوم",
-                            place = "جامع الجزائر الأعظم (المحمدية)",
-                            date = "منذ 4 أيام",
-                            points = "+15 نقطة",
+                            action = act2,
+                            place = place2,
+                            date = time2,
+                            points = pts2,
                             icon = Icons.Default.RateReview,
                             tint = RahaBlue
                         )
 
+                        val act3 = when (lang) {
+                            AppLanguage.AR -> "أبلغت عن حالة المياه (متوفرة)"
+                            AppLanguage.FR -> "Signalé eau disponible"
+                            AppLanguage.EN -> "Reported water available"
+                        }
+                        val place3 = when (lang) {
+                            AppLanguage.AR -> "محطة النقل خروبة (سوجرال)"
+                            AppLanguage.FR -> "Gare routière Caroubier (SOGRAL)"
+                            AppLanguage.EN -> "Kharrouba Bus Station (Sogral)"
+                        }
+                        val time3 = when (lang) {
+                            AppLanguage.AR -> "منذ أسبوع"
+                            AppLanguage.FR -> "Il y a 1 semaine"
+                            AppLanguage.EN -> "1 week ago"
+                        }
+                        val pts3 = when (lang) {
+                            AppLanguage.AR -> "+10 نقاط"
+                            AppLanguage.FR -> "+10 pts"
+                            AppLanguage.EN -> "+10 pts"
+                        }
+
                         TimelineItem(
-                            action = "أبلغت عن حالة المياه (متوفرة)",
-                            place = "محطة النقل خروبة (سوجرال)",
-                            date = "منذ أسبوع",
-                            points = "+10 نقاط",
+                            action = act3,
+                            place = place3,
+                            date = time3,
+                            points = pts3,
                             icon = Icons.Default.WaterDrop,
                             tint = RahaGreen
                         )
 
+                        val act4 = when (lang) {
+                            AppLanguage.AR -> "مسح وتوثيق بطاقة الهوية الوطنية"
+                            AppLanguage.FR -> "Numérisation CNI biométrique"
+                            AppLanguage.EN -> "Biometric National ID scan"
+                        }
+                        val place4 = when (lang) {
+                            AppLanguage.AR -> "نظام التحقق البيومتري الجزائري"
+                            AppLanguage.FR -> "Système biométrique algérien"
+                            AppLanguage.EN -> "Algerian Biometric Verification"
+                        }
+                        val time4 = when (lang) {
+                            AppLanguage.AR -> "منذ أسبوعين"
+                            AppLanguage.FR -> "Il y a 2 semaines"
+                            AppLanguage.EN -> "2 weeks ago"
+                        }
+                        val pts4 = when (lang) {
+                            AppLanguage.AR -> "+100 نقطة"
+                            AppLanguage.FR -> "+100 pts"
+                            AppLanguage.EN -> "+100 pts"
+                        }
+
                         TimelineItem(
-                            action = "مسح وتوثيق بطاقة الهوية الوطنية",
-                            place = "نظام التحقق البيومتري الجزائري",
-                            date = "منذ أسبوعين",
-                            points = "+100 نقطة",
+                            action = act4,
+                            place = place4,
+                            date = time4,
+                            points = pts4,
                             icon = Icons.Default.DocumentScanner,
                             tint = Color(0xFF673AB7)
                         )
@@ -1012,8 +1210,13 @@ fun UserProfileScreen(
                     bloodGroup = extracted.bloodGroup,
                     isIdCardVerified = true
                 )
-                saveSuccessMessage = "تم استخراج بيانات بطاقة التعريف الوطنية وتحديث الملف الشخصي بنجاح! 🇩🇿"
-                Toast.makeText(context, "تم استيراد بيانات الهوية تلقائياً!", Toast.LENGTH_LONG).show()
+                val idScanSuccess = when (lang) {
+                    AppLanguage.AR -> "تم استخراج بيانات بطاقة التعريف الوطنية وتحديث الملف الشخصي بنجاح! 🇩🇿"
+                    AppLanguage.FR -> "Données de la CNI extraites et profil mis à jour avec succès ! 🇩🇿"
+                    AppLanguage.EN -> "National ID data extracted and profile updated successfully! 🇩🇿"
+                }
+                saveSuccessMessage = idScanSuccess
+                Toast.makeText(context, idScanSuccess, Toast.LENGTH_LONG).show()
             }
         )
     }
@@ -1022,8 +1225,8 @@ fun UserProfileScreen(
     if (showSignOutConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showSignOutConfirmDialog = false },
-            title = { Text("تأكيد تسجيل الخروج", fontWeight = FontWeight.Bold) },
-            text = { Text("هل أنت متأكد من رغبتك في تسجيل الخروج من تطبيق «راحة»؟ يمكنك تسجيل الدخول مجدداً في أي وقت.") },
+            title = { Text(AppStrings.signOutConfirmTitle(lang), fontWeight = FontWeight.Bold) },
+            text = { Text(AppStrings.signOutConfirmMessage(lang)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -1032,12 +1235,12 @@ fun UserProfileScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AlertRed)
                 ) {
-                    Text("نعم، تسجيل الخروج")
+                    Text(AppStrings.confirmSignOut(lang))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showSignOutConfirmDialog = false }) {
-                    Text("إلغاء")
+                    Text(AppStrings.cancel(lang))
                 }
             }
         )
@@ -1045,14 +1248,24 @@ fun UserProfileScreen(
 
     // Dialog: Social account linking notification
     if (showSocialLinkSuccessDialog != null) {
+        val linkSuccessTitle = when (lang) {
+            AppLanguage.AR -> "تم ربط الحساب بنجاح"
+            AppLanguage.FR -> "Compte associé avec succès"
+            AppLanguage.EN -> "Account Linked Successfully"
+        }
+        val linkSuccessMsg = when (lang) {
+            AppLanguage.AR -> "تم ربط حساب ${showSocialLinkSuccessDialog} بملفك الشخصي في راحة بنجاح."
+            AppLanguage.FR -> "Le compte ${showSocialLinkSuccessDialog} a été associé à votre profil Raha avec succès."
+            AppLanguage.EN -> "${showSocialLinkSuccessDialog} account has been linked to your Raha profile."
+        }
         AlertDialog(
             onDismissRequest = { showSocialLinkSuccessDialog = null },
             icon = { Icon(Icons.Default.CheckCircle, contentDescription = null, tint = RahaGreen) },
-            title = { Text("تم ربط الحساب بنجاح", fontWeight = FontWeight.Bold) },
-            text = { Text("تم ربط حساب ${showSocialLinkSuccessDialog} بملفك الشخصي في راحة بنجاح.") },
+            title = { Text(linkSuccessTitle, fontWeight = FontWeight.Bold) },
+            text = { Text(linkSuccessMsg) },
             confirmButton = {
                 Button(onClick = { showSocialLinkSuccessDialog = null }, colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)) {
-                    Text("تم")
+                    Text(AppStrings.close(lang))
                 }
             }
         )
@@ -1091,6 +1304,7 @@ private fun SocialLinkRow(
     isConnected: Boolean,
     badgeColor: Color,
     iconLabel: String,
+    lang: AppLanguage,
     onToggle: () -> Unit
 ) {
     Surface(
@@ -1151,7 +1365,7 @@ private fun SocialLinkRow(
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
             ) {
                 Text(
-                    text = if (isConnected) "متصل ✓" else "ربط",
+                    text = if (isConnected) AppStrings.connectedBadge(lang) else AppStrings.linkAction(lang),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -1163,6 +1377,7 @@ private fun SocialLinkRow(
 @Composable
 private fun UserAddedRestroomCard(
     restroom: RestroomEntity,
+    lang: AppLanguage,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -1184,8 +1399,13 @@ private fun UserAddedRestroomCard(
                     shape = RoundedCornerShape(6.dp),
                     color = RahaGreen.copy(alpha = 0.15f)
                 ) {
+                    val verifiedLabel = when (lang) {
+                        AppLanguage.AR -> "معتمد ومتاح للجميع ✓"
+                        AppLanguage.FR -> "Vérifié & Public ✓"
+                        AppLanguage.EN -> "Verified & Public ✓"
+                    }
                     Text(
-                        text = "معتمد ومتاح للجميع ✓",
+                        text = verifiedLabel,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         color = RahaGreen,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -1193,7 +1413,7 @@ private fun UserAddedRestroomCard(
                 }
 
                 Text(
-                    text = if (restroom.isFree) "مجاني" else "${restroom.priceDzd} دج",
+                    text = if (restroom.isFree) AppStrings.freeLabel(lang) else "${restroom.priceDzd} ${AppStrings.dzdCurrency(lang)}",
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                     color = TealPrimary
                 )
@@ -1201,14 +1421,15 @@ private fun UserAddedRestroomCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            val displayName = if (lang != AppLanguage.AR && !restroom.nameFr.isNullOrBlank()) restroom.nameFr else restroom.name
             Text(
-                text = restroom.name,
+                text = displayName,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
-                text = "📍 ${restroom.wilaya} • ${restroom.commune}",
+                text = "📍 ${AlgerianWilayas.getLocalizedWilayaName(restroom.wilaya, lang)} • ${restroom.commune}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1221,13 +1442,18 @@ private fun UserAddedRestroomCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "⭐ ${restroom.rating} (${restroom.reviewsCount} تقييم)",
+                    text = "⭐ ${restroom.rating} (${restroom.reviewsCount} ${AppStrings.reviewsCountSuffix(lang)})",
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = Color(0xFFFFA000)
                 )
 
+                val viewOnMapLabel = when (lang) {
+                    AppLanguage.AR -> "عرض على الخريطة ←"
+                    AppLanguage.FR -> "Voir sur la carte →"
+                    AppLanguage.EN -> "View on map →"
+                }
                 Text(
-                    text = "عرض على الخريطة ←",
+                    text = viewOnMapLabel,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = TealPrimary
                 )

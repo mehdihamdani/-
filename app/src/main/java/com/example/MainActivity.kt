@@ -31,6 +31,12 @@ import com.example.ui.auth.SignInScreen
 import com.example.ui.auth.authStateFlow
 import com.google.firebase.auth.FirebaseAuth
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import com.example.data.model.AppLanguage
+import com.example.util.LocalAppLanguage
+
 class MainActivity : ComponentActivity() {
 
     private val viewModel: RestroomViewModel by viewModels {
@@ -54,12 +60,18 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val appSettings by viewModel.appSettings.collectAsStateWithLifecycle()
-            MyApplicationTheme(
-                palette = appSettings.themePalette,
-                darkModeOption = appSettings.darkModeOption
+            val layoutDirection = if (appSettings.language == AppLanguage.AR) LayoutDirection.Rtl else LayoutDirection.Ltr
+
+            CompositionLocalProvider(
+                LocalLayoutDirection provides layoutDirection,
+                LocalAppLanguage provides appSettings.language
             ) {
-                val auth = remember { FirebaseAuth.getInstance() }
-                val currentUser by auth.authStateFlow().collectAsStateWithLifecycle(initialValue = auth.currentUser)
+                MyApplicationTheme(
+                    palette = appSettings.themePalette,
+                    darkModeOption = appSettings.darkModeOption
+                ) {
+                    val auth = remember { FirebaseAuth.getInstance() }
+                    val currentUser by auth.authStateFlow().collectAsStateWithLifecycle(initialValue = auth.currentUser)
 
                 if (currentUser == null) {
                     SignInScreen(onSignInSuccess = { /* Automatically navigates upon authStateFlow emission */ })
@@ -99,6 +111,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
     }
 
     private fun detectUserLocation() {

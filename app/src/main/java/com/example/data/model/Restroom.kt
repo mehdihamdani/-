@@ -3,15 +3,25 @@ package com.example.data.model
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-enum class RestroomType(val arabicName: String, val frenchName: String) {
-    MOSQUE("مسجد", "Mosquée"),
-    MUSALLA("مصلى", "Salle de prière / Musalla"),
-    HAMMAM("حمام شعبي / دوش", "Hammam traditionnel"),
-    NAFTAL_HIGHWAY("محطة نفطال / طريق سريع", "Station Naftal / Autoroute"),
-    TRANSPORT_HUB("محطة نقل (سوجرال/ميترو/قطار)", "Gare / Station de transport"),
-    MALL("مركز تجاري (مول)", "Centre commercial"),
-    PUBLIC_MUNICIPAL("دورة مياه عمومية بلدية", "Toilette publique municipale"),
-    PRIVATE_COMMERCIAL("دورة مياه خواص", "Toilettes privées")
+enum class RestroomType(
+    val arabicName: String,
+    val frenchName: String,
+    val englishName: String = frenchName
+) {
+    MOSQUE("مسجد", "Mosquée", "Mosque"),
+    MUSALLA("مصلى", "Salle de prière / Musalla", "Prayer Room / Musalla"),
+    HAMMAM("حمام شعبي / دوش", "Hammam traditionnel", "Traditional Bath / Shower"),
+    NAFTAL_HIGHWAY("محطة نفطال / طريق سريع", "Station Naftal / Autoroute", "Naftal Station / Highway"),
+    TRANSPORT_HUB("محطة نقل (سوجرال/ميترو/قطار)", "Gare / Station de transport", "Transport Hub (Sogral/Metro/Train)"),
+    MALL("مركز تجاري (مول)", "Centre commercial", "Shopping Mall"),
+    PUBLIC_MUNICIPAL("دورة مياه عمومية بلدية", "Toilette publique municipale", "Municipal Public Toilet"),
+    PRIVATE_COMMERCIAL("دورة مياه خواص", "Toilettes privées", "Private Commercial Restroom");
+
+    fun getDisplayName(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> arabicName
+        AppLanguage.FR -> frenchName
+        AppLanguage.EN -> englishName
+    }
 }
 
 @Entity(tableName = "restrooms")
@@ -61,6 +71,10 @@ data class RestroomEntity(
             if (isFree) amenities.add("مجاني") else amenities.add("$priceDzd دج")
             return amenities.joinToString(" • ")
         }
+
+    fun getDisplayName(lang: AppLanguage): String {
+        return if (lang != AppLanguage.AR && nameFr.isNotBlank()) nameFr else name
+    }
 
     val offlineCoordinatesString: String
         get() = String.format("%.4f° N, %.4f° E", latitude, longitude)

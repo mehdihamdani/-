@@ -72,6 +72,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.AlgerianWilayas
 import com.example.data.model.AppLanguage
 import com.example.ui.theme.RahaBlue
 import com.example.ui.theme.RahaGreen
@@ -319,7 +320,7 @@ fun DonationsScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "لماذا يحتاج تطبيق «راحة» لدعمكم؟",
+                                text = AppStrings.whySupportAppTitle(currentLanguage),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -328,7 +329,7 @@ fun DonationsScreen(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
-                            text = "تطبيق «راحة» مبادرة جزائرية مجانية 100% بدون إعلانات مزعجة. تبرعكم الرمزي يساهم مباشرة في تغطية تكاليف الخوادم السحابية، التحقق الميداني من دورات المياه، وتطوير الخرائط التفاعلية بدون إنترنت لخدمة جميع المسافرين.",
+                            text = AppStrings.whySupportAppBody(currentLanguage),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 22.sp
@@ -337,7 +338,7 @@ fun DonationsScreen(
                         Spacer(modifier = Modifier.height(18.dp))
 
                         Text(
-                            text = "اختر مبلغ المساهمة (دج):",
+                            text = AppStrings.chooseAmountTitle(currentLanguage),
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -389,7 +390,7 @@ fun DonationsScreen(
                                 val parsed = it.toIntOrNull()
                                 if (parsed != null) selectedAmountDzd = parsed
                             },
-                            label = { Text("أو أدخل مبلغاً مخصصاً (دج)") },
+                            label = { Text(AppStrings.otherAmountPlaceholder(currentLanguage)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp),
@@ -399,7 +400,7 @@ fun DonationsScreen(
                         Spacer(modifier = Modifier.height(20.dp))
 
                         Text(
-                            text = "طرق التبرع المتاحة بالجزائر:",
+                            text = AppStrings.paymentMethodTitle(currentLanguage),
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -408,31 +409,36 @@ fun DonationsScreen(
 
                         // BaridiMob Option Card
                         PaymentMethodCard(
-                            title = "بريدي موب (BaridiMob)",
-                            accountHolder = "مهدي حمداني (تطبيق راحة RAHA)",
-                            identifier = "007 99999 0023456789 42",
+                            title = AppStrings.baridiMobTitle(currentLanguage),
+                            accountHolder = "HAMDANI MEHDI (RAHA DZ)",
+                            identifier = "007 99999 0008578795 55",
                             codeType = "RIP BaridiMob",
                             icon = Icons.Default.CreditCard,
                             accentColor = Color(0xFF00965E),
-                            onCopy = { copyToClipboard("رقم الـ RIP لبريدي موب", "00799999002345678942") }
+                            onCopy = { copyToClipboard("RIP BaridiMob", "00799999000857879555") }
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // CCP Option Card
                         PaymentMethodCard(
-                            title = "الحساب البريدي الجاري (CCP)",
-                            accountHolder = "مهدي حمداني - الجزائر",
-                            identifier = "CCP: 23456789 / Clé 42",
-                            codeType = "رقم الحساب البريدي والمفتاح",
+                            title = AppStrings.ccpTitle(currentLanguage),
+                            accountHolder = "HAMDANI MEHDI - Alger",
+                            identifier = "CCP: 8578795 / Clé 44",
+                            codeType = "CCP",
                             icon = Icons.Default.AccountBalance,
                             accentColor = Color(0xFF084C8D),
-                            onCopy = { copyToClipboard("رقم الحساب الجاري CCP", "23456789 clé 42") }
+                            onCopy = { copyToClipboard("CCP", "8578795 Clé 44") }
                         )
 
                         Spacer(modifier = Modifier.height(18.dp))
 
                         // Action Button
+                        val donateConfirmText = when (currentLanguage) {
+                            AppLanguage.AR -> "تأكيد مساهمتي بقيمة $selectedAmountDzd دج"
+                            AppLanguage.FR -> "Confirmer mon don de $selectedAmountDzd DZD"
+                            AppLanguage.EN -> "Confirm my $selectedAmountDzd DZD donation"
+                        }
                         Button(
                             onClick = { showAppDonationSuccessDialog = true },
                             colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
@@ -445,7 +451,7 @@ fun DonationsScreen(
                             Icon(imageVector = Icons.Default.Handshake, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "تأكيد مساهمتي بقيمة $selectedAmountDzd دج",
+                                text = donateConfirmText,
                                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                             )
                         }
@@ -475,7 +481,7 @@ fun DonationsScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "صدقة جارية لصيانة بيوت الله والوضوء",
+                                text = AppStrings.mosqueProjectsTitle(currentLanguage),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -484,7 +490,7 @@ fun DonationsScreen(
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
-                            text = "قال رسول الله ﷺ: «من بنى مسجداً لله بنى الله له في الجنة بيتاً». صيانة دورات مياه المساجد وتوفير الماء الساخن والصابون للمصلين وعابري السبيل من أعظم الصدقات الجارية وأنفعها.",
+                            text = AppStrings.mosqueProjectsSubtitle(currentLanguage),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 22.sp
@@ -504,7 +510,7 @@ fun DonationsScreen(
                                 Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = RahaGreen)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "جميع التبرعات تذهب مباشرة إلى اللجان الدينية المعتمدة لكل مسجد وبدون أي وسيط أو اقتطاع.",
+                                    text = AppStrings.mosqueDonationNotice(currentLanguage),
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                                     color = RahaGreen
                                 )
@@ -518,6 +524,7 @@ fun DonationsScreen(
             items(registeredMosqueProjects, key = { it.id }) { project ->
                 MosqueProjectCard(
                     project = project,
+                    currentLanguage = currentLanguage,
                     onDonateClick = { showMosqueDonationDialog = project },
                     onCopyRip = { copyToClipboard("RIP ${project.name}", project.baridiMobRip) },
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
@@ -540,7 +547,7 @@ fun DonationsScreen(
             },
             title = {
                 Text(
-                    text = "شكراً جزيلاً لدعمكم! 🇩🇿💙",
+                    text = AppStrings.donationSuccessTitle(currentLanguage),
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
@@ -548,23 +555,10 @@ fun DonationsScreen(
             text = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "مساهمتك بقيمة $selectedAmountDzd دج تساعد في استمرار خوادم تطبيق «راحة» وإبقاء التطبيق مجانياً لجميع أبناء الجزائر والمسافرين.",
+                        text = AppStrings.donationSuccessMessage(currentLanguage),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = TealPrimary.copy(alpha = 0.15f)
-                    ) {
-                        Text(
-                            text = "تمت إضافة وسام «الداعم المجتمعي 🥇» إلى ملفك الشخصي!",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = TealPrimary,
-                            modifier = Modifier.padding(8.dp),
-                            textAlign = TextAlign.Center
-                        )
-                    }
                 }
             },
             confirmButton = {
@@ -572,7 +566,7 @@ fun DonationsScreen(
                     onClick = { showAppDonationSuccessDialog = false },
                     colors = ButtonDefaults.buttonColors(containerColor = TealPrimary)
                 ) {
-                    Text("تم")
+                    Text(AppStrings.close(currentLanguage))
                 }
             }
         )
@@ -581,6 +575,11 @@ fun DonationsScreen(
     // Modal: Mosque Donation Details Dialog
     if (showMosqueDonationDialog != null) {
         val proj = showMosqueDonationDialog!!
+        val mosqueTitleText = when (currentLanguage) {
+            AppLanguage.AR -> "التبرع لـ ${proj.name}"
+            AppLanguage.FR -> "Faire un don à ${proj.name}"
+            AppLanguage.EN -> "Donate to ${proj.name}"
+        }
         AlertDialog(
             onDismissRequest = { showMosqueDonationDialog = null },
             icon = {
@@ -588,7 +587,7 @@ fun DonationsScreen(
             },
             title = {
                 Text(
-                    text = "التبرع لـ ${proj.name}",
+                    text = mosqueTitleText,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
@@ -596,13 +595,13 @@ fun DonationsScreen(
             text = {
                 Column {
                     Text(
-                        text = "الهدف: ${proj.projectNeed}",
+                        text = "${AppStrings.projectNeedLabel(currentLanguage)} ${proj.projectNeed}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "الحساب البريدي المباشر للجنة المسجد:",
+                        text = AppStrings.donationCcpLabelHeader(currentLanguage),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -621,7 +620,7 @@ fun DonationsScreen(
                                 Text("CCP: ${proj.ccpNumber}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             IconButton(onClick = { copyToClipboard("RIP ${proj.name}", proj.baridiMobRip) }) {
-                                Icon(imageVector = Icons.Default.ContentCopy, contentDescription = "نسخ", tint = TealPrimary)
+                                Icon(imageVector = Icons.Default.ContentCopy, contentDescription = AppStrings.copy(currentLanguage), tint = TealPrimary)
                             }
                         }
                     }
@@ -635,12 +634,12 @@ fun DonationsScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = RahaGreen)
                 ) {
-                    Text("تأكيد إرسال الصدقة")
+                    Text(AppStrings.donateToMosqueButton(currentLanguage))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showMosqueDonationDialog = null }) {
-                    Text("إلغاء")
+                    Text(AppStrings.cancel(currentLanguage))
                 }
             }
         )
@@ -654,18 +653,18 @@ fun DonationsScreen(
                 Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = RahaGreen, modifier = Modifier.size(44.dp))
             },
             title = {
-                Text("تقبل الله صدقتكم 🤲", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                Text(AppStrings.donationSuccessTitle(currentLanguage), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
             },
             text = {
                 Text(
-                    text = "جعلها الله صدقة جارية في ميزان حسناتكم ونفع بها مصلين وعابري سبيل في بيت من بيوت الله.",
+                    text = AppStrings.donationSuccessMessage(currentLanguage),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
             confirmButton = {
                 Button(onClick = { showMosqueThankYouDialog = false }, colors = ButtonDefaults.buttonColors(containerColor = RahaGreen)) {
-                    Text("آمين")
+                    Text(AppStrings.close(currentLanguage))
                 }
             }
         )
@@ -717,7 +716,7 @@ private fun PaymentMethodCard(
             }
 
             IconButton(onClick = onCopy) {
-                Icon(imageVector = Icons.Default.ContentCopy, contentDescription = "نسخ", tint = accentColor)
+                Icon(imageVector = Icons.Default.ContentCopy, contentDescription = "Copy", tint = accentColor)
             }
         }
     }
@@ -726,6 +725,7 @@ private fun PaymentMethodCard(
 @Composable
 private fun MosqueProjectCard(
     project: MosqueCharityProject,
+    currentLanguage: AppLanguage,
     onDonateClick: () -> Unit,
     onCopyRip: () -> Unit,
     modifier: Modifier = Modifier
@@ -747,7 +747,7 @@ private fun MosqueProjectCard(
                     color = RahaGreen.copy(alpha = 0.15f)
                 ) {
                     Text(
-                        text = "📍 ${project.wilaya} • ${project.commune}",
+                        text = "📍 ${AlgerianWilayas.getLocalizedWilayaName(project.wilaya, currentLanguage)} • ${project.commune}",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         color = RahaGreen,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
@@ -755,7 +755,7 @@ private fun MosqueProjectCard(
                 }
 
                 Text(
-                    text = "${project.collectedAmountDzd} / ${project.targetAmountDzd} دج",
+                    text = "${project.collectedAmountDzd} / ${project.targetAmountDzd} ${AppStrings.dzdCurrency(currentLanguage)}",
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -770,7 +770,7 @@ private fun MosqueProjectCard(
             )
 
             Text(
-                text = "المشروع: ${project.projectNeed}",
+                text = "${AppStrings.projectNeedLabel(currentLanguage)} ${project.projectNeed}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -790,19 +790,25 @@ private fun MosqueProjectCard(
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            val completedLabel = when (currentLanguage) {
+                AppLanguage.AR -> "مكتمل"
+                AppLanguage.FR -> "atteint"
+                AppLanguage.EN -> "completed"
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "المتبقي لإتمام الصيانة: ${project.remainingDzd} دج",
+                    text = AppStrings.remainingAmount(project.remainingDzd, currentLanguage),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Text(
-                    text = "${(project.progress * 100).toInt()}% مكتمل",
+                    text = "${(project.progress * 100).toInt()}% $completedLabel",
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = RahaGreen
                 )
@@ -822,7 +828,7 @@ private fun MosqueProjectCard(
                 ) {
                     Icon(imageVector = Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("تبرع لهذا المسجد", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(AppStrings.donateToMosqueButton(currentLanguage), fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
 
                 TextButton(
@@ -831,7 +837,7 @@ private fun MosqueProjectCard(
                 ) {
                     Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("نسخ الـ RIP", fontSize = 12.sp)
+                    Text(AppStrings.copyRipButton(currentLanguage), fontSize = 12.sp)
                 }
             }
         }

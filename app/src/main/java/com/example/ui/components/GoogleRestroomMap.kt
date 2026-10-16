@@ -92,6 +92,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.rememberModalBottomSheetState
 import com.example.data.model.AlgerianWilayas
+import com.example.data.model.AppLanguage
+import com.example.util.LocalAppLanguage
+import com.example.util.AppStrings
 import com.example.ui.viewmodel.FilterState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -129,6 +132,39 @@ fun GoogleRestroomMap(
     var showFilterSheet by remember { mutableStateOf(false) }
     var wilayaSearchText by remember { mutableStateOf("") }
     val filterSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val lang = LocalAppLanguage.current
+    val isKeyValid = remember { com.example.util.MapsKeyValidator.isKeyValid() }
+
+    if (!isKeyValid) {
+        LaunchedEffect(Unit) {
+            onSwitchToOfflineMap()
+        }
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(24.dp)
+            ) {
+                CircularProgressIndicator(color = TealPrimary)
+                Spacer(modifier = Modifier.height(16.dp))
+                val switchingText = when (lang) {
+                    AppLanguage.AR -> "جاري التبديل إلى الخريطة التفاعلية المحلية (أوفلاين 100%)..."
+                    AppLanguage.FR -> "Basculement vers la carte vectorielle hors-ligne..."
+                    AppLanguage.EN -> "Switching to offline interactive vector map..."
+                }
+                Text(
+                    text = switchingText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+        return
+    }
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
@@ -198,10 +234,20 @@ fun GoogleRestroomMap(
                 strokeWidth = 2f
             )
 
+            val myLocTitle = when (lang) {
+                AppLanguage.AR -> "موقعي الحالي"
+                AppLanguage.FR -> "Ma position"
+                AppLanguage.EN -> "My Location"
+            }
+            val searchCenterLabel = when (lang) {
+                AppLanguage.AR -> "نقطة ارتكاز البحث"
+                AppLanguage.FR -> "Centre de recherche"
+                AppLanguage.EN -> "Search center"
+            }
             Marker(
                 state = MarkerState(position = LatLng(userLocation.latitude, userLocation.longitude)),
-                title = "موقعي الحالي",
-                snippet = "${userLocation.cityName} (نقطة ارتكاز البحث)",
+                title = myLocTitle,
+                snippet = "${userLocation.cityName} ($searchCenterLabel)",
                 icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
             )
 
@@ -209,11 +255,15 @@ fun GoogleRestroomMap(
             restrooms.forEach { item ->
                 val restroom = item.restroom
                 val isSelected = selectedRestroom?.id == restroom.id
+                val freeLabel = if (restroom.isFree) AppStrings.free(lang) else "${restroom.priceDzd} ${AppStrings.dzdCurrency(lang)}"
+                val distText = item.formattedDistance
+                val cleanLabel = "${AppStrings.cleanliness(lang)}: ${restroom.cleanlinessRating}/5★"
+                val locWilaya = AlgerianWilayas.getLocalizedWilayaName(restroom.wilaya, lang)
 
                 Marker(
                     state = MarkerState(position = LatLng(restroom.latitude, restroom.longitude)),
                     title = restroom.name,
-                    snippet = "${restroom.wilaya} • يبعد ${item.formattedDistance} • ${if (restroom.isFree) "مجاني" else "${restroom.priceDzd} دج"} • نظافة: ${restroom.cleanlinessRating}/5★",
+                    snippet = "$locWilaya • $distText • $freeLabel • $cleanLabel",
                     icon = BitmapDescriptorFactory.defaultMarker(getGoogleMarkerHue(restroom.type)),
                     onClick = {
                         onRestroomSelected(if (isSelected) null else restroom)
@@ -278,10 +328,15 @@ fun GoogleRestroomMap(
                             },
                             modifier = Modifier.heightIn(max = 350.dp)
                         ) {
+                            val wilayaSearchPlaceholder = when (lang) {
+                                AppLanguage.AR -> "ابحث في الـ 69 ولاية..."
+                                AppLanguage.FR -> "Rechercher parmi les 69 wilayas..."
+                                AppLanguage.EN -> "Search across 69 provinces..."
+                            }
                             OutlinedTextField(
                                 value = wilayaSearchText,
                                 onValueChange = { wilayaSearchText = it },
-                                placeholder = { Text("ابحث في الـ 69 ولاية...") },
+                                placeholder = { Text(wilayaSearchPlaceholder) },
                                 singleLine = true,
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -298,8 +353,9 @@ fun GoogleRestroomMap(
                                 }
                             }
                             listToDisplay.forEach { wilaya ->
+                                val displayName = if (lang == AppLanguage.AR) wilaya.displayName else "${wilaya.code} - ${wilaya.frenchName}"
                                 DropdownMenuItem(
-                                    text = { Text(wilaya.displayName) },
+                                    text = { Text(displayName) },
                                     onClick = {
                                         showWilayaMenu = false
                                         wilayaSearchText = ""
@@ -323,6 +379,16 @@ fun GoogleRestroomMap(
                         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
                         shadowElevation = 4.dp
                     ) {
+                        val switchOfflineDesc = when (lang) {
+                            AppLanguage.AR -> "التبديل إلى الخريطة التفاعلية أوفلاين"
+                            AppLanguage.FR -> "Basculer vers la carte interactive hors-ligne"
+                            AppLanguage.EN -> "Switch to offline interactive map"
+                        }
+                        val interactiveMapLabel = when (lang) {
+                            AppLanguage.AR -> "خريطة تفاعلية"
+                            AppLanguage.FR -> "Carte interactive"
+                            AppLanguage.EN -> "Interactive map"
+                        }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -331,13 +397,13 @@ fun GoogleRestroomMap(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Map,
-                                contentDescription = "التبديل إلى الخريطة التفاعلية أوفلاين",
+                                contentDescription = switchOfflineDesc,
                                 tint = RahaBlue,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "خريطة تفاعلية",
+                                text = interactiveMapLabel,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )

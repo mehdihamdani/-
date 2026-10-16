@@ -101,6 +101,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.data.location.LocationHelper
+import com.example.data.model.AppLanguage
 import com.example.data.model.RestroomType
 import androidx.compose.material.icons.filled.Person
 import com.example.ui.components.MapSearchBar
@@ -159,6 +160,8 @@ fun HomeScreen(
     val showInvalidApiKeyDialog by viewModel.showInvalidApiKeyDialog.collectAsStateWithLifecycle()
     val showMosqueReviewDialog by viewModel.showMosqueReviewDialog.collectAsStateWithLifecycle()
     val mosqueDonationAccounts by viewModel.mosqueDonationAccounts.collectAsStateWithLifecycle()
+    val cachedRegionIds by viewModel.cachedRegionIds.collectAsStateWithLifecycle()
+    val regionDownloadProgress by viewModel.regionDownloadProgress.collectAsStateWithLifecycle()
     val isAdminUser = viewModel.isAdminUser
 
     val firestoreRepo = remember {
@@ -295,7 +298,7 @@ fun HomeScreen(
                         IconButton(onClick = { selectedTab = 0 }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "الرجوع للخريطة",
+                                contentDescription = AppStrings.back(currentLang),
                                 tint = TealPrimary
                             )
                         }
@@ -308,7 +311,7 @@ fun HomeScreen(
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.img_raha_logo),
-                            contentDescription = "شعار تطبيق راحة",
+                            contentDescription = AppStrings.appName(currentLang),
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(RoundedCornerShape(8.dp)),
@@ -318,7 +321,7 @@ fun HomeScreen(
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "راحة",
+                                    text = AppStrings.appName(currentLang),
                                     style = MaterialTheme.typography.titleLarge.copy(
                                         fontWeight = FontWeight.ExtraBold,
                                         color = RahaBlue
@@ -342,7 +345,7 @@ fun HomeScreen(
                             }
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "📍 موقعك: ${userLocation.cityName}",
+                                    text = "📍 ${AppStrings.yourLocation(currentLang)}: ${userLocation.cityName}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -352,7 +355,7 @@ fun HomeScreen(
                                     color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
                                 ) {
                                     Text(
-                                        text = "محفوظ محلياً",
+                                        text = AppStrings.savedLocally(currentLang),
                                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                         color = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
@@ -371,7 +374,7 @@ fun HomeScreen(
                     ) {
                         Icon(
                             imageVector = if (isOfflineMode) Icons.Default.CloudOff else Icons.Default.CloudDone,
-                            contentDescription = "التخزين المحلي Room بدون إنترنت",
+                            contentDescription = AppStrings.manageStorage(currentLang),
                             tint = if (isOfflineMode) Color(0xFFE65100) else RahaGreen
                         )
                     }
@@ -383,7 +386,7 @@ fun HomeScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Description,
-                            contentDescription = "دراسة المشروع الشاملة",
+                            contentDescription = AppStrings.feasibilityStudy(currentLang),
                             tint = TealPrimary
                         )
                     }
@@ -396,7 +399,7 @@ fun HomeScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.AdminPanelSettings,
-                                contentDescription = "تدقيق حسابات التبرع للمساجد (إدارة)",
+                                contentDescription = AppStrings.adminReviewTitle(currentLang),
                                 tint = Color(0xFFE65100)
                             )
                         }
@@ -409,7 +412,7 @@ fun HomeScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.AccountCircle,
-                            contentDescription = "الملف الشخصي والحساب",
+                            contentDescription = AppStrings.navProfile(currentLang),
                             tint = if (selectedTab == 5) RahaGreen else TealPrimary
                         )
                     }
@@ -434,9 +437,9 @@ fun HomeScreen(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = "إضافة")
+                        Icon(imageVector = Icons.Default.Add, contentDescription = AppStrings.add(currentLang))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("إضافة", fontWeight = FontWeight.Bold)
+                        Text(AppStrings.add(currentLang), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -473,14 +476,14 @@ fun HomeScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "وضع عدم الاتصال: ${filteredRestrooms.size} مرافق مخزنة محلياً في Room",
+                                text = AppStrings.offlineBanner(filteredRestrooms.size, currentLang),
                                 fontSize = 12.sp,
                                 color = Color(0xFFE65100),
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
                         Text(
-                            text = "إدارة التخزين",
+                            text = AppStrings.manageStorage(currentLang),
                             fontSize = 11.sp,
                             color = Color(0xFFE65100),
                             fontWeight = FontWeight.Bold
@@ -527,13 +530,13 @@ fun HomeScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = "الأقرب إليك الآن: ${nearestRestroom?.restroom?.name}",
+                                    text = "${AppStrings.nearestToYou(currentLang)}: ${nearestRestroom?.restroom?.getDisplayName(currentLang)}",
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "يبعد فقط ${nearestRestroom?.formattedDistance} • ${if (nearestRestroom?.restroom?.isFree == true) "مجاني" else "${nearestRestroom?.restroom?.priceDzd} دج"}",
+                                    text = "${AppStrings.awayOnly(nearestRestroom?.formattedDistance ?: "", currentLang)} • ${if (nearestRestroom?.restroom?.isFree == true) AppStrings.free(currentLang) else "${nearestRestroom?.restroom?.priceDzd} ${AppStrings.dzdCurrency(currentLang)}"}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -553,7 +556,7 @@ fun HomeScreen(
                         ) {
                             Icon(imageVector = Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("انطلق", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                            Text(AppStrings.navigate(currentLang), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                         }
                     }
                 }
@@ -572,7 +575,7 @@ fun HomeScreen(
                 FilterChip(
                     selected = filterState.selectedType == null,
                     onClick = { viewModel.setSelectedType(null) },
-                    label = { Text("الكل") },
+                    label = { Text(AppStrings.filterAll(currentLang)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = TealPrimary,
                         selectedLabelColor = Color.White
@@ -583,7 +586,7 @@ fun HomeScreen(
                 FilterChip(
                     selected = filterState.selectedType == RestroomType.MOSQUE,
                     onClick = { viewModel.setSelectedType(RestroomType.MOSQUE) },
-                    label = { Text("مساجد") },
+                    label = { Text(AppStrings.filterMosques(currentLang)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = getTypeColor(RestroomType.MOSQUE),
                         selectedLabelColor = Color.White
@@ -594,7 +597,7 @@ fun HomeScreen(
                 FilterChip(
                     selected = filterState.selectedType == RestroomType.MUSALLA,
                     onClick = { viewModel.setSelectedType(RestroomType.MUSALLA) },
-                    label = { Text("مصليات") },
+                    label = { Text(AppStrings.filterMusallas(currentLang)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = getTypeColor(RestroomType.MUSALLA),
                         selectedLabelColor = Color.White
@@ -605,7 +608,7 @@ fun HomeScreen(
                 FilterChip(
                     selected = filterState.selectedType == RestroomType.HAMMAM,
                     onClick = { viewModel.setSelectedType(RestroomType.HAMMAM) },
-                    label = { Text("حمامات شعبية / دوش") },
+                    label = { Text(AppStrings.filterHammams(currentLang)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = getTypeColor(RestroomType.HAMMAM),
                         selectedLabelColor = Color.White
@@ -616,28 +619,28 @@ fun HomeScreen(
                 FilterChip(
                     selected = filterState.selectedType == RestroomType.NAFTAL_HIGHWAY,
                     onClick = { viewModel.setSelectedType(RestroomType.NAFTAL_HIGHWAY) },
-                    label = { Text("نفطال / طريق سريع") }
+                    label = { Text(AppStrings.filterNaftal(currentLang)) }
                 )
 
                 // Transport
                 FilterChip(
                     selected = filterState.selectedType == RestroomType.TRANSPORT_HUB,
                     onClick = { viewModel.setSelectedType(RestroomType.TRANSPORT_HUB) },
-                    label = { Text("محطات نقل وسوجرال") }
+                    label = { Text(AppStrings.filterTransport(currentLang)) }
                 )
 
                 // Mall
                 FilterChip(
                     selected = filterState.selectedType == RestroomType.MALL,
                     onClick = { viewModel.setSelectedType(RestroomType.MALL) },
-                    label = { Text("مراكز تجارية") }
+                    label = { Text(AppStrings.filterMalls(currentLang)) }
                 )
 
                 // Private Restroom (دورات مياه خواص)
                 FilterChip(
                     selected = filterState.selectedType == RestroomType.PRIVATE_COMMERCIAL,
                     onClick = { viewModel.setSelectedType(RestroomType.PRIVATE_COMMERCIAL) },
-                    label = { Text("دورات مياه خواص") },
+                    label = { Text(AppStrings.filterPrivate(currentLang)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = getTypeColor(RestroomType.PRIVATE_COMMERCIAL),
                         selectedLabelColor = Color.White
@@ -648,42 +651,42 @@ fun HomeScreen(
                 FilterChip(
                     selected = filterState.freeOnly,
                     onClick = { viewModel.toggleFreeOnly() },
-                    label = { Text("مجاني فقط") }
+                    label = { Text(AppStrings.filterFreeOnly(currentLang)) }
                 )
 
                 // Women Section
                 FilterChip(
                     selected = filterState.womenSectionOnly,
                     onClick = { viewModel.toggleWomenOnly() },
-                    label = { Text("مخصص للنساء") }
+                    label = { Text(AppStrings.filterWomenOnly(currentLang)) }
                 )
 
                 // Accessible PMR
                 FilterChip(
                     selected = filterState.accessiblePmrOnly,
                     onClick = { viewModel.toggleAccessibleOnly() },
-                    label = { Text("ذوي الهمم (PMR)") }
+                    label = { Text(AppStrings.filterPmr(currentLang)) }
                 )
 
                 // High Cleanliness
                 FilterChip(
                     selected = filterState.highCleanlinessOnly,
                     onClick = { viewModel.toggleCleanlinessOnly() },
-                    label = { Text("✨ نظافة عالية") }
+                    label = { Text(AppStrings.filterCleanliness(currentLang)) }
                 )
 
                 // Baby Changing Table
                 FilterChip(
                     selected = filterState.changingTableOnly,
                     onClick = { viewModel.toggleChangingTableOnly() },
-                    label = { Text("👶 طاولة رضع") }
+                    label = { Text(AppStrings.filterBabyChanging(currentLang)) }
                 )
 
                 // Showers
                 FilterChip(
                     selected = filterState.showerOnly,
                     onClick = { viewModel.toggleShowerOnly() },
-                    label = { Text("دوش ساخن") }
+                    label = { Text(AppStrings.filterShower(currentLang)) }
                 )
             }
             }
@@ -694,9 +697,14 @@ fun HomeScreen(
                     searchQuery = filterState.searchQuery,
                     onSearchQueryChange = { viewModel.setSearchQuery(it) },
                     onWilayaSelected = { wilaya ->
-                        viewModel.setUserLocation(wilaya.latitude, wilaya.longitude, "ولاية ${wilaya.arabicName}")
+                        val locName = when (currentLang) {
+                            AppLanguage.AR -> "ولاية ${wilaya.arabicName}"
+                            AppLanguage.FR -> "Wilaya de ${wilaya.frenchName}"
+                            AppLanguage.EN -> "Wilaya of ${wilaya.frenchName}"
+                        }
+                        viewModel.setUserLocation(wilaya.latitude, wilaya.longitude, locName)
                         viewModel.setSelectedWilaya(wilaya.arabicName)
-                        viewModel.setSearchQuery(wilaya.arabicName)
+                        viewModel.setSearchQuery(if (currentLang == AppLanguage.AR) wilaya.arabicName else wilaya.frenchName)
                     },
                     currentWilayaName = userLocation.cityName,
                     modifier = Modifier
@@ -808,7 +816,8 @@ fun HomeScreen(
                                     onToggleMosques = { viewModel.toggleMosquesVisibility() },
                                     onToggleRestAreas = { viewModel.toggleRestAreasVisibility() },
                                     onTogglePublicToilets = { viewModel.togglePublicToiletsVisibility() },
-                                    onResetAll = { viewModel.resetAllFilters() }
+                                    onResetAll = { viewModel.resetAllFilters() },
+                                    onOpenOfflineCache = { viewModel.setShowOfflineCacheDialog(true) }
                                 )
                             }
                         }
@@ -817,8 +826,8 @@ fun HomeScreen(
                         // Nearest Restrooms List View
                         if (filteredRestrooms.isEmpty()) {
                             EmptyStateNotice(
-                                title = "لا توجد نتائج مطابقة للبحث",
-                                subtitle = "جرّب تغيير خيارات الفلترة أو اختر ولاية أخرى أو ساهم بإضافة مرفق جديد."
+                                title = AppStrings.noResultsTitle(currentLang),
+                                subtitle = AppStrings.noResultsSubtitle(currentLang)
                             )
                         } else {
                             LazyColumn(
@@ -844,8 +853,8 @@ fun HomeScreen(
                         val favItems = filteredRestrooms.filter { it.restroom.isFavorite }
                         if (favItems.isEmpty()) {
                             EmptyStateNotice(
-                                title = "قائمة المفضلة فارغة",
-                                subtitle = "انقر على رمز القلب في أي دورة مياه أو حمام لإضافتها إلى قائمة المفضلة والوصول إليها بسرعة."
+                                title = AppStrings.emptyFavoritesTitle(currentLang),
+                                subtitle = AppStrings.emptyFavoritesSubtitle(currentLang)
                             )
                         } else {
                             LazyColumn(
@@ -959,7 +968,7 @@ fun HomeScreen(
             onFavoriteToggle = { viewModel.toggleFavorite(selectedRestroom!!) },
             onReportWaterCut = { isCut -> viewModel.reportWaterCut(selectedRestroom!!, isCut) },
             onRateRestroom = { rating -> viewModel.rateRestroom(selectedRestroom!!, rating) },
-            onSubmitReview = { author, rating, cleanliness, comment, water, soap ->
+            onSubmitReview = { author, rating, cleanliness, comment, water, soap, imageUri ->
                 viewModel.submitReview(
                     restroomId = selectedRestroom!!.id,
                     authorName = author,
@@ -967,7 +976,8 @@ fun HomeScreen(
                     cleanlinessRating = cleanliness,
                     comment = comment,
                     hasWaterAvailable = water,
-                    hasSoapPaper = soap
+                    hasSoapPaper = soap,
+                    imageUri = imageUri
                 )
             }
         )
@@ -1002,6 +1012,11 @@ fun HomeScreen(
             isOfflineMode = isOfflineMode,
             onToggleOfflineMode = { viewModel.toggleOfflineMode() },
             onRefreshCache = { viewModel.refreshOfflineCache() },
+            cachedRegionIds = cachedRegionIds,
+            regionDownloadProgress = regionDownloadProgress,
+            onDownloadRegion = { viewModel.downloadRegion(it) },
+            onRemoveRegion = { viewModel.removeCachedRegion(it) },
+            onDownloadAllRegions = { viewModel.downloadAllRegions() },
             onDismiss = { viewModel.setShowOfflineCacheDialog(false) }
         )
     }

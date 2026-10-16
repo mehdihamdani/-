@@ -48,6 +48,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.AppLanguage
+import com.example.util.LocalAppLanguage
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -243,8 +245,14 @@ fun GoogleSignInButton(
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
+                val signInLang = LocalAppLanguage.current
+                val signInButtonText = when (signInLang) {
+                    AppLanguage.AR -> "تسجيل الدخول بواسطة Google"
+                    AppLanguage.FR -> "Se connecter avec Google"
+                    AppLanguage.EN -> "Sign in with Google"
+                }
                 Text(
-                    text = "تسجيل الدخول بواسطة Google",
+                    text = signInButtonText,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -257,6 +265,7 @@ fun GoogleSignInButton(
 fun SignInScreen(
     onSignInSuccess: () -> Unit
 ) {
+    val lang = LocalAppLanguage.current
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val credentialManager = remember { CredentialManager.create(context) }
@@ -290,8 +299,13 @@ fun SignInScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(color = Color(0xFF0D9488))
                     Spacer(modifier = Modifier.height(16.dp))
+                    val verifyingText = when (lang) {
+                        AppLanguage.AR -> "جاري التحقق من الحساب..."
+                        AppLanguage.FR -> "Vérification du compte en cours..."
+                        AppLanguage.EN -> "Verifying account..."
+                    }
                     Text(
-                        text = "جاري التحقق من الحساب...",
+                        text = verifyingText,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -322,16 +336,26 @@ fun SignInScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                val appNameTitle = when (lang) {
+                    AppLanguage.AR -> "دليل راحة"
+                    AppLanguage.FR -> "Guide Raha"
+                    AppLanguage.EN -> "Raha Guide"
+                }
                 Text(
-                    text = "دليل دورات المياه",
+                    text = appNameTitle,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
 
+                val appSubtitle = when (lang) {
+                    AppLanguage.AR -> "دليل ومجتمع دورات المياه العمومية والمصليات في الـ 69 ولاية"
+                    AppLanguage.FR -> "Guide et communauté des commodités et mosquées dans les 69 wilayas"
+                    AppLanguage.EN -> "Directory and community for restrooms and mosques across 69 wilayas"
+                }
                 Text(
-                    text = "دليل ومجتمع دورات المياه العمومية والخاصة في الـ 69 ولاية",
+                    text = appSubtitle,
                     fontSize = 15.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -347,20 +371,50 @@ fun SignInScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        val f1Title = when (lang) {
+                            AppLanguage.AR -> "العثور على أقرب دورة مياه"
+                            AppLanguage.FR -> "Trouver les commodités proches"
+                            AppLanguage.EN -> "Find nearest restrooms"
+                        }
+                        val f1Sub = when (lang) {
+                            AppLanguage.AR -> "خريطة تفاعلية أوفلاين مع مسارات دقيقة"
+                            AppLanguage.FR -> "Carte interactive hors-ligne avec itinéraires précis"
+                            AppLanguage.EN -> "Interactive offline map with accurate routes"
+                        }
+                        val f2Title = when (lang) {
+                            AppLanguage.AR -> "تقييم نظافة الأماكن"
+                            AppLanguage.FR -> "Évaluer la propreté des lieux"
+                            AppLanguage.EN -> "Rate facility cleanliness"
+                        }
+                        val f2Sub = when (lang) {
+                            AppLanguage.AR -> "شارك تجربتك وتفقد نظافة وتوفر المياه"
+                            AppLanguage.FR -> "Partagez votre avis et vérifiez l'eau courante"
+                            AppLanguage.EN -> "Share your feedback and check running water"
+                        }
+                        val f3Title = when (lang) {
+                            AppLanguage.AR -> "مزامنة سحابية مع Firebase"
+                            AppLanguage.FR -> "Synchronisation Cloud sécurisée"
+                            AppLanguage.EN -> "Secure Cloud Synchronization"
+                        }
+                        val f3Sub = when (lang) {
+                            AppLanguage.AR -> "حفظ الأماكن المفضلة والمساهمات ومشاركتها"
+                            AppLanguage.FR -> "Sauvegardez vos favoris et contributions"
+                            AppLanguage.EN -> "Save favorite places and contributions"
+                        }
                         FeatureRow(
                             icon = Icons.Default.LocationOn,
-                            title = "العثور على أقرب دورة مياه",
-                            subtitle = "خريطة تفاعلية أوفلاين مع مسارات دقيقة"
+                            title = f1Title,
+                            subtitle = f1Sub
                         )
                         FeatureRow(
                             icon = Icons.Default.Star,
-                            title = "تقييم نظافة الأماكن",
-                            subtitle = "شارك تجربتك وتفقد نظافة وتوفر المياه"
+                            title = f2Title,
+                            subtitle = f2Sub
                         )
                         FeatureRow(
                             icon = Icons.Default.CheckCircle,
-                            title = "مزامنة سحابية مع Firebase",
-                            subtitle = "حفظ الأماكن المفضلة ومشاركتها عبر أجهزتك"
+                            title = f3Title,
+                            subtitle = f3Sub
                         )
                     }
                 }
@@ -384,8 +438,13 @@ fun SignInScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                val privacyNote = when (lang) {
+                    AppLanguage.AR -> "تسجيل الدخول آمن عبر حساب قوقل مع الامتثال لسياسة الخصوصية"
+                    AppLanguage.FR -> "Connexion sécurisée via Google conforme à la politique de confidentialité"
+                    AppLanguage.EN -> "Secure Google Sign-In compliant with privacy policies"
+                }
                 Text(
-                    text = "تسجيل الدخول آمن عبر حساب قوقل مع الامتثال لسياسة الخصوصية",
+                    text = privacyNote,
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.outline,
                     textAlign = TextAlign.Center

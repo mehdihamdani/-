@@ -70,6 +70,8 @@ import com.example.ui.theme.TealPrimary
 import com.example.ui.theme.TransportBlue
 import com.example.ui.theme.WaterBlue
 import com.example.ui.viewmodel.RestroomWithDistance
+import com.example.util.AppStrings
+import com.example.util.LocalAppLanguage
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -80,6 +82,7 @@ fun RestroomCard(
     onFavoriteToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val lang = LocalAppLanguage.current
     val restroom = item.restroom
     val typeColor = getTypeColor(restroom.type)
     val typeIcon = getTypeIcon(restroom.type)
@@ -115,7 +118,7 @@ fun RestroomCard(
                 ) {
                     Icon(
                         imageVector = typeIcon,
-                        contentDescription = restroom.type.arabicName,
+                        contentDescription = restroom.type.getDisplayName(lang),
                         tint = typeColor,
                         modifier = Modifier.size(24.dp)
                     )
@@ -127,7 +130,7 @@ fun RestroomCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = restroom.name,
+                            text = restroom.getDisplayName(lang),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -146,7 +149,7 @@ fun RestroomCard(
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text = "${restroom.wilaya} • ${restroom.commune}",
+                            text = "${com.example.data.model.AlgerianWilayas.getLocalizedWilayaName(restroom.wilaya, lang)} • ${restroom.commune}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -184,7 +187,7 @@ fun RestroomCard(
                 ) {
                     Icon(
                         imageVector = if (restroom.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "المفضلة",
+                        contentDescription = AppStrings.navFavorites(lang),
                         tint = if (restroom.isFavorite) AlertRed else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -210,7 +213,11 @@ fun RestroomCard(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "تنبيه مجتمعي: تم الإبلاغ عن انقطاع مؤقت للمياه في هذا الموقع",
+                            text = when (lang) {
+                                com.example.data.model.AppLanguage.AR -> "تنبيه مجتمعي: تم الإبلاغ عن انقطاع مؤقت للمياه في هذا الموقع"
+                                com.example.data.model.AppLanguage.FR -> "Alerte : Coupure d'eau temporaire signalée dans ce lieu"
+                                com.example.data.model.AppLanguage.EN -> "Community alert: Temporary water outage reported at this facility"
+                            },
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = AlertRed
                         )
@@ -228,7 +235,7 @@ fun RestroomCard(
             ) {
                 // Free or Paid badge
                 StatusBadge(
-                    text = if (restroom.isFree) "مجاني" else "${restroom.priceDzd} دج",
+                    text = if (restroom.isFree) AppStrings.free(lang) else "${restroom.priceDzd} ${AppStrings.dzdCurrency(lang)}",
                     color = if (restroom.isFree) SuccessGreen else MaterialTheme.colorScheme.tertiary
                 )
 
@@ -241,7 +248,7 @@ fun RestroomCard(
 
                 // Cleanliness badge
                 StatusBadge(
-                    text = "نظافة: ${restroom.cleanlinessRating}/5",
+                    text = "${AppStrings.cleanliness(lang)}: ${restroom.cleanlinessRating}/5",
                     color = RahaGreen,
                     icon = Icons.Default.CleaningServices
                 )
@@ -249,7 +256,7 @@ fun RestroomCard(
                 // Water status
                 if (!restroom.waterCutReported && restroom.hasWater) {
                     StatusBadge(
-                        text = "ماء متوفر",
+                        text = AppStrings.waterAvailable(lang),
                         color = WaterBlue,
                         icon = Icons.Default.WaterDrop
                     )
@@ -258,7 +265,7 @@ fun RestroomCard(
                 // Wudu
                 if (restroom.hasWudu) {
                     StatusBadge(
-                        text = "مرافق وضوء",
+                        text = AppStrings.wuduAvailable(lang),
                         color = MosqueEmerald,
                         icon = Icons.Default.WaterDrop
                     )
@@ -267,7 +274,11 @@ fun RestroomCard(
                 // Donation Account Badge
                 if (restroom.donationCcp.isNotBlank()) {
                     StatusBadge(
-                        text = "تبرع جاري CCP",
+                        text = when (lang) {
+                            com.example.data.model.AppLanguage.AR -> "تبرع جاري CCP"
+                            com.example.data.model.AppLanguage.FR -> "Don CCP en cours"
+                            com.example.data.model.AppLanguage.EN -> "Ongoing CCP donation"
+                        },
                         color = MosqueEmerald,
                         icon = Icons.Default.VolunteerActivism
                     )
@@ -276,7 +287,7 @@ fun RestroomCard(
                 // Women section
                 if (restroom.hasWomenSection) {
                     StatusBadge(
-                        text = "قسم نساء",
+                        text = AppStrings.filterWomenOnly(lang),
                         color = Color(0xFF9C27B0),
                         icon = Icons.Default.Wc
                     )
@@ -285,7 +296,7 @@ fun RestroomCard(
                 // Wheelchair
                 if (restroom.isAccessiblePmr) {
                     StatusBadge(
-                        text = "ذوي الاحتياجات",
+                        text = AppStrings.filterPmr(lang),
                         color = TransportBlue,
                         icon = Icons.AutoMirrored.Filled.Accessible
                     )
@@ -294,7 +305,7 @@ fun RestroomCard(
                 // Changing Table
                 if (restroom.hasChangingTable) {
                     StatusBadge(
-                        text = "طاولة رضع",
+                        text = AppStrings.filterBabyChanging(lang),
                         color = Color(0xFFE91E63),
                         icon = Icons.Default.ChildCare
                     )
@@ -303,7 +314,7 @@ fun RestroomCard(
                 // High Cleanliness
                 if (restroom.cleanlinessRating >= 4.2f) {
                     StatusBadge(
-                        text = "نظافة عالية",
+                        text = AppStrings.filterCleanliness(lang),
                         color = Color(0xFF2E7D32),
                         icon = Icons.Default.CleaningServices
                     )
@@ -312,7 +323,7 @@ fun RestroomCard(
                 // Shower
                 if (restroom.hasShower) {
                     StatusBadge(
-                        text = "دوش واستحمام",
+                        text = AppStrings.filterShower(lang),
                         color = HammamBronze,
                         icon = Icons.Default.Shower
                     )
@@ -320,7 +331,7 @@ fun RestroomCard(
 
                 // Offline Available Room badge
                 StatusBadge(
-                    text = "مخزن محلياً",
+                    text = AppStrings.savedLocally(lang),
                     color = Color(0xFF1E392A),
                     icon = Icons.Default.CloudDone
                 )
@@ -361,7 +372,7 @@ fun RestroomCard(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("انطلق الآن", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                    Text(AppStrings.navigate(lang), style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                 }
             }
         }

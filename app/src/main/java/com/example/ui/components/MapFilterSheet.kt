@@ -74,6 +74,9 @@ import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.TealPrimary
 import com.example.ui.theme.WaterBlue
 import com.example.ui.viewmodel.FilterState
+import com.example.data.model.AppLanguage
+import com.example.util.LocalAppLanguage
+import com.example.util.AppStrings
 
 @Composable
 fun MapQuickFilterChips(
@@ -88,6 +91,7 @@ fun MapQuickFilterChips(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
+    val lang = LocalAppLanguage.current
 
     Row(
         modifier = modifier
@@ -113,15 +117,25 @@ fun MapQuickFilterChips(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
+                val allFiltersDesc = when (lang) {
+                    AppLanguage.AR -> "كل الفلاتر"
+                    AppLanguage.FR -> "Tous les filtres"
+                    AppLanguage.EN -> "All filters"
+                }
+                val filterText = when (lang) {
+                    AppLanguage.AR -> "تصفية"
+                    AppLanguage.FR -> "Filtrer"
+                    AppLanguage.EN -> "Filter"
+                }
                 Icon(
                     imageVector = Icons.Default.Tune,
-                    contentDescription = "كل الفلاتر",
+                    contentDescription = allFiltersDesc,
                     tint = if (filterState.activeFilterCount > 0) Color.White else RahaBlue,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "تصفية",
+                    text = filterText,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = if (filterState.activeFilterCount > 0) Color.White else MaterialTheme.colorScheme.onSurface
                 )
@@ -145,9 +159,14 @@ fun MapQuickFilterChips(
             }
         }
 
-        // 1. Accessibility Chip (ذوي الهمم)
+        // 1. Accessibility Chip
+        val accessibleTitle = when (lang) {
+            AppLanguage.AR -> "ذوي الهمم"
+            AppLanguage.FR -> "Accès PMR"
+            AppLanguage.EN -> "Accessible"
+        }
         MapFilterQuickChip(
-            title = "ذوي الهمم",
+            title = accessibleTitle,
             icon = Icons.AutoMirrored.Filled.Accessible,
             isActive = filterState.accessiblePmrOnly,
             activeColor = Color(0xFF0077B6),
@@ -155,9 +174,14 @@ fun MapQuickFilterChips(
             testTag = "chip_filter_accessible"
         )
 
-        // 2. High Cleanliness Chip (نظافة عالية)
+        // 2. High Cleanliness Chip
+        val cleanTitle = when (lang) {
+            AppLanguage.AR -> "نظافة عالية"
+            AppLanguage.FR -> "Très propre"
+            AppLanguage.EN -> "High cleanliness"
+        }
         MapFilterQuickChip(
-            title = "نظافة عالية",
+            title = cleanTitle,
             icon = Icons.Default.CleaningServices,
             isActive = filterState.highCleanlinessOnly,
             activeColor = Color(0xFF2E7D32),
@@ -165,9 +189,14 @@ fun MapQuickFilterChips(
             testTag = "chip_filter_cleanliness"
         )
 
-        // 3. Changing Table Chip (طاولة رضع)
+        // 3. Changing Table Chip
+        val babyTitle = when (lang) {
+            AppLanguage.AR -> "طاولة رضع"
+            AppLanguage.FR -> "Table à langer"
+            AppLanguage.EN -> "Baby changing"
+        }
         MapFilterQuickChip(
-            title = "طاولة رضع",
+            title = babyTitle,
             icon = Icons.Default.ChildCare,
             isActive = filterState.changingTableOnly,
             activeColor = Color(0xFFE91E63),
@@ -175,9 +204,9 @@ fun MapQuickFilterChips(
             testTag = "chip_filter_changing_table"
         )
 
-        // 4. Free Only Chip (مجاني)
+        // 4. Free Only Chip
         MapFilterQuickChip(
-            title = "مجاني",
+            title = AppStrings.free(lang),
             icon = Icons.Default.AttachMoney,
             isActive = filterState.freeOnly,
             activeColor = SuccessGreen,
@@ -197,15 +226,20 @@ fun MapQuickFilterChips(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
                 ) {
+                    val resetDesc = when (lang) {
+                        AppLanguage.AR -> "مسح الفلاتر"
+                        AppLanguage.FR -> "Effacer les filtres"
+                        AppLanguage.EN -> "Clear filters"
+                    }
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "إلغاء الفلاتر",
+                        contentDescription = resetDesc,
                         tint = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.size(13.dp)
                     )
                     Spacer(modifier = Modifier.width(3.dp))
                     Text(
-                        text = "مسح الفلاتر",
+                        text = resetDesc,
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
@@ -286,6 +320,8 @@ fun MapFilterSheet(
     onTogglePublicToilets: () -> Unit,
     onResetAll: () -> Unit
 ) {
+    val lang = LocalAppLanguage.current
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -323,13 +359,23 @@ fun MapFilterSheet(
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
+                        val sheetTitle = when (lang) {
+                            AppLanguage.AR -> "تصفية المعالم على الخريطة"
+                            AppLanguage.FR -> "Filtrer les lieux sur la carte"
+                            AppLanguage.EN -> "Filter places on map"
+                        }
+                        val sheetSubtitle = when (lang) {
+                            AppLanguage.AR -> "$matchCount نقطة راحة مطابقة للاختيارات"
+                            AppLanguage.FR -> "$matchCount points relais trouvés"
+                            AppLanguage.EN -> "$matchCount matching facilities found"
+                        }
                         Text(
-                            text = "تصفية المعالم على الخريطة",
+                            text = sheetTitle,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "$matchCount نقطة راحة مطابقة للاختيارات",
+                            text = sheetSubtitle,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -340,8 +386,13 @@ fun MapFilterSheet(
                     onClick = onResetAll,
                     enabled = filterState.activeFilterCount > 0
                 ) {
+                    val resetText = when (lang) {
+                        AppLanguage.AR -> "إعادة ضبط"
+                        AppLanguage.FR -> "Réinitialiser"
+                        AppLanguage.EN -> "Reset"
+                    }
                     Text(
-                        text = "إعادة ضبط",
+                        text = resetText,
                         fontWeight = FontWeight.Bold,
                         color = if (filterState.activeFilterCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
@@ -351,8 +402,13 @@ fun MapFilterSheet(
             Spacer(modifier = Modifier.height(18.dp))
 
             // Section 1: Main Requested Criteria (Accessibility, Cleanliness, Changing Tables)
+            val sec1Title = when (lang) {
+                AppLanguage.AR -> "معايير الراحة والتجهيزات الخاصة"
+                AppLanguage.FR -> "Critères de confort et accessibilité"
+                AppLanguage.EN -> "Comfort & accessibility criteria"
+            }
             Text(
-                text = "معايير الراحة والتجهيزات الخاصة",
+                text = sec1Title,
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -361,9 +417,19 @@ fun MapFilterSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             // 1. Accessibility
+            val pmrTitle = when (lang) {
+                AppLanguage.AR -> "سهولة الوصول لذوي الاحتياجات (PMR)"
+                AppLanguage.FR -> "Accès personnes à mobilité réduite (PMR)"
+                AppLanguage.EN -> "Wheelchair Accessible (PRM)"
+            }
+            val pmrDesc = when (lang) {
+                AppLanguage.AR -> "مداخل ممهدة، أبواب متسعة، ومرافق خاصة بالكراسي المتحركة"
+                AppLanguage.FR -> "Rampes d'accès, portes larges et sanitaires adaptés"
+                AppLanguage.EN -> "Ramps, wide doors, and adapted facilities"
+            }
             FilterToggleRow(
-                title = "سهولة الوصول لذوي الاحتياجات (PMR)",
-                description = "مداخل ممهدة، أبواب متسعة، ومرافق خاصة بالكراسي المتحركة",
+                title = pmrTitle,
+                description = pmrDesc,
                 icon = Icons.AutoMirrored.Filled.Accessible,
                 iconColor = Color(0xFF0077B6),
                 checked = filterState.accessiblePmrOnly,
@@ -374,9 +440,19 @@ fun MapFilterSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             // 2. Cleanliness
+            val cleanSheetTitle = when (lang) {
+                AppLanguage.AR -> "مستوى نظافة ممتاز ومضمون"
+                AppLanguage.FR -> "Excellente propreté garantie"
+                AppLanguage.EN -> "High cleanliness guaranteed"
+            }
+            val cleanSheetDesc = when (lang) {
+                AppLanguage.AR -> "تقييم نظافة 4.2★ فما فوق مع توفر ماء دائم ومواد تنظيف"
+                AppLanguage.FR -> "Note 4.2★+ avec eau courante et savon permanents"
+                AppLanguage.EN -> "Rating 4.2★+ with continuous running water and soap"
+            }
             FilterToggleRow(
-                title = "مستوى نظافة ممتاز ومضمون",
-                description = "تقييم نظافة 4.2★ فما فوق مع توفر ماء دائم ومواد تنظيف",
+                title = cleanSheetTitle,
+                description = cleanSheetDesc,
                 icon = Icons.Default.CleaningServices,
                 iconColor = Color(0xFF2E7D32),
                 checked = filterState.highCleanlinessOnly,
@@ -387,9 +463,19 @@ fun MapFilterSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             // 3. Changing Tables
+            val changingSheetTitle = when (lang) {
+                AppLanguage.AR -> "طاولات تغيير حفاضات الأطفال"
+                AppLanguage.FR -> "Table à langer pour bébés"
+                AppLanguage.EN -> "Baby changing tables"
+            }
+            val changingSheetDesc = when (lang) {
+                AppLanguage.AR -> "مخصصة لرعاية الرضع وتغيير الحفاضات للأمهات والعائلات"
+                AppLanguage.FR -> "Espace dédié pour les parents et nourrissons"
+                AppLanguage.EN -> "Dedicated space for infants and parents"
+            }
             FilterToggleRow(
-                title = "طاولات تغيير حفاضات الأطفال",
-                description = "مخصصة لرعاية الرضع وتغيير الحفاضات للأمهات والعائلات",
+                title = changingSheetTitle,
+                description = changingSheetDesc,
                 icon = Icons.Default.ChildCare,
                 iconColor = Color(0xFFE91E63),
                 checked = filterState.changingTableOnly,
@@ -400,8 +486,13 @@ fun MapFilterSheet(
             Spacer(modifier = Modifier.height(18.dp))
 
             // Section 2: Extra Amenities
+            val sec2Title = when (lang) {
+                AppLanguage.AR -> "الخدمات والمرافق الإضافية"
+                AppLanguage.FR -> "Services et équipements additionnels"
+                AppLanguage.EN -> "Additional services & amenities"
+            }
             Text(
-                text = "الخدمات والمرافق الإضافية",
+                text = sec2Title,
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -409,9 +500,19 @@ fun MapFilterSheet(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
+            val freeTitle = when (lang) {
+                AppLanguage.AR -> "دخول مجاني بالكامل"
+                AppLanguage.FR -> "Accès 100% gratuit"
+                AppLanguage.EN -> "100% Free Access"
+            }
+            val freeDesc = when (lang) {
+                AppLanguage.AR -> "مرافق بدون أي رسوم دفع (0 دج)"
+                AppLanguage.FR -> "Sanitaires sans frais (0 DZD)"
+                AppLanguage.EN -> "Facilities with no fees (0 DZD)"
+            }
             FilterToggleRow(
-                title = "دخول مجاني بالكامل",
-                description = "مرافق بدون أي رسوم دفع (0 دج)",
+                title = freeTitle,
+                description = freeDesc,
                 icon = Icons.Default.AttachMoney,
                 iconColor = SuccessGreen,
                 checked = filterState.freeOnly,
@@ -421,9 +522,14 @@ fun MapFilterSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            val womenDesc = when (lang) {
+                AppLanguage.AR -> "دورات مياه وقاعات وضوء مستقلة خاصة بالنساء"
+                AppLanguage.FR -> "Sanitaires et ablutions séparés pour femmes"
+                AppLanguage.EN -> "Separate restrooms and ablutions for women"
+            }
             FilterToggleRow(
-                title = "قسم مخصص للنساء",
-                description = "دورات مياه وقاعات وضوء مستقلة خاصة بالنساء",
+                title = AppStrings.womenSection(lang),
+                description = womenDesc,
                 icon = Icons.Default.Wc,
                 iconColor = Color(0xFF9C27B0),
                 checked = filterState.womenSectionOnly,
@@ -433,9 +539,19 @@ fun MapFilterSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            val wuduTitle = when (lang) {
+                AppLanguage.AR -> "أحواض وضوء مهيأة"
+                AppLanguage.FR -> "Espace ablutions aménagé"
+                AppLanguage.EN -> "Equipped wudu area"
+            }
+            val wuduDesc = when (lang) {
+                AppLanguage.AR -> "صنابير ومقاعد مخصصة للوضوء والطهارة"
+                AppLanguage.FR -> "Robinets et sièges dédiés aux ablutions"
+                AppLanguage.EN -> "Taps and seating dedicated to ablution"
+            }
             FilterToggleRow(
-                title = "أحواض وضوء مهيأة",
-                description = "صنابير ومقاعد مخصصة للوضوء والطهارة",
+                title = wuduTitle,
+                description = wuduDesc,
                 icon = Icons.Default.WaterDrop,
                 iconColor = WaterBlue,
                 checked = filterState.wuduOnly,
@@ -445,9 +561,14 @@ fun MapFilterSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            val showerDesc = when (lang) {
+                AppLanguage.AR -> "حمامات أو محطات تحتوي على كبائن دوش"
+                AppLanguage.FR -> "Douches individuelles avec eau chaude"
+                AppLanguage.EN -> "Individual showers with hot water"
+            }
             FilterToggleRow(
-                title = "دوش واستحمام بالماء الساخن",
-                description = "حمامات أو محطات تحتوي على كبائن دوش",
+                title = AppStrings.hotShower(lang),
+                description = showerDesc,
                 icon = Icons.Default.Shower,
                 iconColor = Color(0xFFB07D62),
                 checked = filterState.showerOnly,
@@ -458,8 +579,13 @@ fun MapFilterSheet(
             Spacer(modifier = Modifier.height(18.dp))
 
             // Section 3: Facility Category Visibility
+            val sec3Title = when (lang) {
+                AppLanguage.AR -> "فئات المرافق على الخريطة"
+                AppLanguage.FR -> "Catégories visibles sur la carte"
+                AppLanguage.EN -> "Visible categories on map"
+            }
             Text(
-                text = "فئات المرافق على الخريطة",
+                text = sec3Title,
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -471,10 +597,15 @@ fun MapFilterSheet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                val mosquesChipLabel = when (lang) {
+                    AppLanguage.AR -> "المساجد والمصليات"
+                    AppLanguage.FR -> "Mosquées"
+                    AppLanguage.EN -> "Mosques"
+                }
                 FilterChip(
                     selected = filterState.showMosques,
                     onClick = onToggleMosques,
-                    label = { Text("المساجد والمصليات") },
+                    label = { Text(mosquesChipLabel) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Mosque,
@@ -486,10 +617,15 @@ fun MapFilterSheet(
                     modifier = Modifier.weight(1f)
                 )
 
+                val restAreasChipLabel = when (lang) {
+                    AppLanguage.AR -> "الاستراحات"
+                    AppLanguage.FR -> "Aires de repos"
+                    AppLanguage.EN -> "Rest Areas"
+                }
                 FilterChip(
                     selected = filterState.showRestAreas,
                     onClick = onToggleRestAreas,
-                    label = { Text("الاستراحات") },
+                    label = { Text(restAreasChipLabel) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.LocalGasStation,
@@ -501,10 +637,15 @@ fun MapFilterSheet(
                     modifier = Modifier.weight(1f)
                 )
 
+                val publicToiletsChipLabel = when (lang) {
+                    AppLanguage.AR -> "دورات المياه"
+                    AppLanguage.FR -> "Sanitaires"
+                    AppLanguage.EN -> "Restrooms"
+                }
                 FilterChip(
                     selected = filterState.showPublicToilets,
                     onClick = onTogglePublicToilets,
-                    label = { Text("دورات المياه") },
+                    label = { Text(publicToiletsChipLabel) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Wc,
@@ -520,6 +661,11 @@ fun MapFilterSheet(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Apply Button
+            val applyBtnText = when (lang) {
+                AppLanguage.AR -> "عرض $matchCount نقطة راحة مطابقة على الخريطة"
+                AppLanguage.FR -> "Afficher $matchCount résultats sur la carte"
+                AppLanguage.EN -> "Show $matchCount matching results on map"
+            }
             Button(
                 onClick = onDismiss,
                 shape = RoundedCornerShape(14.dp),
@@ -530,7 +676,7 @@ fun MapFilterSheet(
                     .testTag("map_filter_apply_button")
             ) {
                 Text(
-                    text = "عرض $matchCount نقطة راحة مطابقة على الخريطة",
+                    text = applyBtnText,
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                     color = Color.White
                 )

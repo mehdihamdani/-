@@ -9,11 +9,15 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.foundation.rememberScrollState
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -36,6 +40,23 @@ import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Shower
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.core.content.ContextCompat
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.ZoomIn
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.window.Dialog
+import coil.compose.AsyncImage
+import java.io.File
+import java.io.FileOutputStream
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Warning
@@ -80,6 +101,10 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import com.example.data.model.RestroomEntity
 import com.example.data.model.ReviewEntity
+import com.example.data.model.AppLanguage
+import com.example.data.model.AlgerianWilayas
+import com.example.util.AppStrings
+import com.example.util.LocalAppLanguage
 import com.example.ui.theme.AlertRed
 import com.example.ui.theme.MosqueEmerald
 import com.example.ui.theme.RahaGreen
@@ -100,8 +125,9 @@ fun RestroomDetailSheet(
     onFavoriteToggle: () -> Unit,
     onReportWaterCut: (Boolean) -> Unit,
     onRateRestroom: (Float) -> Unit = {},
-    onSubmitReview: (authorName: String, rating: Float, cleanlinessRating: Float, comment: String, hasWater: Boolean, hasSoap: Boolean) -> Unit
+    onSubmitReview: (authorName: String, rating: Float, cleanlinessRating: Float, comment: String, hasWater: Boolean, hasSoap: Boolean, imageUri: String?) -> Unit
 ) {
+    val lang = LocalAppLanguage.current
     val context = LocalContext.current
     var isWritingReview by remember { mutableStateOf(false) }
     var reviewAuthor by remember { mutableStateOf("") }
@@ -110,7 +136,55 @@ fun RestroomDetailSheet(
     var userComment by remember { mutableStateOf("") }
     var userHasWater by remember { mutableStateOf(restroom.hasWater && !restroom.waterCutReported) }
     var userHasSoap by remember { mutableStateOf(restroom.hasSoapPaper) }
+    var selectedReviewImageUri by remember { mutableStateOf<String?>(null) }
+    var expandedReviewImage by remember { mutableStateOf<String?>(null) }
     var reviewSubmittedSuccess by remember { mutableStateOf(false) }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            try {
+                val dir = File(context.filesDir, "review_photos").apply { mkdirs() }
+                val file = File(dir, "review_${System.currentTimeMillis()}.jpg")
+                FileOutputStream(file).use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+                }
+                selectedReviewImageUri = file.absolutePath
+            } catch (e: Exception) {
+                Toast.makeText(context, "خطأ في حفظ الصورة: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                val dir = File(context.filesDir, "review_photos").apply { mkdirs() }
+                val file = File(dir, "review_${System.currentTimeMillis()}.jpg")
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    FileOutputStream(file).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                selectedReviewImageUri = file.absolutePath
+            } catch (e: Exception) {
+                selectedReviewImageUri = uri.toString()
+            }
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            cameraLauncher.launch(null)
+        } else {
+            Toast.makeText(context, AppStrings.cameraPermissionRequired(lang), Toast.LENGTH_LONG).show()
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -147,7 +221,7 @@ fun RestroomDetailSheet(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = restroom.type.arabicName,
+                            text = restroom.type.getDisplayName(lang),
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                             color = getTypeColor(restroom.type)
                         )
@@ -158,34 +232,40 @@ fun RestroomDetailSheet(
                     IconButton(onClick = onFavoriteToggle) {
                         Icon(
                             imageVector = if (restroom.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "المفضلة",
+                            contentDescription = AppStrings.navFavorites(lang),
                             tint = if (restroom.isFavorite) AlertRed else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     IconButton(onClick = onShareClick) {
                         Icon(
                             imageVector = Icons.Default.Share,
-                            contentDescription = "مشاركة",
+                            contentDescription = AppStrings.shareFacility(lang),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     IconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "إغلاق")
+                        Icon(imageVector = Icons.Default.Close, contentDescription = AppStrings.close(lang))
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Name in Arabic
+            // Name in selected language or fallback
+            val displayName = if (lang != AppLanguage.AR && !restroom.nameFr.isNullOrBlank()) restroom.nameFr else restroom.name
             Text(
-                text = restroom.name,
+                text = displayName,
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface
             )
 
-            // Name in French if available
-            if (restroom.nameFr.isNotBlank()) {
+            if (lang != AppLanguage.AR && restroom.name.isNotBlank() && restroom.name != displayName) {
+                Text(
+                    text = restroom.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else if (lang == AppLanguage.AR && restroom.nameFr.isNotBlank()) {
                 Text(
                     text = restroom.nameFr,
                     style = MaterialTheme.typography.bodyMedium,
@@ -196,8 +276,13 @@ fun RestroomDetailSheet(
             Spacer(modifier = Modifier.height(6.dp))
 
             // Location & Distance
+            val distanceAwayText = when (lang) {
+                AppLanguage.AR -> "يبعد $distanceText"
+                AppLanguage.FR -> "À $distanceText"
+                AppLanguage.EN -> "$distanceText away"
+            }
             Text(
-                text = "📍 ${restroom.wilaya} • ${restroom.commune} • يبعد $distanceText",
+                text = "📍 ${AlgerianWilayas.getLocalizedWilayaName(restroom.wilaya, lang)} • ${restroom.commune} • $distanceAwayText",
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = TealPrimary
             )
@@ -215,13 +300,18 @@ fun RestroomDetailSheet(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    val coordsPrefix = when (lang) {
+                        AppLanguage.AR -> "الإحداثيات: "
+                        AppLanguage.FR -> "Coordonnées : "
+                        AppLanguage.EN -> "Coordinates: "
+                    }
                     Text(
-                        text = "الإحداثيات: ${restroom.offlineCoordinatesString}",
+                        text = "$coordsPrefix${restroom.offlineCoordinatesString}",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFF1E392A)
                     )
                     Text(
-                        text = "💾 مخزن محلياً (Room)",
+                        text = AppStrings.savedLocallyRoom(lang),
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                         color = Color(0xFF1E392A)
                     )
@@ -258,12 +348,12 @@ fun RestroomDetailSheet(
                         )
                         Column {
                             Text(
-                                text = "تنبيه انقطاع المياه في هذا الموقع",
+                                text = AppStrings.waterCutAlertTitle(lang),
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                 color = AlertRed
                             )
                             Text(
-                                text = "أبلغ مستخدمون عن عدم توفر الماء مؤقتاً. يرجى أخذ الحيطة أو التوجه لأقرب مسجد مجاور.",
+                                text = AppStrings.waterCutAlertSubtitle(lang),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = AlertRed
                             )
@@ -275,7 +365,7 @@ fun RestroomDetailSheet(
 
             // Amenities & Badges
             Text(
-                text = "الخدمات والمرافق المتوفرة:",
+                text = AppStrings.availableAmenitiesLabel(lang),
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
             )
 
@@ -287,34 +377,34 @@ fun RestroomDetailSheet(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 StatusBadge(
-                    text = if (restroom.isFree) "دخول مجاني" else "سعر الدخول: ${restroom.priceDzd} دج",
+                    text = if (restroom.isFree) AppStrings.freeEntry(lang) else AppStrings.entryFee(restroom.priceDzd, lang),
                     color = if (restroom.isFree) SuccessGreen else MaterialTheme.colorScheme.tertiary
                 )
                 StatusBadge(
-                    text = if (restroom.hasWater && !restroom.waterCutReported) "ماء جاري متوفر" else "ماء مقطوع حالياً",
+                    text = if (restroom.hasWater && !restroom.waterCutReported) AppStrings.waterAvailable(lang) else AppStrings.waterCut(lang),
                     color = if (restroom.hasWater && !restroom.waterCutReported) WaterBlue else AlertRed,
                     icon = Icons.Default.WaterDrop
                 )
                 if (restroom.hasSoapPaper) {
-                    StatusBadge(text = "صابون ومجفف أيدي", color = SuccessGreen, icon = Icons.Default.CheckCircle)
+                    StatusBadge(text = AppStrings.filterSoapPaper(lang), color = SuccessGreen, icon = Icons.Default.CheckCircle)
                 }
                 if (restroom.hasWudu) {
-                    StatusBadge(text = "أحواض وضوء مهيأة", color = TealPrimary, icon = Icons.Default.WaterDrop)
+                    StatusBadge(text = AppStrings.wuduAvailable(lang), color = TealPrimary, icon = Icons.Default.WaterDrop)
                 }
                 if (restroom.hasWomenSection) {
-                    StatusBadge(text = "قسم مخصص للنساء", color = Color(0xFF9C27B0), icon = Icons.Default.Wc)
+                    StatusBadge(text = AppStrings.womenSection(lang), color = Color(0xFF9C27B0), icon = Icons.Default.Wc)
                 }
                 if (restroom.isAccessiblePmr) {
-                    StatusBadge(text = "مهيأ لذوي الاحتياجات الخاصة", color = Color(0xFF0077B6), icon = Icons.AutoMirrored.Filled.Accessible)
+                    StatusBadge(text = AppStrings.accessiblePmr(lang), color = Color(0xFF0077B6), icon = Icons.AutoMirrored.Filled.Accessible)
                 }
                 if (restroom.hasChangingTable) {
-                    StatusBadge(text = "طاولة تغيير حفاضات الأطفال", color = Color(0xFFE91E63), icon = Icons.Default.ChildCare)
+                    StatusBadge(text = AppStrings.babyChanging(lang), color = Color(0xFFE91E63), icon = Icons.Default.ChildCare)
                 }
                 if (restroom.cleanlinessRating >= 4.2f) {
-                    StatusBadge(text = "مستوى نظافة ممتاز (${restroom.cleanlinessRating}★)", color = Color(0xFF2E7D32), icon = Icons.Default.CleaningServices)
+                    StatusBadge(text = "${AppStrings.highCleanliness(lang)} (${restroom.cleanlinessRating}★)", color = Color(0xFF2E7D32), icon = Icons.Default.CleaningServices)
                 }
                 if (restroom.hasShower) {
-                    StatusBadge(text = "دوش واستحمام بالماء الساخن", color = Color(0xFFB07D62), icon = Icons.Default.Shower)
+                    StatusBadge(text = AppStrings.filterShower(lang), color = Color(0xFFB07D62), icon = Icons.Default.Shower)
                 }
             }
 
@@ -329,7 +419,7 @@ fun RestroomDetailSheet(
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(
-                            text = "معلومات إضافية:",
+                            text = AppStrings.additionalInfo(lang),
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -370,7 +460,7 @@ fun RestroomDetailSheet(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = "الحساب الجاري للتبرع وصيانة المرفق:",
+                                    text = AppStrings.donationCcpLabelHeader(lang),
                                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                     color = MosqueEmerald
                                 )
@@ -387,12 +477,12 @@ fun RestroomDetailSheet(
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                 val clip = ClipData.newPlainText("Donation Account", restroom.donationCcp)
                                 clipboard.setPrimaryClip(clip)
-                                Toast.makeText(context, "تم نسخ رقم الحساب للتبرع", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, AppStrings.copyCcpSuccess(lang), Toast.LENGTH_SHORT).show()
                             }
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "نسخ رقم الحساب",
+                                contentDescription = AppStrings.copyCcpContentDesc(lang),
                                 tint = MosqueEmerald
                             )
                         }
@@ -426,17 +516,34 @@ fun RestroomDetailSheet(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "مستوى نظافة المكان",
+                                    text = AppStrings.cleanlinessScore(lang),
                                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                                 )
                             }
+                            val cleanlinessDesc = when {
+                                restroom.cleanlinessRating >= 4.7f -> when (lang) {
+                                    AppLanguage.AR -> "معقم ونظيف جداً ✨"
+                                    AppLanguage.FR -> "Très propre et désinfecté ✨"
+                                    AppLanguage.EN -> "Very clean & sanitized ✨"
+                                }
+                                restroom.cleanlinessRating >= 4.0f -> when (lang) {
+                                    AppLanguage.AR -> "نظيف ومرتب 🧼"
+                                    AppLanguage.FR -> "Propre et bien entretenu 🧼"
+                                    AppLanguage.EN -> "Clean & tidy 🧼"
+                                }
+                                restroom.cleanlinessRating >= 3.0f -> when (lang) {
+                                    AppLanguage.AR -> "نظافة مقبولة وتفي بالغرض"
+                                    AppLanguage.FR -> "Propreté convenable"
+                                    AppLanguage.EN -> "Acceptable cleanliness"
+                                }
+                                else -> when (lang) {
+                                    AppLanguage.AR -> "يحتاج إلى صيانة وتنظيف دوري ⚠️"
+                                    AppLanguage.FR -> "Nécessite un nettoyage ⚠️"
+                                    AppLanguage.EN -> "Needs cleaning & upkeep ⚠️"
+                                }
+                            }
                             Text(
-                                text = when {
-                                    restroom.cleanlinessRating >= 4.7f -> "معقم ونظيف جداً ✨"
-                                    restroom.cleanlinessRating >= 4.0f -> "نظيف ومرتب 🧼"
-                                    restroom.cleanlinessRating >= 3.0f -> "نظافة مقبولة وتفي بالغرض"
-                                    else -> "يحتاج إلى صيانة وتنظيف دوري ⚠️"
-                                },
+                                text = cleanlinessDesc,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (restroom.cleanlinessRating >= 4.0f) SuccessGreen else Color(0xFFE67E22)
                             )
@@ -484,7 +591,7 @@ fun RestroomDetailSheet(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "التقييم العام: ",
+                                text = "${AppStrings.overallScore(lang)}: ",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -494,8 +601,9 @@ fun RestroomDetailSheet(
                                 color = Color(0xFFE67E22)
                             )
                         }
+                        val revCount = if (reviews.isNotEmpty()) reviews.size else restroom.reviewsCount
                         Text(
-                            text = "${if (reviews.isNotEmpty()) reviews.size else restroom.reviewsCount} تقييم وتجربة مسجلة",
+                            text = "$revCount ${AppStrings.reviewsCountSuffix(lang)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -523,7 +631,7 @@ fun RestroomDetailSheet(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "شارك تجربتك وقَيّم نظافة المكان",
+                                text = AppStrings.writeReview(lang),
                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                             )
                         }
@@ -548,8 +656,13 @@ fun RestroomDetailSheet(
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
+                                val successReviewMsg = when (lang) {
+                                    AppLanguage.AR -> "شكراً لمساهمتك! تم نشر تقييمك لمستوى النظافة وتجربتك بنجاح."
+                                    AppLanguage.FR -> "Merci pour votre contribution ! Votre avis a été publié avec succès."
+                                    AppLanguage.EN -> "Thank you! Your cleanliness rating and review have been published."
+                                }
                                 Text(
-                                    text = "شكراً لمساهمتك! تم نشر تقييمك لمستوى النظافة وتجربتك بنجاح.",
+                                    text = successReviewMsg,
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                                     color = SuccessGreen
                                 )
@@ -572,7 +685,7 @@ fun RestroomDetailSheet(
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {
                                     Text(
-                                        text = "إضافة تقييم وتجربة جديدة",
+                                        text = AppStrings.writeReview(lang),
                                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                                     )
 
@@ -582,7 +695,7 @@ fun RestroomDetailSheet(
                                     OutlinedTextField(
                                         value = reviewAuthor,
                                         onValueChange = { reviewAuthor = it },
-                                        label = { Text("اسمك أو صفتك (مثال: مسافر، كريم...)") },
+                                        label = { Text(AppStrings.yourName(lang)) },
                                         singleLine = true,
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -594,7 +707,7 @@ fun RestroomDetailSheet(
 
                                     // Cleanliness Rating Stars (Highlighted & Specific)
                                     Text(
-                                        text = "1. تقييم نظافة المكان 🧹:",
+                                        text = "1. ${AppStrings.cleanlinessScore(lang)} 🧹:",
                                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                                     )
                                     Row(
@@ -609,20 +722,21 @@ fun RestroomDetailSheet(
                                             ) {
                                                 Icon(
                                                     imageVector = if (i <= userCleanlinessRating) Icons.Default.Star else Icons.Default.StarBorder,
-                                                    contentDescription = "$i نجوم في النظافة",
+                                                    contentDescription = "$i ★",
                                                     tint = RahaGreen
                                                 )
                                             }
                                         }
                                         Spacer(modifier = Modifier.width(6.dp))
+                                        val cleanStarLabel = when (userCleanlinessRating.toInt()) {
+                                            5 -> when (lang) { AppLanguage.AR -> "معقم ونظيف جداً"; AppLanguage.FR -> "Très propre"; AppLanguage.EN -> "Very clean" }
+                                            4 -> when (lang) { AppLanguage.AR -> "نظيف ومرتب"; AppLanguage.FR -> "Propre"; AppLanguage.EN -> "Clean" }
+                                            3 -> when (lang) { AppLanguage.AR -> "نظافة مقبولة"; AppLanguage.FR -> "Moyen"; AppLanguage.EN -> "Average" }
+                                            2 -> when (lang) { AppLanguage.AR -> "يحتاج تنظيفاً"; AppLanguage.FR -> "À nettoyer"; AppLanguage.EN -> "Needs cleaning" }
+                                            else -> when (lang) { AppLanguage.AR -> "غير نظيف"; AppLanguage.FR -> "Sale"; AppLanguage.EN -> "Dirty" }
+                                        }
                                         Text(
-                                            text = when (userCleanlinessRating.toInt()) {
-                                                5 -> "معقم ونظيف جداً"
-                                                4 -> "نظيف ومرتب"
-                                                3 -> "نظافة مقبولة"
-                                                2 -> "يحتاج تنظيفاً"
-                                                else -> "غير نظيف"
-                                            },
+                                            text = cleanStarLabel,
                                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                             color = RahaGreen
                                         )
@@ -632,7 +746,7 @@ fun RestroomDetailSheet(
 
                                     // Overall Rating Stars
                                     Text(
-                                        text = "2. التقييم العام للمرفق ⭐:",
+                                        text = "2. ${AppStrings.overallScore(lang)} ⭐:",
                                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                                     )
                                     Row(
@@ -647,20 +761,21 @@ fun RestroomDetailSheet(
                                             ) {
                                                 Icon(
                                                     imageVector = if (i <= userOverallRating) Icons.Default.Star else Icons.Default.StarBorder,
-                                                    contentDescription = "$i نجوم عام",
+                                                    contentDescription = "$i ★",
                                                     tint = Color(0xFFE67E22)
                                                 )
                                             }
                                         }
                                         Spacer(modifier = Modifier.width(6.dp))
+                                        val overallLabel = when (userOverallRating.toInt()) {
+                                            5 -> when (lang) { AppLanguage.AR -> "ممتاز"; AppLanguage.FR -> "Excellent"; AppLanguage.EN -> "Excellent" }
+                                            4 -> when (lang) { AppLanguage.AR -> "جيد جداً"; AppLanguage.FR -> "Très bon"; AppLanguage.EN -> "Very Good" }
+                                            3 -> when (lang) { AppLanguage.AR -> "جيد"; AppLanguage.FR -> "Bon"; AppLanguage.EN -> "Good" }
+                                            2 -> when (lang) { AppLanguage.AR -> "مقبول"; AppLanguage.FR -> "Passable"; AppLanguage.EN -> "Fair" }
+                                            else -> when (lang) { AppLanguage.AR -> "سيء"; AppLanguage.FR -> "Mauvais"; AppLanguage.EN -> "Poor" }
+                                        }
                                         Text(
-                                            text = when (userOverallRating.toInt()) {
-                                                5 -> "ممتاز"
-                                                4 -> "جيد جداً"
-                                                3 -> "جيد"
-                                                2 -> "مقبول"
-                                                else -> "سيء"
-                                            },
+                                            text = overallLabel,
                                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                             color = Color(0xFFE67E22)
                                         )
@@ -669,8 +784,13 @@ fun RestroomDetailSheet(
                                     Spacer(modifier = Modifier.height(10.dp))
 
                                     // Amenities Status Toggles (Water & Soap)
+                                    val statusDuringVisitLabel = when (lang) {
+                                        AppLanguage.AR -> "حالة المرافق أثناء زيارتك:"
+                                        AppLanguage.FR -> "État des équipements lors de votre visite :"
+                                        AppLanguage.EN -> "Facility status during your visit:"
+                                    }
                                     Text(
-                                        text = "حالة المرافق أثناء زيارتك:",
+                                        text = statusDuringVisitLabel,
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                                     )
                                     Row(
@@ -680,7 +800,10 @@ fun RestroomDetailSheet(
                                         FilterChip(
                                             selected = userHasWater,
                                             onClick = { userHasWater = !userHasWater },
-                                            label = { Text(if (userHasWater) "💧 الماء متوفر" else "⚠️ الماء منقطع") },
+                                            label = {
+                                                val waterLabel = if (userHasWater) "💧 " + AppStrings.waterAvailable(lang) else "⚠️ " + AppStrings.waterCut(lang)
+                                                Text(waterLabel)
+                                            },
                                             colors = FilterChipDefaults.filterChipColors(
                                                 selectedContainerColor = WaterBlue.copy(alpha = 0.2f),
                                                 selectedLabelColor = WaterBlue
@@ -689,7 +812,14 @@ fun RestroomDetailSheet(
                                         FilterChip(
                                             selected = userHasSoap,
                                             onClick = { userHasSoap = !userHasSoap },
-                                            label = { Text(if (userHasSoap) "🧼 صابون متوفر" else "❌ بدون صابون") },
+                                            label = {
+                                                val soapLabel = if (userHasSoap) "🧼 " + AppStrings.filterSoapPaper(lang) else when (lang) {
+                                                    AppLanguage.AR -> "❌ بدون صابون"
+                                                    AppLanguage.FR -> "❌ Sans savon"
+                                                    AppLanguage.EN -> "❌ No soap"
+                                                }
+                                                Text(soapLabel)
+                                            },
                                             colors = FilterChipDefaults.filterChipColors(
                                                 selectedContainerColor = RahaGreen.copy(alpha = 0.2f),
                                                 selectedLabelColor = RahaGreen
@@ -703,7 +833,7 @@ fun RestroomDetailSheet(
                                     OutlinedTextField(
                                         value = userComment,
                                         onValueChange = { userComment = it },
-                                        label = { Text("شارك تفاصيل تجربتك أو ملاحظاتك عن النظافة...") },
+                                        label = { Text(AppStrings.writeCommentPlaceholder(lang)) },
                                         minLines = 3,
                                         maxLines = 5,
                                         modifier = Modifier
@@ -711,6 +841,127 @@ fun RestroomDetailSheet(
                                             .testTag("review_comment_input"),
                                         shape = RoundedCornerShape(10.dp)
                                     )
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    // Photo Attachment Section (Camera / Gallery)
+                                    Text(
+                                        text = AppStrings.attachPhoto(lang) + " 📸:",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    if (selectedReviewImageUri == null) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            OutlinedButton(
+                                                onClick = {
+                                                    val hasPerm = ContextCompat.checkSelfPermission(
+                                                        context,
+                                                        Manifest.permission.CAMERA
+                                                    ) == PackageManager.PERMISSION_GRANTED
+                                                    if (hasPerm) {
+                                                        cameraLauncher.launch(null)
+                                                    } else {
+                                                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                                    }
+                                                },
+                                                shape = RoundedCornerShape(10.dp),
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .testTag("take_camera_photo_button")
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.PhotoCamera,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(16.dp),
+                                                    tint = TealPrimary
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(AppStrings.takePhotoCamera(lang), fontSize = 11.sp)
+                                            }
+
+                                            OutlinedButton(
+                                                onClick = {
+                                                    galleryLauncher.launch(
+                                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                                    )
+                                                },
+                                                shape = RoundedCornerShape(10.dp),
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .testTag("pick_gallery_photo_button")
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.PhotoLibrary,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(16.dp),
+                                                    tint = RahaGreen
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(AppStrings.pickFromGallery(lang), fontSize = 11.sp)
+                                            }
+                                        }
+                                    } else {
+                                        // Preview attached image
+                                        Surface(
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            border = BorderStroke(1.dp, RahaGreen.copy(alpha = 0.5f)),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Column(modifier = Modifier.padding(10.dp)) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.CheckCircle,
+                                                            contentDescription = null,
+                                                            tint = RahaGreen,
+                                                            modifier = Modifier.size(16.dp)
+                                                        )
+                                                        Text(
+                                                            text = AppStrings.photoAttached(lang),
+                                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                            color = RahaGreen
+                                                        )
+                                                    }
+                                                    IconButton(
+                                                        onClick = { selectedReviewImageUri = null },
+                                                        modifier = Modifier.size(24.dp)
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Close,
+                                                            contentDescription = "حذف الصورة",
+                                                            tint = AlertRed,
+                                                            modifier = Modifier.size(18.dp)
+                                                        )
+                                                    }
+                                                }
+
+                                                Spacer(modifier = Modifier.height(6.dp))
+
+                                                AsyncImage(
+                                                    model = selectedReviewImageUri,
+                                                    contentDescription = "صورة المرفق المرفقة",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .height(140.dp)
+                                                        .clip(RoundedCornerShape(8.dp))
+                                                )
+                                            }
+                                        }
+                                    }
 
                                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -720,27 +971,37 @@ fun RestroomDetailSheet(
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         OutlinedButton(
-                                            onClick = { isWritingReview = false },
+                                            onClick = {
+                                                isWritingReview = false
+                                                selectedReviewImageUri = null
+                                            },
                                             shape = RoundedCornerShape(10.dp),
                                             modifier = Modifier.weight(1f)
                                         ) {
-                                            Text("إلغاء")
+                                            Text(AppStrings.cancel(lang))
                                         }
 
                                         Button(
                                             onClick = {
+                                                val defaultAuthor = when (lang) {
+                                                    AppLanguage.AR -> "مواطن"
+                                                    AppLanguage.FR -> "Voyageur"
+                                                    AppLanguage.EN -> "Traveler"
+                                                }
                                                 onSubmitReview(
-                                                    reviewAuthor.ifBlank { "مواطن" },
+                                                    reviewAuthor.ifBlank { defaultAuthor },
                                                     userOverallRating,
                                                     userCleanlinessRating,
                                                     userComment,
                                                     userHasWater,
-                                                    userHasSoap
+                                                    userHasSoap,
+                                                    selectedReviewImageUri
                                                 )
                                                 onRateRestroom(userOverallRating)
                                                 isWritingReview = false
                                                 reviewSubmittedSuccess = true
                                                 userComment = ""
+                                                selectedReviewImageUri = null
                                             },
                                             shape = RoundedCornerShape(10.dp),
                                             colors = ButtonDefaults.buttonColors(containerColor = SuccessGreen),
@@ -754,7 +1015,7 @@ fun RestroomDetailSheet(
                                                 modifier = Modifier.size(16.dp)
                                             )
                                             Spacer(modifier = Modifier.width(6.dp))
-                                            Text("نشر التقييم")
+                                            Text(AppStrings.submitReview(lang))
                                         }
                                     }
                                 }
@@ -781,7 +1042,7 @@ fun RestroomDetailSheet(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "تجارب وآراء الزوار (${reviews.size})",
+                            text = AppStrings.reviewsSection(reviews.size, lang),
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                         )
                         Icon(
@@ -845,7 +1106,7 @@ fun RestroomDetailSheet(
                                                 color = RahaGreen.copy(alpha = 0.12f)
                                             ) {
                                                 Text(
-                                                    text = "✨ نظافة: ${rev.cleanlinessRating}/5",
+                                                    text = "✨ ${AppStrings.cleanliness(lang)}: ${rev.cleanlinessRating}/5",
                                                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                                     color = RahaGreen,
                                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -879,15 +1140,16 @@ fun RestroomDetailSheet(
                                             )
 
                                             // Water badge
+                                            val waterText = if (rev.hasWaterAvailable) "💧 " + AppStrings.waterAvailable(lang) else "⚠️ " + AppStrings.waterCut(lang)
                                             Text(
-                                                text = if (rev.hasWaterAvailable) "💧 ماء متوفر" else "⚠️ ماء منقطع",
+                                                text = waterText,
                                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                                 color = if (rev.hasWaterAvailable) WaterBlue else AlertRed
                                             )
 
                                             if (rev.hasSoapPaper) {
                                                 Text(
-                                                    text = "• 🧼 صابون متوفر",
+                                                    text = "• 🧼 " + AppStrings.filterSoapPaper(lang),
                                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                                     color = RahaGreen
                                                 )
@@ -902,6 +1164,54 @@ fun RestroomDetailSheet(
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )
+                                        }
+
+                                        // Attached review photo
+                                        if (!rev.imageUri.isNullOrBlank()) {
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(160.dp)
+                                                    .clip(RoundedCornerShape(10.dp))
+                                                    .clickable { expandedReviewImage = rev.imageUri }
+                                            ) {
+                                                AsyncImage(
+                                                    model = rev.imageUri,
+                                                    contentDescription = "صورة المرفق المرفقة بالتقييم",
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier.fillMaxSize()
+                                                )
+                                                Surface(
+                                                    shape = RoundedCornerShape(6.dp),
+                                                    color = Color.Black.copy(alpha = 0.6f),
+                                                    modifier = Modifier
+                                                        .align(Alignment.BottomEnd)
+                                                        .padding(6.dp)
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.ZoomIn,
+                                                            contentDescription = null,
+                                                            tint = Color.White,
+                                                            modifier = Modifier.size(12.dp)
+                                                        )
+                                                        Text(
+                                                            text = when (lang) {
+                                                                AppLanguage.AR -> "عرض الصورة"
+                                                                AppLanguage.FR -> "Agrandir"
+                                                                AppLanguage.EN -> "Zoom photo"
+                                                            },
+                                                            color = Color.White,
+                                                            fontSize = 10.sp
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -928,12 +1238,17 @@ fun RestroomDetailSheet(
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "لا توجد تعليقات مسجلة بعد لهذا المرفق.",
+                                    text = AppStrings.noReviewsYet(lang),
                                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                                val beFirstDesc = when (lang) {
+                                    AppLanguage.AR -> "كن أول من يشارك تجربته ويقيّم مستوى النظافة لمساعدة الآخرين!"
+                                    AppLanguage.FR -> "Soyez le premier à partager votre expérience et évaluer la propreté !"
+                                    AppLanguage.EN -> "Be the first to share your experience and rate the cleanliness!"
+                                }
                                 Text(
-                                    text = "كن أول من يشارك تجربته ويقيّم مستوى النظافة لمساعدة الآخرين!",
+                                    text = beFirstDesc,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                                 )
@@ -959,7 +1274,7 @@ fun RestroomDetailSheet(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (restroom.waterCutReported) "إلغاء التنبيه (الماء عاد وتوفر)" else "إبلاغ عن انقطاع الماء أو خلل",
+                    text = if (restroom.waterCutReported) AppStrings.reportWaterRestored(lang) else AppStrings.reportWaterCut(lang),
                     color = if (restroom.waterCutReported) SuccessGreen else AlertRed
                 )
             }
@@ -979,9 +1294,48 @@ fun RestroomDetailSheet(
                 Icon(imageVector = Icons.Default.Navigation, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "فتح الاتجاهات على الخريطة",
+                    text = AppStrings.openInMaps(lang),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
+            }
+        }
+    }
+
+    // Fullscreen Image Preview Dialog
+    if (expandedReviewImage != null) {
+        Dialog(onDismissRequest = { expandedReviewImage = null }) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    AsyncImage(
+                        model = expandedReviewImage,
+                        contentDescription = "صورة المرفق بالحجم الكامل",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 420.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = { expandedReviewImage = null },
+                        colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(AppStrings.close(lang))
+                    }
+                }
             }
         }
     }

@@ -47,9 +47,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.AppLanguage
 import com.example.ui.theme.MosqueEmerald
 import com.example.ui.theme.NaftalFlame
 import com.example.ui.theme.TealPrimary
+import com.example.util.AppStrings
+import com.example.util.LocalAppLanguage
 
 @Composable
 fun FloatingFilterPanel(
@@ -63,6 +66,8 @@ fun FloatingFilterPanel(
     modifier: Modifier = Modifier,
     activeCount: Int? = null
 ) {
+    val lang = LocalAppLanguage.current
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
@@ -111,7 +116,11 @@ fun FloatingFilterPanel(
                         )
                     }
                     Text(
-                        text = "فلترة العرض السريعة",
+                        text = when (lang) {
+                            AppLanguage.AR -> "فلترة العرض السريعة"
+                            AppLanguage.FR -> "Filtres rapides"
+                            AppLanguage.EN -> "Quick filters"
+                        },
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp
@@ -125,7 +134,11 @@ fun FloatingFilterPanel(
                             modifier = Modifier.padding(start = 4.dp)
                         ) {
                             Text(
-                                text = "$activeCount متاح",
+                                text = when (lang) {
+                                    AppLanguage.AR -> "$activeCount متاح"
+                                    AppLanguage.FR -> "$activeCount dispos"
+                                    AppLanguage.EN -> "$activeCount active"
+                                },
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = TealPrimary,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -143,7 +156,7 @@ fun FloatingFilterPanel(
                         modifier = Modifier.clickable { onResetAll() }
                     ) {
                         Text(
-                            text = "إظهار الكل",
+                            text = AppStrings.showAllCategories(lang),
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
@@ -151,7 +164,11 @@ fun FloatingFilterPanel(
                     }
                 } else {
                     Text(
-                        text = "انقر للإخفاء أو الإظهار",
+                        text = when (lang) {
+                            AppLanguage.AR -> "انقر للإخفاء أو الإظهار"
+                            AppLanguage.FR -> "Toucher pour basculer"
+                            AppLanguage.EN -> "Tap to toggle"
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -167,8 +184,16 @@ fun FloatingFilterPanel(
             ) {
                 // 1. Mosques & Musallas (مساجد ومصليات)
                 FilterCategoryToggleItem(
-                    title = "مساجد",
-                    subtitle = "ومصليات",
+                    title = when (lang) {
+                        AppLanguage.AR -> "مساجد"
+                        AppLanguage.FR -> "Mosquées"
+                        AppLanguage.EN -> "Mosques"
+                    },
+                    subtitle = when (lang) {
+                        AppLanguage.AR -> "ومصليات"
+                        AppLanguage.FR -> "& Prières"
+                        AppLanguage.EN -> "& Prayers"
+                    },
                     icon = Icons.Default.Mosque,
                     themeColor = MosqueEmerald,
                     isActive = showMosques,
@@ -179,8 +204,16 @@ fun FloatingFilterPanel(
 
                 // 2. Public Toilets (دورات مياه عمومية)
                 FilterCategoryToggleItem(
-                    title = "دورات مياه",
-                    subtitle = "عمومية",
+                    title = when (lang) {
+                        AppLanguage.AR -> "دورات مياه"
+                        AppLanguage.FR -> "Toilettes"
+                        AppLanguage.EN -> "Restrooms"
+                    },
+                    subtitle = when (lang) {
+                        AppLanguage.AR -> "عمومية"
+                        AppLanguage.FR -> "Publiques"
+                        AppLanguage.EN -> "Public"
+                    },
                     icon = Icons.Default.Wc,
                     themeColor = TealPrimary,
                     isActive = showPublicToilets,
@@ -191,8 +224,16 @@ fun FloatingFilterPanel(
 
                 // 3. Rest Areas (استراحات / نفطال)
                 FilterCategoryToggleItem(
-                    title = "استراحات",
-                    subtitle = "نفطال وطرق",
+                    title = when (lang) {
+                        AppLanguage.AR -> "استراحات"
+                        AppLanguage.FR -> "Aires repos"
+                        AppLanguage.EN -> "Rest areas"
+                    },
+                    subtitle = when (lang) {
+                        AppLanguage.AR -> "نفطال وطرق"
+                        AppLanguage.FR -> "Naftal & Voies"
+                        AppLanguage.EN -> "Naftal & Roads"
+                    },
                     icon = Icons.Default.LocalGasStation,
                     themeColor = NaftalFlame,
                     isActive = showRestAreas,
