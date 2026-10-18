@@ -407,10 +407,9 @@ fun DonationsScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // BaridiMob Option Card
+                        // BaridiMob Option Card (no name displayed)
                         PaymentMethodCard(
                             title = AppStrings.baridiMobTitle(currentLanguage),
-                            accountHolder = "HAMDANI MEHDI (RAHA DZ)",
                             identifier = "007 99999 0008578795 55",
                             codeType = "RIP BaridiMob",
                             icon = Icons.Default.CreditCard,
@@ -420,15 +419,14 @@ fun DonationsScreen(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // CCP Option Card
+                        // Bank Account Option Card (replacing CCP)
                         PaymentMethodCard(
-                            title = AppStrings.ccpTitle(currentLanguage),
-                            accountHolder = "HAMDANI MEHDI - Alger",
-                            identifier = "CCP: 8578795 / Clé 44",
-                            codeType = "CCP",
+                            title = AppStrings.bankAccountTitle(currentLanguage),
+                            identifier = "4159991208",
+                            codeType = "Bank Account",
                             icon = Icons.Default.AccountBalance,
                             accentColor = Color(0xFF084C8D),
-                            onCopy = { copyToClipboard("CCP", "8578795 Clé 44") }
+                            onCopy = { copyToClipboard("Compte Bancaire", "4159991208") }
                         )
 
                         Spacer(modifier = Modifier.height(18.dp))
@@ -674,7 +672,7 @@ fun DonationsScreen(
 @Composable
 private fun PaymentMethodCard(
     title: String,
-    accountHolder: String,
+    accountHolder: String? = null,
     identifier: String,
     codeType: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -711,7 +709,9 @@ private fun PaymentMethodCard(
                 Column {
                     Text(text = title, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
                     Text(text = identifier, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold), color = accentColor)
-                    Text(text = accountHolder, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (!accountHolder.isNullOrBlank()) {
+                        Text(text = accountHolder, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
 

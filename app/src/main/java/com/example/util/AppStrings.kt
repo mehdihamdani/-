@@ -924,6 +924,18 @@ object AppStrings {
         AppLanguage.EN -> "Instant transfer via Algerian RIP"
     }
 
+    fun bankAccountTitle(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "الحساب البنكي (Compte Bancaire)"
+        AppLanguage.FR -> "Compte Bancaire"
+        AppLanguage.EN -> "Bank Account"
+    }
+
+    fun bankAccountSub(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "تحويل بنكي مباشر"
+        AppLanguage.FR -> "Virement bancaire direct"
+        AppLanguage.EN -> "Direct bank transfer"
+    }
+
     fun ccpTitle(lang: AppLanguage): String = when (lang) {
         AppLanguage.AR -> "حوالة بريدية CCP"
         AppLanguage.FR -> "Virement postal CCP"

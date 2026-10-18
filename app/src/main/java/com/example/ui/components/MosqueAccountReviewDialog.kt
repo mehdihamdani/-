@@ -214,10 +214,16 @@ fun MosqueAccountReviewDialog(
                                 account = item,
                                 onOpenSource = {
                                     try {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.source))
-                                        context.startActivity(intent)
+                                        val uri = Uri.parse(item.source.trim())
+                                        val scheme = uri.scheme?.lowercase()
+                                        if (scheme == "http" || scheme == "https") {
+                                            val intent = Intent(Intent.ACTION_VIEW, uri)
+                                            context.startActivity(intent)
+                                        } else {
+                                            Toast.makeText(context, "الرابط غير آمن أو غير صالح", Toast.LENGTH_SHORT).show()
+                                        }
                                     } catch (_: Exception) {
-                                        Toast.makeText(context, "تعذر فتح الرابط", Toast.LENGTH_SHORT).show()
+                                         Toast.makeText(context, "تعذر فتح الرابط", Toast.LENGTH_SHORT).show()
                                     }
                                 },
                                 onAuditClick = {

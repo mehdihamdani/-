@@ -96,15 +96,15 @@ class FirestoreRestroomRepository(
 
         val data = mutableMapOf<String, Any>(
             "id" to docId,
-            "name" to restroom.name,
+            "name" to restroom.name.trim().take(150),
             "latitude" to restroom.latitude,
             "longitude" to restroom.longitude,
-            "province" to restroom.province,
+            "province" to restroom.province.trim().take(100),
             "createdBy" to verifiedUid,
             "createdAt" to FieldValue.serverTimestamp(),
-            "rating" to restroom.rating,
-            "reviewsCount" to restroom.reviewsCount,
-            "cleanlinessRating" to restroom.cleanlinessRating,
+            "rating" to restroom.rating.coerceIn(0.0, 5.0),
+            "reviewsCount" to restroom.reviewsCount.coerceAtLeast(0),
+            "cleanlinessRating" to restroom.cleanlinessRating.coerceIn(0.0, 5.0),
             "isFree" to restroom.isFree,
             "priceDzd" to restroom.priceDzd,
             "hasWater" to restroom.hasWater,
@@ -113,11 +113,11 @@ class FirestoreRestroomRepository(
             "hasAccessibleToilet" to restroom.hasAccessibleToilet,
             "hasSquatToilet" to restroom.hasSquatToilet,
             "hasSittingToilet" to restroom.hasSittingToilet,
-            "type" to restroom.type
+            "type" to restroom.type.trim().take(50)
         )
-        if (restroom.nameAr.isNotBlank()) data["nameAr"] = restroom.nameAr
-        if (restroom.address.isNotBlank()) data["address"] = restroom.address
-        if (restroom.donationCcp.isNotBlank()) data["donationCcp"] = restroom.donationCcp
+        if (restroom.nameAr.isNotBlank()) data["nameAr"] = restroom.nameAr.trim().take(150)
+        if (restroom.address.isNotBlank()) data["address"] = restroom.address.trim().take(300)
+        if (restroom.donationCcp.isNotBlank()) data["donationCcp"] = restroom.donationCcp.trim().take(100)
 
         try {
             docRef.set(data).await()
@@ -135,17 +135,17 @@ class FirestoreRestroomRepository(
 
         val data = mutableMapOf<String, Any>(
             "id" to reviewId,
-            "restroomId" to review.restroomId,
+            "restroomId" to review.restroomId.trim().take(128),
             "userId" to verifiedUid,
-            "authorName" to review.authorName.ifBlank { "مواطن" },
+            "authorName" to review.authorName.trim().take(100).ifBlank { "مواطن" },
             "rating" to review.rating.coerceIn(1.0, 5.0),
             "cleanlinessRating" to review.cleanlinessRating.coerceIn(1.0, 5.0),
             "hasWaterAvailable" to review.hasWaterAvailable,
             "hasSoapPaper" to review.hasSoapPaper,
             "createdAt" to FieldValue.serverTimestamp()
         )
-        if (review.comment.isNotBlank()) data["comment"] = review.comment.trim()
-        if (!review.imageUrl.isNullOrBlank()) data["imageUrl"] = review.imageUrl.trim()
+        if (review.comment.isNotBlank()) data["comment"] = review.comment.trim().take(1000)
+        if (!review.imageUrl.isNullOrBlank()) data["imageUrl"] = review.imageUrl.trim().take(2000)
 
         try {
             reviewRef.set(data).await()

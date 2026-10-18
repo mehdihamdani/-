@@ -14,9 +14,10 @@ service cloud.firestore {
       return isSignedIn() && (
         request.auth.uid == 'LMvNlRBChOWuSYuYkUIdOAj9VDh2' ||
         ('admin' in request.auth.token && request.auth.token.admin == true) ||
-        ('email' in request.auth.token && (
+        ('email' in request.auth.token &&
+         'email_verified' in request.auth.token && request.auth.token.email_verified == true && (
           request.auth.token.email == 'mehdi.hamdani.net@gmail.com' ||
-          request.auth.token.email.matches('.*@admin\\.raha\\.dz$')
+          request.auth.token.email.matches('^[a-zA-Z0-9._%+-]+@admin\\.raha\\.dz$')
         )) ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true)
@@ -103,7 +104,8 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow get, list: if isSignedIn() && (isOwner(userId) || isAdmin());
-      allow create: if isSignedIn() && isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow create: if isSignedIn() && isOwner(userId) && isValidUserProfile(request.resource.data) &&
+                       (!('isAdmin' in request.resource.data) || request.resource.data.isAdmin == false || isAdmin());
       allow update: if isSignedIn() && isOwner(userId) && isValidUserProfile(request.resource.data) &&
                        request.resource.data.userId == resource.data.userId &&
                        // Prevent self-elevation to admin unless already admin
@@ -124,11 +126,13 @@ service cloud.firestore {
                        request.resource.data.createdBy == request.auth.uid &&
                        isValidRestroom(request.resource.data);
       allow update: if isSignedIn() &&
-                       (resource.data.createdBy == request.auth.uid ||
+                       ((resource.data.createdBy == request.auth.uid || isAdmin()) ||
                         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rating', 'reviewsCount', 'cleanlinessRating', 'updatedAt'])) &&
                        isValidRestroom(request.resource.data) &&
-                       request.resource.data.createdBy == resource.data.createdBy;
-      allow delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+                       request.resource.data.createdBy == resource.data.createdBy &&
+                       request.resource.data.id == resource.data.id &&
+                       request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isSignedIn() && (resource.data.createdBy == request.auth.uid || isAdmin());
     }
 
     match /reviews/{reviewId} {
@@ -137,10 +141,12 @@ service cloud.firestore {
                        request.resource.data.userId == request.auth.uid &&
                        isValidReview(request.resource.data);
       allow update: if isSignedIn() &&
-                       resource.data.userId == request.auth.uid &&
-                       request.resource.data.userId == request.auth.uid &&
+                       (resource.data.userId == request.auth.uid || isAdmin()) &&
+                       request.resource.data.userId == resource.data.userId &&
+                       request.resource.data.id == resource.data.id &&
+                       request.resource.data.restroomId == resource.data.restroomId &&
                        isValidReview(request.resource.data);
-      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     // Mosque donation accounts:
@@ -150,7 +156,7 @@ service cloud.firestore {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && isAdmin() && isValidMosqueDonationAccount(request.resource.data);
       allow update: if isSignedIn() && isAdmin() && isValidMosqueDonationAccount(request.resource.data);
-      allow delete: if isAdmin();
+      allow delete: if isSignedIn() && isAdmin();
     }
   }
 }

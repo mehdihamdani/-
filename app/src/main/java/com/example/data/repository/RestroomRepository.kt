@@ -162,10 +162,10 @@ class RestroomRepository(
     ): Long = withContext(Dispatchers.IO) {
         val review = ReviewEntity(
             restroomId = restroomId,
-            authorName = authorName.ifBlank { "مواطن" },
+            authorName = authorName.trim().take(100).ifBlank { "مواطن" },
             rating = rating.coerceIn(1.0f, 5.0f),
             cleanlinessRating = cleanlinessRating.coerceIn(1.0f, 5.0f),
-            comment = comment.trim(),
+            comment = comment.trim().take(1000),
             hasWaterAvailable = hasWaterAvailable,
             hasSoapPaper = hasSoapPaper,
             imageUri = imageUri,
