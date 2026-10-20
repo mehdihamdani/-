@@ -85,6 +85,10 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.clustering.ClusterItem
+import com.google.maps.android.compose.clustering.Clustering
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import kotlinx.coroutines.launch
 
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -196,6 +200,24 @@ fun GoogleRestroomMap(
         }
     }
 
+    // Prepare clustered items representing registered facilities
+    val clusterItems = remember(restrooms, lang) {
+        restrooms.map { item ->
+            val restroom = item.restroom
+            val freeLabel = if (restroom.isFree) AppStrings.free(lang) else "${restroom.priceDzd} ${AppStrings.dzdCurrency(lang)}"
+            val distText = item.formattedDistance
+            val cleanLabel = "${AppStrings.cleanliness(lang)}: ${restroom.cleanlinessRating}/5★"
+            val locWilaya = AlgerianWilayas.getLocalizedWilayaName(restroom.wilaya, lang)
+
+            RestroomClusterItem(
+                restroomWithDistance = item,
+                itemPosition = LatLng(restroom.latitude, restroom.longitude),
+                itemTitle = restroom.name,
+                itemSnippet = "$locWilaya • $distText • $freeLabel • $cleanLabel"
+            )
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -251,26 +273,38 @@ fun GoogleRestroomMap(
                 icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
             )
 
-            // Markers showing registered restrooms based on user location
-            restrooms.forEach { item ->
-                val restroom = item.restroom
-                val isSelected = selectedRestroom?.id == restroom.id
-                val freeLabel = if (restroom.isFree) AppStrings.free(lang) else "${restroom.priceDzd} ${AppStrings.dzdCurrency(lang)}"
-                val distText = item.formattedDistance
-                val cleanLabel = "${AppStrings.cleanliness(lang)}: ${restroom.cleanlinessRating}/5★"
-                val locWilaya = AlgerianWilayas.getLocalizedWilayaName(restroom.wilaya, lang)
-
-                Marker(
-                    state = MarkerState(position = LatLng(restroom.latitude, restroom.longitude)),
-                    title = restroom.name,
-                    snippet = "$locWilaya • $distText • $freeLabel • $cleanLabel",
-                    icon = BitmapDescriptorFactory.defaultMarker(getGoogleMarkerHue(restroom.type)),
-                    onClick = {
-                        onRestroomSelected(if (isSelected) null else restroom)
-                        false
+            // Marker Clustering for Restrooms, Mosques & Rest Stops
+            Clustering(
+                items = clusterItems,
+                onClusterClick = { cluster ->
+                    coroutineScope.launch {
+                        cameraPositionState.animate(
+                            CameraUpdateFactory.newLatLngZoom(
+                                cluster.position,
+                                (cameraPositionState.position.zoom + 2.5f).coerceAtMost(20f)
+                            )
+                        )
                     }
-                )
-            }
+                    true
+                },
+                onClusterItemClick = { clusterItem ->
+                    val restroom = clusterItem.restroomWithDistance.restroom
+                    val isSelected = selectedRestroom?.id == restroom.id
+                    onRestroomSelected(if (isSelected) null else restroom)
+                    false
+                },
+                clusterContent = { cluster ->
+                    RestroomClusterBadge(count = cluster.size)
+                },
+                clusterItemContent = { clusterItem ->
+                    val restroom = clusterItem.restroomWithDistance.restroom
+                    val isSelected = selectedRestroom?.id == restroom.id
+                    RestroomMarkerPin(
+                        type = restroom.type,
+                        isSelected = isSelected
+                    )
+                }
+            )
         }
 
         // Top Overlay Header: City Selector + Map Layer Selector + Offline Switcher
@@ -756,5 +790,103 @@ fun getGoogleMarkerHue(type: RestroomType): Float {
         RestroomType.MALL -> BitmapDescriptorFactory.HUE_ROSE
         RestroomType.PUBLIC_MUNICIPAL -> BitmapDescriptorFactory.HUE_CYAN
         RestroomType.PRIVATE_COMMERCIAL -> BitmapDescriptorFactory.HUE_YELLOW
+    }
+}
+
+/**
+ * Data holder for cluster items on Google Maps representing restrooms, mosques, and rest stops.
+ */
+data class RestroomClusterItem(
+    val restroomWithDistance: RestroomWithDistance,
+    private val itemPosition: LatLng,
+    private val itemTitle: String,
+    private val itemSnippet: String,
+    private val itemZIndex: Float? = 0f
+) : ClusterItem {
+    override fun getPosition(): LatLng = itemPosition
+    override fun getTitle(): String = itemTitle
+    override fun getSnippet(): String = itemSnippet
+    override fun getZIndex(): Float? = itemZIndex
+}
+
+/**
+ * Distinctive cluster badge showing the count of nearby facilities with Algerian Raha branding.
+ */
+@Composable
+private fun RestroomClusterBadge(
+    count: Int,
+    modifier: Modifier = Modifier
+) {
+    val badgeColor = when {
+        count >= 50 -> Color(0xFFD32F2F) // Dense cluster - Red
+        count >= 20 -> Color(0xFFF57C00) // Medium-dense - Deep Orange
+        count >= 10 -> Color(0xFF00897B) // Medium - Teal
+        else -> RahaGreen // Small cluster - Raha Green
+    }
+
+    val sizeDp = when {
+        count >= 100 -> 48.dp
+        count >= 20 -> 44.dp
+        else -> 40.dp
+    }
+
+    Surface(
+        shape = CircleShape,
+        color = badgeColor,
+        shadowElevation = 6.dp,
+        border = BorderStroke(2.5.dp, Color.White),
+        modifier = modifier.size(sizeDp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = if (count > 99) "99+" else count.toString(),
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = if (count > 99) 11.sp else 13.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+/**
+ * Custom pin marker for an individual facility with its category icon and selected state indicator.
+ */
+@Composable
+private fun RestroomMarkerPin(
+    type: RestroomType,
+    isSelected: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val pinColor = when (type) {
+        RestroomType.MOSQUE, RestroomType.MUSALLA -> Color(0xFF2E7D32)
+        RestroomType.HAMMAM -> Color(0xFFE65100)
+        RestroomType.NAFTAL_HIGHWAY -> Color(0xFF0277BD)
+        RestroomType.TRANSPORT_HUB -> Color(0xFF6A1B9A)
+        RestroomType.MALL -> Color(0xFFC2185B)
+        RestroomType.PUBLIC_MUNICIPAL -> Color(0xFF00838F)
+        RestroomType.PRIVATE_COMMERCIAL -> Color(0xFFF9A825)
+    }
+
+    val iconVector = getTypeIcon(type)
+
+    Surface(
+        shape = CircleShape,
+        color = if (isSelected) AlertRed else pinColor,
+        shadowElevation = if (isSelected) 8.dp else 4.dp,
+        border = BorderStroke(
+            width = if (isSelected) 3.dp else 2.dp,
+            color = Color.White
+        ),
+        modifier = modifier.size(if (isSelected) 46.dp else 38.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = iconVector,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(if (isSelected) 22.dp else 18.dp)
+            )
+        }
     }
 }

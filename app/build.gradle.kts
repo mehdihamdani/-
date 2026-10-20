@@ -64,10 +64,14 @@ android {
   }
 }
 
-// Configure the Secrets Gradle Plugin to use .env and .env.example files
-// to match the convention used in Web projects.
+// Configure the Secrets Gradle Plugin to seamlessly support secrets.properties or .env
 secrets {
-  propertiesFileName = ".env"
+  propertiesFileName = if (file("${rootDir}/secrets.properties").exists() &&
+      file("${rootDir}/secrets.properties").readText().lines().any { it.trim().startsWith("MAPS_API_KEY=") && it.substringAfter("=").trim().isNotEmpty() }) {
+    "secrets.properties"
+  } else {
+    ".env"
+  }
   defaultPropertiesFileName = ".env.example"
   ignoreList.add("FIREBASE_APPCHECK_DEBUG_TOKEN")
 }
@@ -117,6 +121,8 @@ dependencies {
   implementation(libs.play.services.location)
   implementation(libs.play.services.maps)
   implementation(libs.maps.compose)
+  implementation(libs.maps.compose.utils)
+  implementation(libs.maps.utils)
   implementation(libs.retrofit)
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
