@@ -66,11 +66,12 @@ android {
 
 // Configure the Secrets Gradle Plugin to seamlessly support secrets.properties or .env
 secrets {
-  propertiesFileName = if (file("${rootDir}/secrets.properties").exists() &&
-      file("${rootDir}/secrets.properties").readText().lines().any { it.trim().startsWith("MAPS_API_KEY=") && it.substringAfter("=").trim().isNotEmpty() }) {
+  propertiesFileName = if (file("${rootDir}/secrets.properties").exists()) {
     "secrets.properties"
-  } else {
+  } else if (file("${rootDir}/.env").exists()) {
     ".env"
+  } else {
+    ".env.example"
   }
   defaultPropertiesFileName = ".env.example"
   ignoreList.add("FIREBASE_APPCHECK_DEBUG_TOKEN")

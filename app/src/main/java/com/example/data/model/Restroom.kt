@@ -51,13 +51,43 @@ data class RestroomEntity(
     val address: String = "",
     val notes: String = "",
     val donationCcp: String = "",
+    // Mosque dedicated services & social links
+    val hasQuranSchool: Boolean = false,
+    val hasFridayPrayer: Boolean = false,
+    val hasLibrary: Boolean = false,
+    val hasParking: Boolean = false,
+    val hasAirConditioning: Boolean = false,
+    val hasFuneralWash: Boolean = false,
+    val hasIftarRamadan: Boolean = false,
+    val facebookUrl: String = "",
+    val mosquePhone: String = "",
+    val imamName: String = "",
+    val mosqueServicesNotes: String = "",
     val isFavorite: Boolean = false,
     val isUserAdded: Boolean = false,
     val waterCutReported: Boolean = false,
     val timestamp: Long = System.currentTimeMillis(),
     val lastCachedTimestamp: Long = System.currentTimeMillis(),
-    val isOfflineAvailable: Boolean = true
+    val isOfflineAvailable: Boolean = true,
+    // Hammam dedicated services, schedules & contact
+    val hasSteamSauna: Boolean = false,
+    val hasKessaScrub: Boolean = false,
+    val hasPrivateShowerRooms: Boolean = false,
+    val isThermalSpring: Boolean = false,
+    val hasTowelRental: Boolean = false,
+    val hasTeaLounge: Boolean = false,
+    val hasBarberGrooming: Boolean = false,
+    val hammamPhone: String = "",
+    val hammamMenHours: String = "",
+    val hammamWomenHours: String = "",
+    val hammamServicesNotes: String = ""
 ) {
+    val isMosqueOrMusalla: Boolean
+        get() = type == RestroomType.MOSQUE || type == RestroomType.MUSALLA
+
+    val isHammam: Boolean
+        get() = type == RestroomType.HAMMAM
+
     /**
      * Formats basic metadata for offline display when internet is unavailable.
      */
@@ -65,6 +95,10 @@ data class RestroomEntity(
         get() {
             val amenities = mutableListOf<String>()
             if (isAccessiblePmr) amenities.add("♿ مهيأ لذوي الهمم")
+            if (hasQuranSchool) amenities.add("📖 مدرسة قرآنية")
+            if (isThermalSpring) amenities.add("♨️ مياه معدنية حموية")
+            if (hasSteamSauna) amenities.add("🧖 بخار وساونا")
+            if (hasKessaScrub) amenities.add("🧼 تكييس وتدليك")
             if (hasChangingTable) amenities.add("👶 طاولة رضع")
             if (hasWater) amenities.add("💧 ماء متوفر") else amenities.add("⚠️ ماء منقطع")
             if (hasWomenSection) amenities.add("🧕 جناح نساء")

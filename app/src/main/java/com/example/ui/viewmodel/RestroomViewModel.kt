@@ -125,20 +125,33 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
     private val _selectedRestroom = MutableStateFlow<RestroomEntity?>(null)
     val selectedRestroom: StateFlow<RestroomEntity?> = _selectedRestroom
 
+    private val _selectedMosquePage = MutableStateFlow<RestroomEntity?>(null)
+    val selectedMosquePage: StateFlow<RestroomEntity?> = _selectedMosquePage
+
+    private val _selectedHammamPage = MutableStateFlow<RestroomEntity?>(null)
+    val selectedHammamPage: StateFlow<RestroomEntity?> = _selectedHammamPage
+
+    private val _initialAddType = MutableStateFlow<RestroomType?>(null)
+    val initialAddType: StateFlow<RestroomType?> = _initialAddType
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    val selectedRestroomReviews: StateFlow<List<ReviewEntity>> = _selectedRestroom
-        .flatMapLatest { restroom ->
-            if (restroom != null) {
-                repository.getReviewsForRestroom(restroom.id)
-            } else {
-                flowOf(emptyList())
-            }
+    val selectedRestroomReviews: StateFlow<List<ReviewEntity>> = combine(
+        _selectedRestroom,
+        _selectedMosquePage,
+        _selectedHammamPage
+    ) { restroom, mosque, hammam ->
+        hammam ?: mosque ?: restroom
+    }.flatMapLatest { activeFacility ->
+        if (activeFacility != null) {
+            repository.getReviewsForRestroom(activeFacility.id)
+        } else {
+            flowOf(emptyList())
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     private val _showAddDialog = MutableStateFlow(false)
     val showAddDialog: StateFlow<Boolean> = _showAddDialog
@@ -206,6 +219,28 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
         _userLocation
     ) { restrooms, filters, location ->
         filterRestroomList(restrooms, filters, location)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    // Unfiltered list of all Hammams & Thermal Springs across Algeria sorted by distance
+    val allHammams: StateFlow<List<RestroomWithDistance>> = combine(
+        repository.allRestrooms,
+        _userLocation
+    ) { restrooms, location ->
+        restrooms
+            .filter { it.type == RestroomType.HAMMAM }
+            .map { item ->
+                val dist = calculateDistance(location.latitude, location.longitude, item.latitude, item.longitude)
+                RestroomWithDistance(
+                    restroom = item,
+                    distanceMeters = dist,
+                    formattedDistance = formatDistance(dist)
+                )
+            }
+            .sortedBy { it.distanceMeters }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -305,8 +340,56 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
         _selectedRestroom.value = restroom
     }
 
+    fun openMosquePage(mosque: RestroomEntity?) {
+        _selectedMosquePage.value = mosque
+        if (mosque != null) {
+            _selectedRestroom.value = null
+            _selectedHammamPage.value = null
+        }
+    }
+
+    fun openHammamPage(hammam: RestroomEntity?) {
+        _selectedHammamPage.value = hammam
+        if (hammam != null) {
+            _selectedRestroom.value = null
+            _selectedMosquePage.value = null
+        }
+    }
+
+    fun updateMosqueDetails(updated: RestroomEntity) {
+        viewModelScope.launch {
+            repository.updateRestroom(updated)
+            if (_selectedMosquePage.value?.id == updated.id) {
+                _selectedMosquePage.value = updated
+            }
+            if (_selectedRestroom.value?.id == updated.id) {
+                _selectedRestroom.value = updated
+            }
+        }
+    }
+
+    fun updateHammamDetails(updated: RestroomEntity) {
+        viewModelScope.launch {
+            repository.updateRestroom(updated)
+            if (_selectedHammamPage.value?.id == updated.id) {
+                _selectedHammamPage.value = updated
+            }
+            if (_selectedRestroom.value?.id == updated.id) {
+                _selectedRestroom.value = updated
+            }
+        }
+    }
+
     fun setShowAddDialog(show: Boolean) {
+        if (!show) {
+            _initialAddType.value = null
+        }
         _showAddDialog.value = show
+    }
+
+    fun openAddDialogWithType(type: RestroomType? = null) {
+        _initialAddType.value = type
+        _showAddDialog.value = true
     }
 
     fun setShowStudyDialog(show: Boolean) {
@@ -416,6 +499,12 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
             if (_selectedRestroom.value?.id == restroom.id) {
                 _selectedRestroom.value = _selectedRestroom.value?.copy(isFavorite = !restroom.isFavorite)
             }
+            if (_selectedMosquePage.value?.id == restroom.id) {
+                _selectedMosquePage.value = _selectedMosquePage.value?.copy(isFavorite = !restroom.isFavorite)
+            }
+            if (_selectedHammamPage.value?.id == restroom.id) {
+                _selectedHammamPage.value = _selectedHammamPage.value?.copy(isFavorite = !restroom.isFavorite)
+            }
         }
     }
 
@@ -485,7 +574,29 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
         openingHours: String,
         address: String,
         notes: String,
-        donationCcp: String = ""
+        donationCcp: String = "",
+        hasQuranSchool: Boolean = false,
+        hasFridayPrayer: Boolean = false,
+        hasLibrary: Boolean = false,
+        hasParking: Boolean = false,
+        hasAirConditioning: Boolean = false,
+        hasFuneralWash: Boolean = false,
+        hasIftarRamadan: Boolean = false,
+        facebookUrl: String = "",
+        mosquePhone: String = "",
+        imamName: String = "",
+        mosqueServicesNotes: String = "",
+        hasSteamSauna: Boolean = false,
+        hasKessaScrub: Boolean = false,
+        hasPrivateShowerRooms: Boolean = false,
+        isThermalSpring: Boolean = false,
+        hasTowelRental: Boolean = false,
+        hasTeaLounge: Boolean = false,
+        hasBarberGrooming: Boolean = false,
+        hammamPhone: String = "",
+        hammamMenHours: String = "",
+        hammamWomenHours: String = "",
+        hammamServicesNotes: String = ""
     ) {
         viewModelScope.launch {
             val userLoc = _userLocation.value
@@ -513,9 +624,32 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
                 address = address,
                 notes = notes,
                 donationCcp = donationCcp,
+                hasQuranSchool = hasQuranSchool,
+                hasFridayPrayer = hasFridayPrayer,
+                hasLibrary = hasLibrary,
+                hasParking = hasParking,
+                hasAirConditioning = hasAirConditioning,
+                hasFuneralWash = hasFuneralWash,
+                hasIftarRamadan = hasIftarRamadan,
+                facebookUrl = facebookUrl,
+                mosquePhone = mosquePhone,
+                imamName = imamName,
+                mosqueServicesNotes = mosqueServicesNotes,
+                hasSteamSauna = hasSteamSauna,
+                hasKessaScrub = hasKessaScrub,
+                hasPrivateShowerRooms = hasPrivateShowerRooms,
+                isThermalSpring = isThermalSpring,
+                hasTowelRental = hasTowelRental,
+                hasTeaLounge = hasTeaLounge,
+                hasBarberGrooming = hasBarberGrooming,
+                hammamPhone = hammamPhone,
+                hammamMenHours = hammamMenHours,
+                hammamWomenHours = hammamWomenHours,
+                hammamServicesNotes = hammamServicesNotes,
                 isUserAdded = true
             )
             repository.addRestroom(newRestroom)
+            _initialAddType.value = null
             _showAddDialog.value = false
         }
     }
@@ -661,7 +795,10 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
                         val q = filters.searchQuery.trim().lowercase()
                         val matchName = item.name.lowercase().contains(q) || item.nameFr.lowercase().contains(q)
                         val matchPlace = item.wilaya.lowercase().contains(q) || item.commune.lowercase().contains(q)
-                        val matchNotes = item.notes.lowercase().contains(q) || item.address.lowercase().contains(q)
+                        val matchNotes = item.notes.lowercase().contains(q) ||
+                            item.address.lowercase().contains(q) ||
+                            item.hammamServicesNotes.lowercase().contains(q) ||
+                            item.mosqueServicesNotes.lowercase().contains(q)
                         if (!matchName && !matchPlace && !matchNotes) return@filter false
                     }
                     true

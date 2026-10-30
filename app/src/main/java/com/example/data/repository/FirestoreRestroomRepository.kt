@@ -118,6 +118,28 @@ class FirestoreRestroomRepository(
         if (restroom.nameAr.isNotBlank()) data["nameAr"] = restroom.nameAr.trim().take(150)
         if (restroom.address.isNotBlank()) data["address"] = restroom.address.trim().take(300)
         if (restroom.donationCcp.isNotBlank()) data["donationCcp"] = restroom.donationCcp.trim().take(100)
+        data["hasQuranSchool"] = restroom.hasQuranSchool
+        data["hasFridayPrayer"] = restroom.hasFridayPrayer
+        data["hasLibrary"] = restroom.hasLibrary
+        data["hasParking"] = restroom.hasParking
+        data["hasAirConditioning"] = restroom.hasAirConditioning
+        data["hasFuneralWash"] = restroom.hasFuneralWash
+        data["hasIftarRamadan"] = restroom.hasIftarRamadan
+        if (restroom.facebookUrl.isNotBlank()) data["facebookUrl"] = restroom.facebookUrl.trim().take(500)
+        if (restroom.mosquePhone.isNotBlank()) data["mosquePhone"] = restroom.mosquePhone.trim().take(40)
+        if (restroom.imamName.isNotBlank()) data["imamName"] = restroom.imamName.trim().take(150)
+        if (restroom.mosqueServicesNotes.isNotBlank()) data["mosqueServicesNotes"] = restroom.mosqueServicesNotes.trim().take(1000)
+        data["hasSteamSauna"] = restroom.hasSteamSauna
+        data["hasKessaScrub"] = restroom.hasKessaScrub
+        data["hasPrivateShowerRooms"] = restroom.hasPrivateShowerRooms
+        data["isThermalSpring"] = restroom.isThermalSpring
+        data["hasTowelRental"] = restroom.hasTowelRental
+        data["hasTeaLounge"] = restroom.hasTeaLounge
+        data["hasBarberGrooming"] = restroom.hasBarberGrooming
+        if (restroom.hammamPhone.isNotBlank()) data["hammamPhone"] = restroom.hammamPhone.trim().take(40)
+        if (restroom.hammamMenHours.isNotBlank()) data["hammamMenHours"] = restroom.hammamMenHours.trim().take(200)
+        if (restroom.hammamWomenHours.isNotBlank()) data["hammamWomenHours"] = restroom.hammamWomenHours.trim().take(200)
+        if (restroom.hammamServicesNotes.isNotBlank()) data["hammamServicesNotes"] = restroom.hammamServicesNotes.trim().take(1000)
 
         try {
             docRef.set(data).await()

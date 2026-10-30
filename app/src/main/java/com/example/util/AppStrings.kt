@@ -1354,5 +1354,313 @@ object AppStrings {
         AppLanguage.FR -> "avis"
         AppLanguage.EN -> "reviews"
     }
+
+    // --- MOSQUE DEDICATED PAGE & SERVICES ---
+    fun openMosquePage(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "صفحة المسجد والخدمات"
+        AppLanguage.FR -> "Page de la mosquée & services"
+        AppLanguage.EN -> "Mosque Page & Services"
+    }
+
+    fun mosquePageHeaderTitle(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "صفحة المسجد والخدمات الدينية"
+        AppLanguage.FR -> "Page de la mosquée & services religieux"
+        AppLanguage.EN -> "Mosque Profile & Religious Services"
+    }
+
+    fun mosqueServicesSectionTitle(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "الخدمات والأنشطة التي يقدمها المسجد"
+        AppLanguage.FR -> "Services et activités de la mosquée"
+        AppLanguage.EN -> "Mosque Services & Activities"
+    }
+
+    fun quranSchoolBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "مدرسة قرآنية وتحفيظ"
+        AppLanguage.FR -> "École coranique"
+        AppLanguage.EN -> "Quranic School"
+    }
+
+    fun fridayPrayerBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "صلاة الجمعة"
+        AppLanguage.FR -> "Prière du Vendredi"
+        AppLanguage.EN -> "Friday Prayer (Jumu'ah)"
+    }
+
+    fun mosqueLibraryBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "مكتبة وحلقات علم"
+        AppLanguage.FR -> "Bibliothèque & cours"
+        AppLanguage.EN -> "Library & Study Circles"
+    }
+
+    fun mosqueParkingBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "موقف سيارات"
+        AppLanguage.FR -> "Parking disponible"
+        AppLanguage.EN -> "Parking Available"
+    }
+
+    fun airConditioningBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "قاعة صلاة مكيفة / مدفأة"
+        AppLanguage.FR -> "Salle climatisée / chauffée"
+        AppLanguage.EN -> "Air Conditioned / Heated"
+    }
+
+    fun funeralWashBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "مغسل موتى مجهز"
+        AppLanguage.FR -> "Lavage mortuaire"
+        AppLanguage.EN -> "Funeral Washing Facility"
+    }
+
+    fun iftarRamadanBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "إفطار عابر السبيل (رمضان)"
+        AppLanguage.FR -> "Iftar Ramadan (Voyageurs)"
+        AppLanguage.EN -> "Ramadan Iftar for Travelers"
+    }
+
+    fun facebookPageTitle(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "الصفحة الرسمية للمسجد على فيسبوك"
+        AppLanguage.FR -> "Page Facebook officielle de la mosquée"
+        AppLanguage.EN -> "Official Mosque Facebook Page"
+    }
+
+    fun openFacebookPage(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "زيارة صفحة الفيسبوك"
+        AppLanguage.FR -> "Visiter la page Facebook"
+        AppLanguage.EN -> "Visit Facebook Page"
+    }
+
+    fun facebookUrlLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "رابط صفحة الفيسبوك للمسجد (اختياري)"
+        AppLanguage.FR -> "Lien Facebook de la mosquée (optionnel)"
+        AppLanguage.EN -> "Mosque Facebook Page URL (optional)"
+    }
+
+    fun mosquePhoneLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "هاتف إدارة / لجنة المسجد (اختياري)"
+        AppLanguage.FR -> "Téléphone du comité de la mosquée (optionnel)"
+        AppLanguage.EN -> "Mosque Committee Phone (optional)"
+    }
+
+    fun imamNameLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "الإمام / الهيئة المشرفة (اختياري)"
+        AppLanguage.FR -> "Imam / Comité superviseur (optionnel)"
+        AppLanguage.EN -> "Imam / Supervising Committee (optional)"
+    }
+
+    fun mosqueServicesScheduleLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "برنامج المدرسة القرآنية والدروس والخدمات"
+        AppLanguage.FR -> "Programme de l'école coranique et des cours"
+        AppLanguage.EN -> "Quranic School & Lessons Schedule"
+    }
+
+    fun editMosqueServicesButton(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "تحديث خدمات المسجد ورابط الفيسبوك"
+        AppLanguage.FR -> "Mettre à jour les services & lien Facebook"
+        AppLanguage.EN -> "Update Mosque Services & Facebook Link"
+    }
+
+    fun mosqueNoServicesListed(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "لم يتم تسجيل خدمات إضافية لهذا المسجد بعد."
+        AppLanguage.FR -> "Aucun service supplémentaire renseigné pour cette mosquée."
+        AppLanguage.EN -> "No additional services listed for this mosque yet."
+    }
+
+    fun activeServicesCountBadge(count: Int, lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "$count خدمات"
+        AppLanguage.FR -> "$count services"
+        AppLanguage.EN -> "$count services"
+    }
+
+    fun mosqueFacebookMissingHint(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "لم تتم إضافة رابط صفحة الفيسبوك بعد — أضفه لخدمة المصلين"
+        AppLanguage.FR -> "Lien Facebook non renseigné — Ajoutez-le pour aider les fidèles"
+        AppLanguage.EN -> "Facebook link not added yet — Add it to help worshippers"
+    }
+
+    fun addFacebookLinkButton(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "إضافة رابط صفحة الفيسبوك للمسجد"
+        AppLanguage.FR -> "Ajouter le lien Facebook de la mosquée"
+        AppLanguage.EN -> "Add Mosque Facebook Page Link"
+    }
+
+    fun mosqueCallPhoneAction(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "اتصال هاتفي"
+        AppLanguage.FR -> "Appeler"
+        AppLanguage.EN -> "Call"
+    }
+
+    fun invalidUrlMessage(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "رابط غير صالح"
+        AppLanguage.FR -> "Lien non valide"
+        AppLanguage.EN -> "Invalid URL"
+    }
+
+    fun openUrlFailedMessage(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "تعذر فتح الرابط في المتصفح الخارجي"
+        AppLanguage.FR -> "Impossible d'ouvrir le lien dans le navigateur"
+        AppLanguage.EN -> "Could not open link in external browser"
+    }
+
+    // --- HAMMAMS DIRECTORY & HAMMAM PROFILE SERVICES ---
+    fun hammamsDirectoryTitle(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "الحمامات والمركبات الحموية"
+        AppLanguage.FR -> "Hammams & Stations Thermales"
+        AppLanguage.EN -> "Hammams & Thermal Baths"
+    }
+
+    fun hammamsDirectorySubtitle(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "دليل الحمامات التقليدية، العصرية والمنابع المعدنية الحموية وخدماتها عبر الجزائر"
+        AppLanguage.FR -> "Guide des hammams traditionnels, spas modernes et sources thermales en Algérie"
+        AppLanguage.EN -> "Guide to traditional baths, modern spas, and thermal springs across Algeria"
+    }
+
+    fun openHammamPage(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "صفحة الحمام والخدمات"
+        AppLanguage.FR -> "Page du hammam & services"
+        AppLanguage.EN -> "Hammam Page & Services"
+    }
+
+    fun hammamPageHeaderTitle(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "صفحة الحمام والخدمات الاستشفائية"
+        AppLanguage.FR -> "Profil du Hammam & Prestations"
+        AppLanguage.EN -> "Hammam Profile & Services"
+    }
+
+    fun hammamServicesSectionTitle(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "خدمات الحمام ومرافق الاستجمام"
+        AppLanguage.FR -> "Services et prestations du hammam"
+        AppLanguage.EN -> "Hammam Services & Wellness Amenities"
+    }
+
+    fun steamSaunaBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "بيت سخون وبخار وساونا"
+        AppLanguage.FR -> "Vapeur & Sauna"
+        AppLanguage.EN -> "Steam Room & Sauna"
+    }
+
+    fun kessaScrubBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "تكييس وتدليك تقليدي"
+        AppLanguage.FR -> "Gommage Kessa & Massage"
+        AppLanguage.EN -> "Kessa Scrub & Massage"
+    }
+
+    fun privateShowerRoomsBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "غرف دوش فردية ساخنة"
+        AppLanguage.FR -> "Cabines de douche individuelles"
+        AppLanguage.EN -> "Private Hot Shower Cabins"
+    }
+
+    fun thermalSpringBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "مياه معدنية حموية علاجية"
+        AppLanguage.FR -> "Eau thermale minérale curative"
+        AppLanguage.EN -> "Therapeutic Thermal Mineral Water"
+    }
+
+    fun towelRentalBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "كراء المناشف والصابون البلدي"
+        AppLanguage.FR -> "Location serviettes & savon noir"
+        AppLanguage.EN -> "Towel Rental & Black Soap"
+    }
+
+    fun teaLoungeBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "قاعة استراحة وشاي أعشاب"
+        AppLanguage.FR -> "Salon de repos & thé"
+        AppLanguage.EN -> "Relaxation & Herbal Tea Lounge"
+    }
+
+    fun barberGroomingBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "حلاقة وعناية شخصية"
+        AppLanguage.FR -> "Coiffure & soins"
+        AppLanguage.EN -> "Barber & Grooming"
+    }
+
+    fun hammamMenHoursLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "أوقات الرجال"
+        AppLanguage.FR -> "Horaires Hommes"
+        AppLanguage.EN -> "Men's Schedule"
+    }
+
+    fun hammamWomenHoursLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "أوقات النساء والعائلات"
+        AppLanguage.FR -> "Horaires Femmes & Familles"
+        AppLanguage.EN -> "Women & Family Schedule"
+    }
+
+    fun hammamPhoneLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "هاتف الحمام للحجز والاستعلام"
+        AppLanguage.FR -> "Téléphone du hammam (Réservation)"
+        AppLanguage.EN -> "Hammam Booking & Inquiry Phone"
+    }
+
+    fun hammamServicesNotesLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "تفاصيل العروض، الأسعار وخدمات الاستحمام"
+        AppLanguage.FR -> "Détails des formules, tarifs et soins"
+        AppLanguage.EN -> "Packages, Pricing & Bathing Details"
+    }
+
+    fun hammamFacebookTitle(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "الصفحة الرسمية للحمام على فيسبوك"
+        AppLanguage.FR -> "Page Facebook officielle du hammam"
+        AppLanguage.EN -> "Official Hammam Facebook Page"
+    }
+
+    fun hammamFacebookUrlLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "رابط صفحة الفيسبوك للحمام (اختياري)"
+        AppLanguage.FR -> "Lien Facebook du hammam (optionnel)"
+        AppLanguage.EN -> "Hammam Facebook Page URL (optional)"
+    }
+
+    fun hammamFacebookMissingHint(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "لم تتم إضافة رابط صفحة الفيسبوك بعد — أضفه لمشاركة أوقات العمل والعروض"
+        AppLanguage.FR -> "Lien Facebook non renseigné — Ajoutez-le pour partager les horaires"
+        AppLanguage.EN -> "Facebook link not added yet — Add it to share schedules & offers"
+    }
+
+    fun addHammamFacebookButton(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "إضافة رابط صفحة الفيسبوك للحمام"
+        AppLanguage.FR -> "Ajouter le lien Facebook du hammam"
+        AppLanguage.EN -> "Add Hammam Facebook Link"
+    }
+
+    fun editHammamServicesButton(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "تحديث خدمات الحمام وأوقات الرجال والنساء"
+        AppLanguage.FR -> "Mettre à jour services & horaires du hammam"
+        AppLanguage.EN -> "Update Hammam Services & Schedules"
+    }
+
+    fun hammamNoServicesListed(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "لم يتم تسجيل خدمات تفصيلية لهذا الحمام بعد."
+        AppLanguage.FR -> "Aucun service détaillé renseigné pour ce hammam."
+        AppLanguage.EN -> "No detailed services listed for this hammam yet."
+    }
+
+    fun searchHammamsPlaceholder(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "ابحث عن حمام شعبي، عصري أو مركب معدني (مثلاً: حمام دباغ، القبة...)"
+        AppLanguage.FR -> "Rechercher un hammam ou station thermale (ex: Debagh, Righa...)"
+        AppLanguage.EN -> "Search hammam or thermal spring (e.g. Debagh, Righa, Kouba...)"
+    }
+
+    fun addNewHammamButton(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "إضافة حمام جديد"
+        AppLanguage.FR -> "Ajouter un hammam"
+        AppLanguage.EN -> "Add New Hammam"
+    }
+
+    fun statTotalHammams(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "إجمالي الحمامات"
+        AppLanguage.FR -> "Total Hammams"
+        AppLanguage.EN -> "Total Hammams"
+    }
+
+    fun statThermalSprings(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "منابع حموية معدنية"
+        AppLanguage.FR -> "Sources Thermales"
+        AppLanguage.EN -> "Thermal Springs"
+    }
+
+    fun statWomenFriendly(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "أجنحة وأوقات للنساء"
+        AppLanguage.FR -> "Espaces Femmes"
+        AppLanguage.EN -> "Women's Schedule"
+    }
 }
 

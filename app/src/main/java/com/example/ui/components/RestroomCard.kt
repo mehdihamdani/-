@@ -29,8 +29,11 @@ import androidx.compose.material.icons.filled.LocalGasStation
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mosque
 import androidx.compose.material.icons.filled.Navigation
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Shower
 import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Train
 import androidx.compose.material.icons.filled.VolunteerActivism
@@ -39,6 +42,8 @@ import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Wc
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -60,13 +65,16 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.RestroomEntity
 import com.example.data.model.RestroomType
 import com.example.ui.theme.AlertRed
+import com.example.ui.theme.FacebookBlue
 import com.example.ui.theme.HammamBronze
 import com.example.ui.theme.MallViolet
 import com.example.ui.theme.MosqueEmerald
 import com.example.ui.theme.NaftalFlame
 import com.example.ui.theme.RahaGreen
+import com.example.ui.theme.SteamAmber
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.TealPrimary
+import com.example.ui.theme.ThermalSpringTeal
 import com.example.ui.theme.TransportBlue
 import com.example.ui.theme.WaterBlue
 import com.example.ui.viewmodel.RestroomWithDistance
@@ -80,6 +88,8 @@ fun RestroomCard(
     onClick: () -> Unit,
     onNavigateClick: () -> Unit,
     onFavoriteToggle: () -> Unit,
+    onOpenMosquePage: (() -> Unit)? = null,
+    onOpenHammamPage: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val lang = LocalAppLanguage.current
@@ -271,6 +281,51 @@ fun RestroomCard(
                     )
                 }
 
+                // Quranic School Badge
+                if (restroom.hasQuranSchool) {
+                    StatusBadge(
+                        text = AppStrings.quranSchoolBadge(lang),
+                        color = MosqueEmerald,
+                        icon = Icons.Default.School
+                    )
+                }
+
+                // Hammam Specialized Service Badges
+                if (restroom.isThermalSpring) {
+                    StatusBadge(
+                        text = AppStrings.thermalSpringBadge(lang),
+                        color = ThermalSpringTeal,
+                        icon = Icons.Default.HotTub
+                    )
+                }
+                if (restroom.hasSteamSauna) {
+                    StatusBadge(
+                        text = AppStrings.steamSaunaBadge(lang),
+                        color = SteamAmber,
+                        icon = Icons.Default.HotTub
+                    )
+                }
+                if (restroom.hasKessaScrub) {
+                    StatusBadge(
+                        text = AppStrings.kessaScrubBadge(lang),
+                        color = HammamBronze,
+                        icon = Icons.Default.Spa
+                    )
+                }
+
+                // Facebook Page Badge
+                if (restroom.facebookUrl.isNotBlank()) {
+                    StatusBadge(
+                        text = when (lang) {
+                            com.example.data.model.AppLanguage.AR -> "صفحة فيسبوك"
+                            com.example.data.model.AppLanguage.FR -> "Page Facebook"
+                            com.example.data.model.AppLanguage.EN -> "Facebook Page"
+                        },
+                        color = FacebookBlue,
+                        icon = Icons.Default.Public
+                    )
+                }
+
                 // Donation Account Badge
                 if (restroom.donationCcp.isNotBlank()) {
                     StatusBadge(
@@ -358,21 +413,79 @@ fun RestroomCard(
                     )
                 }
 
-                Button(
-                    onClick = onNavigateClick,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = TealPrimary
-                    ),
-                    modifier = Modifier.testTag("navigate_button_${restroom.id}")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Navigation,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(AppStrings.navigate(lang), style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                    if (restroom.isMosqueOrMusalla && onOpenMosquePage != null) {
+                        OutlinedButton(
+                            onClick = onOpenMosquePage,
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, MosqueEmerald),
+                            modifier = Modifier.testTag("mosque_page_button_${restroom.id}")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Mosque,
+                                contentDescription = null,
+                                tint = MosqueEmerald,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = when (lang) {
+                                    com.example.data.model.AppLanguage.AR -> "صفحة المسجد"
+                                    com.example.data.model.AppLanguage.FR -> "Mosquée"
+                                    com.example.data.model.AppLanguage.EN -> "Mosque"
+                                },
+                                color = MosqueEmerald,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
+                    }
+
+                    if (restroom.isHammam && onOpenHammamPage != null) {
+                        val hammamBtnColor = if (restroom.isThermalSpring) ThermalSpringTeal else HammamBronze
+                        OutlinedButton(
+                            onClick = onOpenHammamPage,
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, hammamBtnColor),
+                            modifier = Modifier.testTag("hammam_page_button_${restroom.id}")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.HotTub,
+                                contentDescription = null,
+                                tint = hammamBtnColor,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = when (lang) {
+                                    com.example.data.model.AppLanguage.AR -> "صفحة الحمام"
+                                    com.example.data.model.AppLanguage.FR -> "Hammam"
+                                    com.example.data.model.AppLanguage.EN -> "Hammam"
+                                },
+                                color = hammamBtnColor,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = onNavigateClick,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = TealPrimary
+                        ),
+                        modifier = Modifier.testTag("navigate_button_${restroom.id}")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Navigation,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(AppStrings.navigate(lang), style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                    }
                 }
             }
         }

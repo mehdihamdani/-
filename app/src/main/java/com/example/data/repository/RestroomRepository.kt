@@ -192,6 +192,10 @@ class RestroomRepository(
         insertedId
     }
 
+    suspend fun updateRestroom(restroom: RestroomEntity) = withContext(Dispatchers.IO) {
+        dao.updateRestroom(restroom)
+    }
+
     suspend fun deleteRestroom(id: Long) = withContext(Dispatchers.IO) {
         dao.deleteRestroom(id)
     }

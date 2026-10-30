@@ -58,6 +58,28 @@ service cloud.firestore {
              (!('hasAccessibleToilet' in data) || data.hasAccessibleToilet is bool) &&
              (!('hasSquatToilet' in data) || data.hasSquatToilet is bool) &&
              (!('hasSittingToilet' in data) || data.hasSittingToilet is bool) &&
+             (!('hasQuranSchool' in data) || data.hasQuranSchool is bool) &&
+             (!('hasFridayPrayer' in data) || data.hasFridayPrayer is bool) &&
+             (!('hasLibrary' in data) || data.hasLibrary is bool) &&
+             (!('hasParking' in data) || data.hasParking is bool) &&
+             (!('hasAirConditioning' in data) || data.hasAirConditioning is bool) &&
+             (!('hasFuneralWash' in data) || data.hasFuneralWash is bool) &&
+             (!('hasIftarRamadan' in data) || data.hasIftarRamadan is bool) &&
+             (!('facebookUrl' in data) || (data.facebookUrl is string && data.facebookUrl.size() <= 500)) &&
+             (!('mosquePhone' in data) || (data.mosquePhone is string && data.mosquePhone.size() <= 40)) &&
+             (!('imamName' in data) || (data.imamName is string && data.imamName.size() <= 150)) &&
+             (!('mosqueServicesNotes' in data) || (data.mosqueServicesNotes is string && data.mosqueServicesNotes.size() <= 1000)) &&
+             (!('hasSteamSauna' in data) || data.hasSteamSauna is bool) &&
+             (!('hasKessaScrub' in data) || data.hasKessaScrub is bool) &&
+             (!('hasPrivateShowerRooms' in data) || data.hasPrivateShowerRooms is bool) &&
+             (!('isThermalSpring' in data) || data.isThermalSpring is bool) &&
+             (!('hasTowelRental' in data) || data.hasTowelRental is bool) &&
+             (!('hasTeaLounge' in data) || data.hasTeaLounge is bool) &&
+             (!('hasBarberGrooming' in data) || data.hasBarberGrooming is bool) &&
+             (!('hammamPhone' in data) || (data.hammamPhone is string && data.hammamPhone.size() <= 40)) &&
+             (!('hammamMenHours' in data) || (data.hammamMenHours is string && data.hammamMenHours.size() <= 200)) &&
+             (!('hammamWomenHours' in data) || (data.hammamWomenHours is string && data.hammamWomenHours.size() <= 200)) &&
+             (!('hammamServicesNotes' in data) || (data.hammamServicesNotes is string && data.hammamServicesNotes.size() <= 1000)) &&
              (!('rating' in data) || (data.rating is number && data.rating >= 0.0 && data.rating <= 5.0)) &&
              (!('reviewsCount' in data) || (data.reviewsCount is int && data.reviewsCount >= 0)) &&
              (!('cleanlinessRating' in data) || (data.cleanlinessRating is number && data.cleanlinessRating >= 0.0 && data.cleanlinessRating <= 5.0)) &&
@@ -126,9 +148,19 @@ service cloud.firestore {
                        request.resource.data.createdBy == request.auth.uid &&
                        isValidRestroom(request.resource.data);
       allow update: if isSignedIn() &&
-                       ((resource.data.createdBy == request.auth.uid || isAdmin()) ||
-                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rating', 'reviewsCount', 'cleanlinessRating', 'updatedAt'])) &&
                        isValidRestroom(request.resource.data) &&
+                       ((resource.data.createdBy == request.auth.uid || isAdmin()) ||
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                          'rating', 'reviewsCount', 'cleanlinessRating',
+                          'hasQuranSchool', 'hasFridayPrayer', 'hasLibrary', 'hasParking',
+                          'hasAirConditioning', 'hasFuneralWash', 'hasIftarRamadan',
+                          'facebookUrl', 'mosquePhone', 'imamName', 'mosqueServicesNotes',
+                          'hasSteamSauna', 'hasKessaScrub', 'hasPrivateShowerRooms',
+                          'isThermalSpring', 'hasTowelRental', 'hasTeaLounge',
+                          'hasBarberGrooming', 'hammamPhone', 'hammamMenHours',
+                          'hammamWomenHours', 'hammamServicesNotes',
+                          'updatedAt'
+                        ])) &&
                        request.resource.data.createdBy == resource.data.createdBy &&
                        request.resource.data.id == resource.data.id &&
                        request.resource.data.createdAt == resource.data.createdAt;
@@ -150,10 +182,9 @@ service cloud.firestore {
     }
 
     // Mosque donation accounts:
-    // Read: Allowed for authenticated users (under review only, not public payment destinations)
-    // Create/Update/Delete: Strictly protected and restricted to administrators with valid schema validation
+    // Read & Write: Strictly protected and restricted to administrators with valid schema validation
     match /mosque_donation_accounts/{accountId} {
-      allow get, list: if isSignedIn();
+      allow get, list: if isSignedIn() && isAdmin();
       allow create: if isSignedIn() && isAdmin() && isValidMosqueDonationAccount(request.resource.data);
       allow update: if isSignedIn() && isAdmin() && isValidMosqueDonationAccount(request.resource.data);
       allow delete: if isSignedIn() && isAdmin();

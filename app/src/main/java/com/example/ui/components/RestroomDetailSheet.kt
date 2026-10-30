@@ -36,8 +36,11 @@ import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Mosque
 import androidx.compose.material.icons.filled.Navigation
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.ReportProblem
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Shower
 import android.Manifest
@@ -105,11 +108,15 @@ import com.example.data.model.AppLanguage
 import com.example.data.model.AlgerianWilayas
 import com.example.util.AppStrings
 import com.example.util.LocalAppLanguage
+import androidx.compose.material.icons.filled.HotTub
 import com.example.ui.theme.AlertRed
+import com.example.ui.theme.FacebookBlue
+import com.example.ui.theme.HammamBronze
 import com.example.ui.theme.MosqueEmerald
 import com.example.ui.theme.RahaGreen
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.TealPrimary
+import com.example.ui.theme.ThermalSpringTeal
 import com.example.ui.theme.WaterBlue
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -125,6 +132,8 @@ fun RestroomDetailSheet(
     onFavoriteToggle: () -> Unit,
     onReportWaterCut: (Boolean) -> Unit,
     onRateRestroom: (Float) -> Unit = {},
+    onOpenMosquePage: (() -> Unit)? = null,
+    onOpenHammamPage: (() -> Unit)? = null,
     onSubmitReview: (authorName: String, rating: Float, cleanlinessRating: Float, comment: String, hasWater: Boolean, hasSoap: Boolean, imageUri: String?) -> Unit
 ) {
     val lang = LocalAppLanguage.current
@@ -327,6 +336,240 @@ fun RestroomDetailSheet(
             }
 
             Spacer(modifier = Modifier.height(14.dp))
+
+            // Dedicated Mosque Page & Services Banner (Quranic School, Facebook Page, etc.)
+            if (restroom.isMosqueOrMusalla) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MosqueEmerald.copy(alpha = 0.1f),
+                    border = BorderStroke(1.dp, MosqueEmerald.copy(alpha = 0.4f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("sheet_mosque_services_banner")
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MosqueEmerald,
+                                    modifier = Modifier.size(38.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.Mosque,
+                                            contentDescription = null,
+                                            tint = Color.White,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = AppStrings.mosqueServicesSectionTitle(lang),
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                        color = MosqueEmerald
+                                    )
+                                    val summaryItems = buildList {
+                                        if (restroom.hasQuranSchool) add("📖 " + AppStrings.quranSchoolBadge(lang))
+                                        if (restroom.hasFridayPrayer) add("🕌 " + AppStrings.fridayPrayerBadge(lang))
+                                        if (restroom.hasLibrary) add("📚 " + AppStrings.mosqueLibraryBadge(lang))
+                                        if (restroom.facebookUrl.isNotBlank()) add("🌐 فيسبوك")
+                                    }
+                                    Text(
+                                        text = if (summaryItems.isNotEmpty()) summaryItems.joinToString(" • ")
+                                        else when (lang) {
+                                            AppLanguage.AR -> "تصفح خدمات المسجد، المدرسة القرآنية ورابط الفيسبوك"
+                                            AppLanguage.FR -> "Découvrir l'école coranique et la page Facebook"
+                                            AppLanguage.EN -> "Explore Quranic school & Facebook page"
+                                        },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            if (onOpenMosquePage != null) {
+                                Button(
+                                    onClick = onOpenMosquePage,
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmerald),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("sheet_open_mosque_page_button")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Mosque,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = AppStrings.openMosquePage(lang),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            if (restroom.facebookUrl.isNotBlank()) {
+                                OutlinedButton(
+                                    onClick = { com.example.ui.screens.openSafeExternalUrl(context, restroom.facebookUrl) },
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = BorderStroke(1.dp, Color(0xFF1877F2)),
+                                    modifier = Modifier.testTag("sheet_open_facebook_button")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Public,
+                                        contentDescription = null,
+                                        tint = Color(0xFF1877F2),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Facebook",
+                                        color = Color(0xFF1877F2),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+            }
+
+            // Dedicated Hammam Page & Services Banner (Steam, Scrub, Thermal Spring, Schedules, Facebook)
+            if (restroom.isHammam) {
+                val hammamAccent = if (restroom.isThermalSpring) ThermalSpringTeal else HammamBronze
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = hammamAccent.copy(alpha = 0.1f),
+                    border = BorderStroke(1.dp, hammamAccent.copy(alpha = 0.4f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("sheet_hammam_services_banner")
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = hammamAccent,
+                                modifier = Modifier.size(38.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.HotTub,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = AppStrings.hammamServicesSectionTitle(lang),
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = hammamAccent
+                                )
+                                val hammamSummary = buildList {
+                                    if (restroom.isThermalSpring) add("♨️ " + AppStrings.thermalSpringBadge(lang))
+                                    if (restroom.hasSteamSauna) add("🧖 " + AppStrings.steamSaunaBadge(lang))
+                                    if (restroom.hasKessaScrub) add("🧼 " + AppStrings.kessaScrubBadge(lang))
+                                    if (restroom.hasPrivateShowerRooms) add("🚿 " + AppStrings.privateShowerRoomsBadge(lang))
+                                    if (restroom.facebookUrl.isNotBlank()) add("🌐 Facebook")
+                                }
+                                Text(
+                                    text = if (hammamSummary.isNotEmpty()) hammamSummary.joinToString(" • ")
+                                    else AppStrings.hammamsDirectorySubtitle(lang),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            if (onOpenHammamPage != null) {
+                                Button(
+                                    onClick = onOpenHammamPage,
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = hammamAccent),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("sheet_open_hammam_page_button")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.HotTub,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = AppStrings.openHammamPage(lang),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            if (restroom.facebookUrl.isNotBlank()) {
+                                OutlinedButton(
+                                    onClick = { openExternalBrowserUrl(context, restroom.facebookUrl, lang) },
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = BorderStroke(1.dp, FacebookBlue),
+                                    modifier = Modifier.testTag("sheet_open_hammam_facebook_button")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Public,
+                                        contentDescription = null,
+                                        tint = FacebookBlue,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Facebook",
+                                        color = FacebookBlue,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+            }
 
             // Water cut alert banner
             if (restroom.waterCutReported) {

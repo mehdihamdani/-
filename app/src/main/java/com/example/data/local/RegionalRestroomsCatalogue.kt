@@ -55,7 +55,16 @@ object RegionalRestroomsCatalogue {
             cleanlinessRating = 4.9f,
             openingHours = "04:30 - 22:30",
             address = "طريق سيدي عبد الله السريع، المحمدية",
-            notes = "مرافق مكيفة ومصاعد وممرات خاصة بذوي الهمم."
+            notes = "مرافق مكيفة ومصاعد وممرات خاصة بذوي الهمم.",
+            hasQuranSchool = true,
+            hasFridayPrayer = true,
+            hasLibrary = true,
+            hasParking = true,
+            hasAirConditioning = true,
+            hasFuneralWash = true,
+            hasIftarRamadan = true,
+            facebookUrl = "https://www.facebook.com/DjamaaElDjazairOfficial",
+            mosqueServicesNotes = "دار القرآن الكريم، مكتبة جامع الجزائر، قاعات محاضرات وموقف سيارات."
         ),
         RestroomEntity(
             id = 102,
@@ -99,7 +108,13 @@ object RegionalRestroomsCatalogue {
             cleanlinessRating = 4.6f,
             openingHours = "04:45 - 22:00",
             address = "وسط مدينة البليدة، بجانب ساحة التوتة",
-            notes = "ميضأة واسعة مع صيانة دورية ومياه عذبة."
+            notes = "ميضأة واسعة مع صيانة دورية ومياه عذبة.",
+            hasQuranSchool = true,
+            hasFridayPrayer = true,
+            hasLibrary = true,
+            hasAirConditioning = true,
+            facebookUrl = "https://www.facebook.com/MosqueeElKawtharBlida",
+            mosqueServicesNotes = "مدرسة قرآنية لتحفيظ القرآن الكريم وتدريس المتون، ودروس أسبوعية."
         ),
         RestroomEntity(
             id = 104,

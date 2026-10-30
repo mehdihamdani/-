@@ -119,11 +119,13 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VolunteerActivism
+import androidx.compose.material.icons.filled.HotTub
 import com.example.ui.screens.DonationsScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.util.AppStrings
 import com.example.ui.screens.UserProfileScreen
 import com.example.ui.theme.AlertRed
+import com.example.ui.theme.HammamBronze
 import com.example.ui.theme.RahaBlue
 import com.example.ui.theme.RahaGreen
 import com.example.ui.theme.RahaGreenContainer
@@ -146,10 +148,14 @@ fun HomeScreen(
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
     val filterState by viewModel.filterState.collectAsStateWithLifecycle()
     val filteredRestrooms by viewModel.filteredRestrooms.collectAsStateWithLifecycle()
+    val allHammams by viewModel.allHammams.collectAsStateWithLifecycle()
     val nearestRestroom by viewModel.nearestRestroom.collectAsStateWithLifecycle()
     val selectedRestroom by viewModel.selectedRestroom.collectAsStateWithLifecycle()
+    val selectedMosquePage by viewModel.selectedMosquePage.collectAsStateWithLifecycle()
+    val selectedHammamPage by viewModel.selectedHammamPage.collectAsStateWithLifecycle()
     val selectedRestroomReviews by viewModel.selectedRestroomReviews.collectAsStateWithLifecycle()
     val showAddDialog by viewModel.showAddDialog.collectAsStateWithLifecycle()
+    val initialAddType by viewModel.initialAddType.collectAsStateWithLifecycle()
     val showStudyDialog by viewModel.showStudyDialog.collectAsStateWithLifecycle()
     val mapProvider by viewModel.mapProvider.collectAsStateWithLifecycle()
     val isLocating by viewModel.isLocating.collectAsStateWithLifecycle()
@@ -217,6 +223,40 @@ fun HomeScreen(
 
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val studySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    // Dedicated Full-Screen Mosque Profile & Services Page
+    if (selectedMosquePage != null) {
+        val mosqueDist = filteredRestrooms.find { it.restroom.id == selectedMosquePage!!.id }?.formattedDistance ?: ""
+        MosqueProfileScreen(
+            mosque = selectedMosquePage!!,
+            distanceText = mosqueDist,
+            reviews = selectedRestroomReviews,
+            onBack = { viewModel.openMosquePage(null) },
+            onNavigateClick = { viewModel.openInGoogleMaps(context, selectedMosquePage!!) },
+            onShareClick = { viewModel.shareRestroom(context, selectedMosquePage!!) },
+            onFavoriteToggle = { viewModel.toggleFavorite(selectedMosquePage!!) },
+            onUpdateMosqueDetails = { updated -> viewModel.updateMosqueDetails(updated) }
+        )
+        return
+    }
+
+    // Dedicated Full-Screen Hammam Profile & Services Page
+    if (selectedHammamPage != null) {
+        val hammamDist = allHammams.find { it.restroom.id == selectedHammamPage!!.id }?.formattedDistance
+            ?: filteredRestrooms.find { it.restroom.id == selectedHammamPage!!.id }?.formattedDistance
+            ?: ""
+        HammamProfileScreen(
+            hammam = selectedHammamPage!!,
+            distanceText = hammamDist,
+            reviews = selectedRestroomReviews,
+            onBack = { viewModel.openHammamPage(null) },
+            onNavigateClick = { viewModel.openInGoogleMaps(context, selectedHammamPage!!) },
+            onShareClick = { viewModel.shareRestroom(context, selectedHammamPage!!) },
+            onFavoriteToggle = { viewModel.toggleFavorite(selectedHammamPage!!) },
+            onUpdateHammamDetails = { updated -> viewModel.updateHammamDetails(updated) }
+        )
+        return
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -366,6 +406,17 @@ fun HomeScreen(
                     }
                 },
                 actions = {
+                    // Dedicated Hammams & Services Directory Page Button
+                    IconButton(
+                        onClick = { selectedTab = if (selectedTab == 6) 0 else 6 },
+                        modifier = Modifier.testTag("hammams_directory_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.HotTub,
+                            contentDescription = AppStrings.hammamsDirectoryTitle(currentLang),
+                            tint = if (selectedTab == 6) HammamBronze else TealPrimary
+                        )
+                    }
 
                     // Offline Cache & Local Storage Status Button
                     IconButton(
@@ -604,7 +655,7 @@ fun HomeScreen(
                     )
                 )
 
-                // Hammam
+                // Hammam Map/List Filter
                 FilterChip(
                     selected = filterState.selectedType == RestroomType.HAMMAM,
                     onClick = { viewModel.setSelectedType(RestroomType.HAMMAM) },
@@ -613,6 +664,31 @@ fun HomeScreen(
                         selectedContainerColor = getTypeColor(RestroomType.HAMMAM),
                         selectedLabelColor = Color.White
                     )
+                )
+
+                // Direct Quick-Access Chip to Dedicated Hammams & Services Page ("صفحة الحمامات وخدماتهم")
+                FilterChip(
+                    selected = selectedTab == 6,
+                    onClick = { selectedTab = 6 },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.HotTub,
+                            contentDescription = null,
+                            tint = HammamBronze,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = AppStrings.hammamsDirectoryTitle(currentLang),
+                            fontWeight = FontWeight.Bold,
+                            color = HammamBronze
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = HammamBronze.copy(alpha = 0.1f)
+                    ),
+                    modifier = Modifier.testTag("open_hammams_directory_chip")
                 )
 
                 // Naftal / Highway
@@ -842,7 +918,13 @@ fun HomeScreen(
                                         item = item,
                                         onClick = { viewModel.selectRestroom(item.restroom) },
                                         onNavigateClick = { viewModel.openInGoogleMaps(context, item.restroom) },
-                                        onFavoriteToggle = { viewModel.toggleFavorite(item.restroom) }
+                                        onFavoriteToggle = { viewModel.toggleFavorite(item.restroom) },
+                                        onOpenMosquePage = if (item.restroom.isMosqueOrMusalla) {
+                                            { viewModel.openMosquePage(item.restroom) }
+                                        } else null,
+                                        onOpenHammamPage = if (item.restroom.isHammam) {
+                                            { viewModel.openHammamPage(item.restroom) }
+                                        } else null
                                     )
                                 }
                             }
@@ -869,7 +951,13 @@ fun HomeScreen(
                                         item = item,
                                         onClick = { viewModel.selectRestroom(item.restroom) },
                                         onNavigateClick = { viewModel.openInGoogleMaps(context, item.restroom) },
-                                        onFavoriteToggle = { viewModel.toggleFavorite(item.restroom) }
+                                        onFavoriteToggle = { viewModel.toggleFavorite(item.restroom) },
+                                        onOpenMosquePage = if (item.restroom.isMosqueOrMusalla) {
+                                            { viewModel.openMosquePage(item.restroom) }
+                                        } else null,
+                                        onOpenHammamPage = if (item.restroom.isHammam) {
+                                            { viewModel.openHammamPage(item.restroom) }
+                                        } else null
                                     )
                                 }
                             }
@@ -932,6 +1020,27 @@ fun HomeScreen(
                             }
                         )
                     }
+                    6 -> {
+                        // Dedicated Hammams & Thermal Baths Directory Screen ("صفحة الحمامات وخدماتهم")
+                        HammamsDirectoryScreen(
+                            hammams = allHammams,
+                            onHammamSelected = { hammam ->
+                                viewModel.openHammamPage(hammam)
+                            },
+                            onNavigateClick = { hammam ->
+                                viewModel.openInGoogleMaps(context, hammam)
+                            },
+                            onFavoriteToggle = { hammam ->
+                                viewModel.toggleFavorite(hammam)
+                            },
+                            onAddHammamClick = {
+                                viewModel.openAddDialogWithType(RestroomType.HAMMAM)
+                            },
+                            onBack = {
+                                selectedTab = 0
+                            }
+                        )
+                    }
                 }
 
                 // Floating Category Filter Panel overlaying the bottom of the screen (only on Map, List, or Favorites: 0, 1, 2)
@@ -968,6 +1077,12 @@ fun HomeScreen(
             onFavoriteToggle = { viewModel.toggleFavorite(selectedRestroom!!) },
             onReportWaterCut = { isCut -> viewModel.reportWaterCut(selectedRestroom!!, isCut) },
             onRateRestroom = { rating -> viewModel.rateRestroom(selectedRestroom!!, rating) },
+            onOpenMosquePage = if (selectedRestroom!!.isMosqueOrMusalla) {
+                { viewModel.openMosquePage(selectedRestroom!!) }
+            } else null,
+            onOpenHammamPage = if (selectedRestroom!!.isHammam) {
+                { viewModel.openHammamPage(selectedRestroom!!) }
+            } else null,
             onSubmitReview = { author, rating, cleanliness, comment, water, soap, imageUri ->
                 viewModel.submitReview(
                     restroomId = selectedRestroom!!.id,
@@ -983,14 +1098,54 @@ fun HomeScreen(
         )
     }
 
-    // Community Restroom Contribution Dialog
+    // Community Restroom / Mosque / Hammam Contribution Dialog
     if (showAddDialog) {
         AddRestroomDialog(
+            initialType = initialAddType ?: RestroomType.MOSQUE,
             onDismiss = { viewModel.setShowAddDialog(false) },
-            onSubmit = { name, nameFr, wilaya, commune, type, isFree, price, hasWater, hasSoap, pmr, women, shower, wudu, changingTable, hours, addr, notes, donationCcp ->
+            onSubmit = { name, nameFr, wilaya, commune, type, isFree, price, hasWater, hasSoap, pmr, women, shower, wudu, changingTable, hours, addr, notes, donationCcp, hasQuranSchool, hasFridayPrayer, hasLibrary, hasParking, hasAirConditioning, hasFuneralWash, hasIftarRamadan, facebookUrl, mosquePhone, imamName, mosqueServicesNotes, hammamExtras ->
                 viewModel.addNewRestroom(
-                    name, nameFr, wilaya, commune, type, isFree, price,
-                    hasWater, hasSoap, pmr, women, shower, wudu, changingTable, 4.5f, hours, addr, notes, donationCcp
+                    name = name,
+                    nameFr = nameFr,
+                    wilaya = wilaya,
+                    commune = commune,
+                    type = type,
+                    isFree = isFree,
+                    priceDzd = price,
+                    hasWater = hasWater,
+                    hasSoapPaper = hasSoap,
+                    isAccessiblePmr = pmr,
+                    hasWomenSection = women,
+                    hasShower = shower,
+                    hasWudu = wudu,
+                    hasChangingTable = changingTable,
+                    cleanlinessRating = 4.5f,
+                    openingHours = hours,
+                    address = addr,
+                    notes = notes,
+                    donationCcp = donationCcp,
+                    hasQuranSchool = hasQuranSchool,
+                    hasFridayPrayer = hasFridayPrayer,
+                    hasLibrary = hasLibrary,
+                    hasParking = hasParking,
+                    hasAirConditioning = hasAirConditioning,
+                    hasFuneralWash = hasFuneralWash,
+                    hasIftarRamadan = hasIftarRamadan,
+                    facebookUrl = facebookUrl,
+                    mosquePhone = mosquePhone,
+                    imamName = imamName,
+                    mosqueServicesNotes = mosqueServicesNotes,
+                    hasSteamSauna = hammamExtras.hasSteamSauna,
+                    hasKessaScrub = hammamExtras.hasKessaScrub,
+                    hasPrivateShowerRooms = hammamExtras.hasPrivateShowerRooms,
+                    isThermalSpring = hammamExtras.isThermalSpring,
+                    hasTowelRental = hammamExtras.hasTowelRental,
+                    hasTeaLounge = hammamExtras.hasTeaLounge,
+                    hasBarberGrooming = hammamExtras.hasBarberGrooming,
+                    hammamPhone = hammamExtras.hammamPhone,
+                    hammamMenHours = hammamExtras.hammamMenHours,
+                    hammamWomenHours = hammamExtras.hammamWomenHours,
+                    hammamServicesNotes = hammamExtras.hammamServicesNotes
                 )
             }
         )
@@ -1040,8 +1195,13 @@ fun HomeScreen(
             },
             text = {
                 Column {
+                    val keyStatus = when {
+                        com.example.BuildConfig.MAPS_API_KEY.isBlank() || com.example.BuildConfig.MAPS_API_KEY == "DEFAULT_MAPS_API_KEY" -> "لم يتم ضبط المفتاح بعد (القيمة الافتراضية)"
+                        com.example.BuildConfig.MAPS_API_KEY.length > 8 -> "${com.example.BuildConfig.MAPS_API_KEY.take(6)}...${com.example.BuildConfig.MAPS_API_KEY.takeLast(3)} (غير مكتمل أو غير مفعل)"
+                        else -> "مفتاح غير مكتمل أو غير صالح"
+                    }
                     Text(
-                        text = "القيمة الحالية لمفتاح الخرائط هي: \"${com.example.BuildConfig.MAPS_API_KEY}\".",
+                        text = "حالة مفتاح الخرائط: $keyStatus",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold
                     )

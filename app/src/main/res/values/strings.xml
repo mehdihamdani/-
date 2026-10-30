@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">راحة</string>
+    <string name="mosque_detail_services_title">الخدمات والأنشطة التي يقدمها المسجد</string>
+    <string name="mosque_detail_no_services">لم يتم تسجيل خدمات إضافية لهذا المسجد بعد</string>
+    <string name="mosque_detail_facebook_title">الصفحة الرسمية للمسجد على فيسبوك</string>
+    <string name="mosque_detail_open_facebook">زيارة صفحة الفيسبوك</string>
+    <string name="mosque_detail_facebook_missing">لم تتم إضافة رابط صفحة الفيسبوك بعد</string>
+    <string name="mosque_detail_add_facebook">إضافة رابط صفحة الفيسبوك للمسجد</string>
+    <string name="mosque_detail_call_phone">اتصال هاتفي</string>
+    <string name="mosque_detail_invalid_url">رابط غير صالح</string>
+    <string name="mosque_detail_open_url_failed">تعذر فتح الرابط في المتصفح</string>
+    <string name="hammam_directory_title">الحمامات والمركبات الحموية وخدماتها</string>
+    <string name="hammam_detail_services_title">خدمات الحمام ومرافق الاستجمام</string>
+    <string name="hammam_detail_men_hours">أوقات الرجال</string>
+    <string name="hammam_detail_women_hours">أوقات النساء والعائلات</string>
+    <string name="hammam_detail_open_facebook">زيارة صفحة الحمام على فيسبوك</string>
 </resources>

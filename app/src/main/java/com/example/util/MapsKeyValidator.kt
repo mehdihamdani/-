@@ -23,7 +23,7 @@ object MapsKeyValidator {
                 "لم يتم تكوين مفتاح Google Maps API في لوحة Secrets."
             }
             !key.startsWith("AIza") -> {
-                "مفتاح Google Maps الحالي ('$key') غير صالح. يجب أن يبدأ المفتاح بـ AIzaSy ويتكون من 39 حرفاً من Google Cloud Console."
+                "مفتاح Google Maps الحالي غير صالح. يجب أن يبدأ المفتاح بـ AIza ويتكون من 39 حرفاً من Google Cloud Console."
             }
             key.length < 35 -> {
                 "مفتاح Google Maps غير مكتمل (أقل من 35 حرفاً)."

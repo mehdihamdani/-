@@ -17,8 +17,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddLocationAlt
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Mosque
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.VolunteerActivism
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -46,17 +50,35 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.material.icons.filled.HotTub
 import com.example.data.model.AlgerianWilayas
 import com.example.data.model.AppLanguage
 import com.example.data.model.RestroomType
+import com.example.ui.theme.FacebookBlue
+import com.example.ui.theme.HammamBronze
 import com.example.ui.theme.MosqueEmerald
 import com.example.ui.theme.TealPrimary
 import com.example.util.AppStrings
 import com.example.util.LocalAppLanguage
 
+data class HammamFormExtras(
+    val hasSteamSauna: Boolean = false,
+    val hasKessaScrub: Boolean = false,
+    val hasPrivateShowerRooms: Boolean = false,
+    val isThermalSpring: Boolean = false,
+    val hasTowelRental: Boolean = false,
+    val hasTeaLounge: Boolean = false,
+    val hasBarberGrooming: Boolean = false,
+    val hammamPhone: String = "",
+    val hammamMenHours: String = "",
+    val hammamWomenHours: String = "",
+    val hammamServicesNotes: String = ""
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddRestroomDialog(
+    initialType: RestroomType = RestroomType.MOSQUE,
     onDismiss: () -> Unit,
     onSubmit: (
         name: String,
@@ -76,27 +98,63 @@ fun AddRestroomDialog(
         openingHours: String,
         address: String,
         notes: String,
-        donationCcp: String
+        donationCcp: String,
+        hasQuranSchool: Boolean,
+        hasFridayPrayer: Boolean,
+        hasLibrary: Boolean,
+        hasParking: Boolean,
+        hasAirConditioning: Boolean,
+        hasFuneralWash: Boolean,
+        hasIftarRamadan: Boolean,
+        facebookUrl: String,
+        mosquePhone: String,
+        imamName: String,
+        mosqueServicesNotes: String,
+        hammamExtras: HammamFormExtras
     ) -> Unit
 ) {
+    val isInitialHammam = initialType == RestroomType.HAMMAM
     var name by remember { mutableStateOf("") }
     var nameFr by remember { mutableStateOf("") }
     var wilaya by remember { mutableStateOf("الجزائر العاصمة") }
     var commune by remember { mutableStateOf("") }
-    var selectedType by remember { mutableStateOf(RestroomType.MOSQUE) }
-    var isFree by remember { mutableStateOf(true) }
-    var priceText by remember { mutableStateOf("0") }
+    var selectedType by remember { mutableStateOf(initialType) }
+    var isFree by remember { mutableStateOf(!isInitialHammam) }
+    var priceText by remember { mutableStateOf(if (isInitialHammam) "300" else "0") }
     var hasWater by remember { mutableStateOf(true) }
     var hasSoapPaper by remember { mutableStateOf(true) }
     var isAccessiblePmr by remember { mutableStateOf(false) }
     var hasWomenSection by remember { mutableStateOf(true) }
-    var hasShower by remember { mutableStateOf(false) }
+    var hasShower by remember { mutableStateOf(isInitialHammam) }
     var hasWudu by remember { mutableStateOf(true) }
     var hasChangingTable by remember { mutableStateOf(false) }
-    var openingHours by remember { mutableStateOf("أوقات الصلوات") }
+    var openingHours by remember { mutableStateOf(if (isInitialHammam) "07:00 - 21:00" else "أوقات الصلوات") }
     var address by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var donationCcp by remember { mutableStateOf("") }
+    var hasQuranSchool by remember { mutableStateOf(true) }
+    var hasFridayPrayer by remember { mutableStateOf(true) }
+    var hasLibrary by remember { mutableStateOf(false) }
+    var hasParking by remember { mutableStateOf(false) }
+    var hasAirConditioning by remember { mutableStateOf(true) }
+    var hasFuneralWash by remember { mutableStateOf(false) }
+    var hasIftarRamadan by remember { mutableStateOf(false) }
+    var facebookUrl by remember { mutableStateOf("") }
+    var mosquePhone by remember { mutableStateOf("") }
+    var imamName by remember { mutableStateOf("") }
+    var mosqueServicesNotes by remember { mutableStateOf("") }
+
+    var isThermalSpring by remember { mutableStateOf(false) }
+    var hasSteamSauna by remember { mutableStateOf(true) }
+    var hasKessaScrub by remember { mutableStateOf(true) }
+    var hasPrivateShowerRooms by remember { mutableStateOf(true) }
+    var hasTowelRental by remember { mutableStateOf(false) }
+    var hasTeaLounge by remember { mutableStateOf(false) }
+    var hasBarberGrooming by remember { mutableStateOf(false) }
+    var hammamPhone by remember { mutableStateOf("") }
+    var hammamMenHours by remember { mutableStateOf("") }
+    var hammamWomenHours by remember { mutableStateOf("") }
+    var hammamServicesNotes by remember { mutableStateOf("") }
 
     var typeMenuExpanded by remember { mutableStateOf(false) }
     var wilayaMenuExpanded by remember { mutableStateOf(false) }
@@ -194,7 +252,8 @@ fun AddRestroomDialog(
                                     if (type == RestroomType.HAMMAM) {
                                         hasShower = true
                                         isFree = false
-                                        priceText = "200"
+                                        priceText = "300"
+                                        openingHours = "07:00 - 21:00"
                                     } else if (type == RestroomType.MOSQUE || type == RestroomType.MUSALLA) {
                                         hasWudu = true
                                         isFree = true
@@ -451,6 +510,223 @@ fun AddRestroomDialog(
                     singleLine = true
                 )
 
+                // Mosque Specific Services & Facebook Page Section
+                if (selectedType == RestroomType.MOSQUE || selectedType == RestroomType.MUSALLA) {
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = MosqueEmerald.copy(alpha = 0.08f),
+                        border = BorderStroke(1.dp, MosqueEmerald.copy(alpha = 0.35f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Mosque,
+                                    contentDescription = null,
+                                    tint = MosqueEmerald,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = AppStrings.mosqueServicesSectionTitle(lang),
+                                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = MosqueEmerald
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = facebookUrl,
+                                onValueChange = { facebookUrl = it },
+                                label = { Text(AppStrings.facebookUrlLabel(lang)) },
+                                placeholder = { Text("https://www.facebook.com/...") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Public,
+                                        contentDescription = null,
+                                        tint = Color(0xFF1877F2)
+                                    )
+                                },
+                                singleLine = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("add_mosque_facebook_input")
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasQuranSchool, onCheckedChange = { hasQuranSchool = it })
+                                Text("📖 " + AppStrings.quranSchoolBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasFridayPrayer, onCheckedChange = { hasFridayPrayer = it })
+                                Text("🕌 " + AppStrings.fridayPrayerBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasLibrary, onCheckedChange = { hasLibrary = it })
+                                Text("📚 " + AppStrings.mosqueLibraryBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasParking, onCheckedChange = { hasParking = it })
+                                Text("🅿️ " + AppStrings.mosqueParkingBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasAirConditioning, onCheckedChange = { hasAirConditioning = it })
+                                Text("❄️ " + AppStrings.airConditioningBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasIftarRamadan, onCheckedChange = { hasIftarRamadan = it })
+                                Text("🌙 " + AppStrings.iftarRamadanBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasFuneralWash, onCheckedChange = { hasFuneralWash = it })
+                                Text("🤲 " + AppStrings.funeralWashBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            OutlinedTextField(
+                                value = mosqueServicesNotes,
+                                onValueChange = { mosqueServicesNotes = it },
+                                label = { Text(AppStrings.mosqueServicesScheduleLabel(lang)) },
+                                maxLines = 3,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+
+                // Hammam Specific Services, Schedules & Facebook Section
+                if (selectedType == RestroomType.HAMMAM) {
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = HammamBronze.copy(alpha = 0.08f),
+                        border = BorderStroke(1.dp, HammamBronze.copy(alpha = 0.35f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("add_hammam_services_section")
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.HotTub,
+                                    contentDescription = null,
+                                    tint = HammamBronze,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = AppStrings.hammamServicesSectionTitle(lang),
+                                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = HammamBronze
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = hammamMenHours,
+                                onValueChange = { hammamMenHours = it },
+                                label = { Text(AppStrings.hammamMenHoursLabel(lang)) },
+                                placeholder = { Text("06:00 - 12:30 / 18:30 - 22:00") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = hammamWomenHours,
+                                onValueChange = { hammamWomenHours = it },
+                                label = { Text(AppStrings.hammamWomenHoursLabel(lang)) },
+                                placeholder = { Text("13:00 - 18:00") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = hammamPhone,
+                                onValueChange = { hammamPhone = it },
+                                label = { Text(AppStrings.hammamPhoneLabel(lang)) },
+                                placeholder = { Text("021 00 00 00 / 0550...") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = facebookUrl,
+                                onValueChange = { facebookUrl = it },
+                                label = { Text(AppStrings.hammamFacebookUrlLabel(lang)) },
+                                placeholder = { Text("https://www.facebook.com/...") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Public,
+                                        contentDescription = null,
+                                        tint = FacebookBlue
+                                    )
+                                },
+                                singleLine = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("add_hammam_facebook_input")
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = isThermalSpring, onCheckedChange = { isThermalSpring = it })
+                                Text("♨️ " + AppStrings.thermalSpringBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasSteamSauna, onCheckedChange = { hasSteamSauna = it })
+                                Text("🧖 " + AppStrings.steamSaunaBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasKessaScrub, onCheckedChange = { hasKessaScrub = it })
+                                Text("🧼 " + AppStrings.kessaScrubBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasPrivateShowerRooms, onCheckedChange = { hasPrivateShowerRooms = it })
+                                Text("🚿 " + AppStrings.privateShowerRoomsBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasTowelRental, onCheckedChange = { hasTowelRental = it })
+                                Text("🧺 " + AppStrings.towelRentalBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasTeaLounge, onCheckedChange = { hasTeaLounge = it })
+                                Text("🍵 " + AppStrings.teaLoungeBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasBarberGrooming, onCheckedChange = { hasBarberGrooming = it })
+                                Text("💈 " + AppStrings.barberGroomingBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(checked = hasParking, onCheckedChange = { hasParking = it })
+                                Text("🅿️ " + AppStrings.mosqueParkingBadge(lang), style = MaterialTheme.typography.bodySmall)
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            OutlinedTextField(
+                                value = hammamServicesNotes,
+                                onValueChange = { hammamServicesNotes = it },
+                                label = { Text(AppStrings.hammamServicesNotesLabel(lang)) },
+                                maxLines = 3,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(18.dp))
 
                 // Buttons
@@ -465,6 +741,8 @@ fun AddRestroomDialog(
                     Button(
                         onClick = {
                             if (name.isNotBlank()) {
+                                val isMosqueType = selectedType == RestroomType.MOSQUE || selectedType == RestroomType.MUSALLA
+                                val isHammamType = selectedType == RestroomType.HAMMAM
                                 onSubmit(
                                     name,
                                     nameFr,
@@ -483,12 +761,40 @@ fun AddRestroomDialog(
                                     openingHours,
                                     address,
                                     notes,
-                                    donationCcp
+                                    donationCcp,
+                                    if (isMosqueType) hasQuranSchool else false,
+                                    if (isMosqueType) hasFridayPrayer else false,
+                                    if (isMosqueType) hasLibrary else false,
+                                    if (isMosqueType || isHammamType) hasParking else false,
+                                    if (isMosqueType) hasAirConditioning else false,
+                                    if (isMosqueType) hasFuneralWash else false,
+                                    if (isMosqueType) hasIftarRamadan else false,
+                                    if (isMosqueType || isHammamType) facebookUrl.trim() else "",
+                                    if (isMosqueType) mosquePhone.trim() else "",
+                                    if (isMosqueType) imamName.trim() else "",
+                                    if (isMosqueType) mosqueServicesNotes.trim() else "",
+                                    if (isHammamType) {
+                                        HammamFormExtras(
+                                            hasSteamSauna = hasSteamSauna,
+                                            hasKessaScrub = hasKessaScrub,
+                                            hasPrivateShowerRooms = hasPrivateShowerRooms,
+                                            isThermalSpring = isThermalSpring,
+                                            hasTowelRental = hasTowelRental,
+                                            hasTeaLounge = hasTeaLounge,
+                                            hasBarberGrooming = hasBarberGrooming,
+                                            hammamPhone = hammamPhone.trim(),
+                                            hammamMenHours = hammamMenHours.trim(),
+                                            hammamWomenHours = hammamWomenHours.trim(),
+                                            hammamServicesNotes = hammamServicesNotes.trim()
+                                        )
+                                    } else {
+                                        HammamFormExtras()
+                                    }
                                 )
                             }
                         },
                         enabled = name.isNotBlank(),
-                        colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
+                        colors = ButtonDefaults.buttonColors(containerColor = if (selectedType == RestroomType.HAMMAM) HammamBronze else TealPrimary),
                         modifier = Modifier.testTag("confirm_add_restroom_button")
                     ) {
                         Text(AppStrings.submitContribution(lang))

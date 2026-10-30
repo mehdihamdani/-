@@ -71,6 +71,7 @@ abstract class FirestoreEmulatorTestBase {
         if (::auth.isInitialized) {
             auth.signOut()
         }
+        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
     }
 
     protected suspend fun signInTestUser(email: String): String = withContext(Dispatchers.IO) {
@@ -95,7 +96,7 @@ abstract class FirestoreEmulatorTestBase {
         fun isPortOpen(host: String, port: Int): Boolean {
             return try {
                 java.net.Socket().use { socket ->
-                    socket.connect(java.net.InetSocketAddress(host, port), 200)
+                    socket.connect(java.net.InetSocketAddress(host, port), 1500)
                     true
                 }
             } catch (_: Exception) {

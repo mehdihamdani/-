@@ -177,7 +177,7 @@ test("Non-administrator: cannot create or edit mosque donation accounts", async 
 });
 
 test("Administrator: can read, create, and audit mosque donation accounts with leading zeros preserved", async () => {
-  const adminDb = testEnv.authenticatedContext(ADMIN_UID, { email: ADMIN_EMAIL }).firestore();
+  const adminDb = testEnv.authenticatedContext(ADMIN_UID, { email: ADMIN_EMAIL, email_verified: true }).firestore();
 
   const record1 = {
     id: "mosque_omar_chlef",
@@ -214,6 +214,77 @@ test("Administrator: can read, create, and audit mosque donation accounts with l
       committee_consent_confirmed: true,
       document_name: "releve_ccp_chlef_2026.pdf",
       admin_notes: "Checked official stamp from Religious Affairs direction.",
+    })
+  );
+});
+
+test("Authenticated: can create mosque with Quran school and Facebook URL", async () => {
+  const aliceDb = testEnv.authenticatedContext(ALICE_UID).firestore();
+  await assertSucceeds(
+    aliceDb.collection("restrooms").doc("mosque_algiers_1").set({
+      id: "mosque_algiers_1",
+      name: "Grande Mosquée d'Alger",
+      nameAr: "جامع الجزائر الأعظم",
+      latitude: 36.7345,
+      longitude: 3.1418,
+      province: "الجزائر العاصمة",
+      type: "mosque",
+      hasQuranSchool: true,
+      hasFridayPrayer: true,
+      hasLibrary: true,
+      facebookUrl: "https://www.facebook.com/DjamaaElDjazairOfficial",
+      imamName: "الشيخ محمد المأمون القاسمي",
+      mosqueServicesNotes: "مدرسة قرآنية لتحفيظ القرآن الكريم يومياً بعد صلاة العصر",
+      createdBy: ALICE_UID,
+      createdAt: new Date(),
+    })
+  );
+});
+
+test("Authenticated: can create and update hammam with services, schedules, and Facebook URL", async () => {
+  const aliceDb = testEnv.authenticatedContext(ALICE_UID).firestore();
+  await assertSucceeds(
+    aliceDb.collection("restrooms").doc("hammam_righa_1").set({
+      id: "hammam_righa_1",
+      name: "Station Thermale Hammam Righa",
+      nameAr: "المركب الحموي المعدني حمام ريغة",
+      latitude: 36.3792,
+      longitude: 2.3967,
+      province: "عين الدفلى",
+      type: "hammam",
+      isFree: false,
+      priceDzd: 400,
+      hasSteamSauna: true,
+      hasKessaScrub: true,
+      hasPrivateShowerRooms: true,
+      isThermalSpring: true,
+      hasTowelRental: true,
+      hasTeaLounge: true,
+      hasBarberGrooming: false,
+      hammamPhone: "027 59 10 20",
+      hammamMenHours: "يومياً 06:00 - 21:00 (جناح مستقل)",
+      hammamWomenHours: "يومياً 08:00 - 19:00 (جناح مستقل + غرف عائلية)",
+      hammamServicesNotes: "مياه معدنية علاجية ساخنة (67°م)، غرف استشفاء فردية وعائلية، تكييس وتدليك طبيعي.",
+      facebookUrl: "https://www.facebook.com/StationThermaleHammamRigha",
+      createdBy: ALICE_UID,
+      createdAt: new Date(),
+    })
+  );
+
+  // Another authenticated community contributor (Bob) can update Hammam services & hours,
+  // but cannot tamper with createdBy or priceDzd
+  const bobDb = testEnv.authenticatedContext(BOB_UID).firestore();
+  await assertSucceeds(
+    bobDb.collection("restrooms").doc("hammam_righa_1").update({
+      hasBarberGrooming: true,
+      hammamServicesNotes: "تمت إضافة صالون حلاقة وعناية داخل المركب الحموي.",
+      updatedAt: new Date(),
+    })
+  );
+
+  await assertFails(
+    bobDb.collection("restrooms").doc("hammam_righa_1").update({
+      createdBy: BOB_UID,
     })
   );
 });
