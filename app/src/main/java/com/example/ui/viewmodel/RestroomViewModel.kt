@@ -156,9 +156,6 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
     private val _showAddDialog = MutableStateFlow(false)
     val showAddDialog: StateFlow<Boolean> = _showAddDialog
 
-    private val _showStudyDialog = MutableStateFlow(false)
-    val showStudyDialog: StateFlow<Boolean> = _showStudyDialog
-
     private val _isOfflineReady = MutableStateFlow(true)
     val isOfflineReady: StateFlow<Boolean> = _isOfflineReady
 
@@ -390,10 +387,6 @@ class RestroomViewModel(private val repository: RestroomRepository) : ViewModel(
     fun openAddDialogWithType(type: RestroomType? = null) {
         _initialAddType.value = type
         _showAddDialog.value = true
-    }
-
-    fun setShowStudyDialog(show: Boolean) {
-        _showStudyDialog.value = show
     }
 
     fun setShowOfflineCacheDialog(show: Boolean) {

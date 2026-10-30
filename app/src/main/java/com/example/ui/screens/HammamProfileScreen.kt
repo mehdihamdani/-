@@ -36,6 +36,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -596,6 +597,8 @@ fun EditHammamServicesDialog(
     var hasWomenSection by remember { mutableStateOf(hammam.hasWomenSection) }
     var hasParking by remember { mutableStateOf(hammam.hasParking) }
     var servicesNotes by remember { mutableStateOf(hammam.hammamServicesNotes) }
+    var supportsRemotePayment by remember { mutableStateOf(hammam.hasRemotePayment) }
+    var remotePaymentDetails by remember { mutableStateOf(hammam.donationCcp) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -711,6 +714,43 @@ fun EditHammamServicesDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = RahaBlue.copy(alpha = 0.08f),
+                    border = BorderStroke(1.dp, RahaBlue.copy(alpha = 0.35f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        HammamCheckboxRow(
+                            checked = supportsRemotePayment,
+                            onCheckedChange = { supportsRemotePayment = it },
+                            label = "💳 " + AppStrings.remotePaymentEnableCheckbox(lang)
+                        )
+                        if (supportsRemotePayment) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            OutlinedTextField(
+                                value = remotePaymentDetails,
+                                onValueChange = { remotePaymentDetails = it },
+                                label = { Text(AppStrings.remotePaymentAccountLabel(lang)) },
+                                placeholder = { Text(AppStrings.remotePaymentAccountPlaceholder(lang)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.CreditCard,
+                                        contentDescription = null,
+                                        tint = RahaBlue
+                                    )
+                                },
+                                singleLine = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("edit_hammam_remote_payment_input")
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = servicesNotes,
                     onValueChange = { servicesNotes = it },
@@ -732,6 +772,11 @@ fun EditHammamServicesDialog(
                     Button(
                         onClick = {
                             val parsedPrice = priceText.toIntOrNull()?.coerceAtLeast(0) ?: hammam.priceDzd
+                            val updatedRemotePayment = if (supportsRemotePayment) {
+                                remotePaymentDetails.trim().ifBlank { AppStrings.defaultRemotePaymentMethod(lang) }
+                            } else {
+                                ""
+                            }
                             onSave(
                                 hammam.copy(
                                     isFree = parsedPrice == 0,
@@ -749,7 +794,8 @@ fun EditHammamServicesDialog(
                                     hammamWomenHours = womenHours.trim(),
                                     hammamPhone = hammamPhone.trim(),
                                     facebookUrl = facebookUrl.trim(),
-                                    hammamServicesNotes = servicesNotes.trim()
+                                    hammamServicesNotes = servicesNotes.trim(),
+                                    donationCcp = updatedRemotePayment
                                 )
                             )
                         },

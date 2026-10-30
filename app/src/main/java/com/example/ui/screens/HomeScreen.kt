@@ -36,9 +36,6 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.CloudDone
-import androidx.compose.material.icons.filled.CloudOff
-import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FilterList
@@ -110,7 +107,6 @@ import com.example.ui.components.FloatingFilterPanel
 import com.example.ui.components.GoogleRestroomMap
 import com.example.ui.components.InteractiveRestroomMap
 import com.example.ui.components.OfflineCacheDialog
-import com.example.ui.components.ProjectStudySheet
 import com.example.ui.components.RestroomCard
 import com.example.ui.components.RestroomDetailSheet
 import com.example.ui.components.getTypeColor
@@ -131,7 +127,6 @@ import com.example.ui.theme.RahaGreen
 import com.example.ui.theme.RahaGreenContainer
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.TealPrimary
-import androidx.compose.material.icons.filled.AdminPanelSettings
 import com.example.data.repository.FirestoreRestroomRepository
 import com.example.ui.components.MosqueAccountReviewDialog
 import com.example.ui.viewmodel.MapProviderType
@@ -156,7 +151,6 @@ fun HomeScreen(
     val selectedRestroomReviews by viewModel.selectedRestroomReviews.collectAsStateWithLifecycle()
     val showAddDialog by viewModel.showAddDialog.collectAsStateWithLifecycle()
     val initialAddType by viewModel.initialAddType.collectAsStateWithLifecycle()
-    val showStudyDialog by viewModel.showStudyDialog.collectAsStateWithLifecycle()
     val mapProvider by viewModel.mapProvider.collectAsStateWithLifecycle()
     val isLocating by viewModel.isLocating.collectAsStateWithLifecycle()
     val locationMessage by viewModel.locationMessage.collectAsStateWithLifecycle()
@@ -222,7 +216,6 @@ fun HomeScreen(
     }
 
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val studySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     // Dedicated Full-Screen Mosque Profile & Services Page
     if (selectedMosquePage != null) {
@@ -387,7 +380,10 @@ fun HomeScreen(
                                 Text(
                                     text = "📍 ${AppStrings.yourLocation(currentLang)}: ${userLocation.cityName}",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Surface(
@@ -406,56 +402,6 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    // Dedicated Hammams & Services Directory Page Button
-                    IconButton(
-                        onClick = { selectedTab = if (selectedTab == 6) 0 else 6 },
-                        modifier = Modifier.testTag("hammams_directory_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.HotTub,
-                            contentDescription = AppStrings.hammamsDirectoryTitle(currentLang),
-                            tint = if (selectedTab == 6) HammamBronze else TealPrimary
-                        )
-                    }
-
-                    // Offline Cache & Local Storage Status Button
-                    IconButton(
-                        onClick = { viewModel.setShowOfflineCacheDialog(true) },
-                        modifier = Modifier.testTag("offline_cache_button")
-                    ) {
-                        Icon(
-                            imageVector = if (isOfflineMode) Icons.Default.CloudOff else Icons.Default.CloudDone,
-                            contentDescription = AppStrings.manageStorage(currentLang),
-                            tint = if (isOfflineMode) Color(0xFFE65100) else RahaGreen
-                        )
-                    }
-
-                    // Project Feasibility Study Button
-                    IconButton(
-                        onClick = { viewModel.setShowStudyDialog(true) },
-                        modifier = Modifier.testTag("project_study_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Description,
-                            contentDescription = AppStrings.feasibilityStudy(currentLang),
-                            tint = TealPrimary
-                        )
-                    }
-
-                    // Admin-only Mosque Donation Review Button
-                    if (isAdminUser) {
-                        IconButton(
-                            onClick = { viewModel.setShowMosqueReviewDialog(true) },
-                            modifier = Modifier.testTag("admin_mosque_review_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.AdminPanelSettings,
-                                contentDescription = AppStrings.adminReviewTitle(currentLang),
-                                tint = Color(0xFFE65100)
-                            )
-                        }
-                    }
-
                     // User Account & Profile Screen Button
                     IconButton(
                         onClick = { selectedTab = if (selectedTab == 5) 0 else 5 },
@@ -985,8 +931,9 @@ fun HomeScreen(
                             onOpenOfflineDialog = {
                                 viewModel.setShowOfflineCacheDialog(true)
                             },
-                            onOpenStudyDialog = {
-                                viewModel.setShowStudyDialog(true)
+                            isAdmin = isAdminUser,
+                            onOpenAdminReviewDialog = {
+                                viewModel.setShowMosqueReviewDialog(true)
                             },
                             onBack = {
                                 selectedTab = 0
@@ -1148,14 +1095,6 @@ fun HomeScreen(
                     hammamServicesNotes = hammamExtras.hammamServicesNotes
                 )
             }
-        )
-    }
-
-    // Project Feasibility Study Sheet
-    if (showStudyDialog) {
-        ProjectStudySheet(
-            sheetState = studySheetState,
-            onDismiss = { viewModel.setShowStudyDialog(false) }
         )
     }
 

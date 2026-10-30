@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.HotTub
@@ -119,7 +120,8 @@ data class HammamDetailUiModel(
     val phoneNumber: String = "",
     val services: List<HammamServiceTag> = emptyList(),
     val servicesNotes: String = "",
-    val facebookUrl: String = ""
+    val facebookUrl: String = "",
+    val remotePaymentDetails: String = ""
 )
 
 /**
@@ -252,6 +254,16 @@ fun RestroomEntity.toHammamDetailUiModel(
                 )
             )
         }
+        if (hasRemotePayment) {
+            add(
+                HammamServiceTag(
+                    id = "remote_payment",
+                    label = AppStrings.remotePaymentBadge(lang),
+                    icon = Icons.Default.CreditCard,
+                    accentColor = RahaBlue
+                )
+            )
+        }
     }
 
     return HammamDetailUiModel(
@@ -270,7 +282,8 @@ fun RestroomEntity.toHammamDetailUiModel(
         phoneNumber = hammamPhone,
         services = activeServices,
         servicesNotes = hammamServicesNotes,
-        facebookUrl = facebookUrl
+        facebookUrl = facebookUrl,
+        remotePaymentDetails = if (hasRemotePayment) donationCcp else ""
     )
 }
 
@@ -461,6 +474,68 @@ fun HammamDetailView(
                                 )
                             }
                         }
+                    }
+                }
+            }
+        }
+
+        // Electronic Remote Payment Card (BaridiMob / CCP / Edahabia)
+        if (hammamInfo.remotePaymentDetails.isNotBlank()) {
+            Card(
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = RahaBlue.copy(alpha = 0.08f)),
+                border = BorderStroke(1.dp, RahaBlue.copy(alpha = 0.35f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("hammam_remote_payment_card")
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CreditCard,
+                            contentDescription = null,
+                            tint = RahaBlue,
+                            modifier = Modifier.size(26.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = AppStrings.remotePaymentHeader(lang),
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                                color = RahaBlue
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = hammamInfo.remotePaymentDetails,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clipboard.setPrimaryClip(ClipData.newPlainText("Remote Payment", hammamInfo.remotePaymentDetails))
+                            Toast.makeText(context, AppStrings.copyRemotePaymentSuccess(lang), Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .testTag("hammam_copy_remote_payment_btn")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = AppStrings.copyRemotePaymentContentDesc(lang),
+                            tint = RahaBlue
+                        )
                     }
                 }
             }

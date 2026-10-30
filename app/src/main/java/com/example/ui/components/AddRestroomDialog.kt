@@ -17,11 +17,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddLocationAlt
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Mosque
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -57,6 +59,7 @@ import com.example.data.model.RestroomType
 import com.example.ui.theme.FacebookBlue
 import com.example.ui.theme.HammamBronze
 import com.example.ui.theme.MosqueEmerald
+import com.example.ui.theme.RahaBlue
 import com.example.ui.theme.TealPrimary
 import com.example.util.AppStrings
 import com.example.util.LocalAppLanguage
@@ -132,6 +135,8 @@ fun AddRestroomDialog(
     var address by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var donationCcp by remember { mutableStateOf("") }
+    var supportsRemotePayment by remember { mutableStateOf(false) }
+    var remotePaymentInfo by remember { mutableStateOf("") }
     var hasQuranSchool by remember { mutableStateOf(true) }
     var hasFridayPrayer by remember { mutableStateOf(true) }
     var hasLibrary by remember { mutableStateOf(false) }
@@ -486,29 +491,97 @@ fun AddRestroomDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Donation Current Account (CCP / BaridiMob)
-                val ccpPlaceholder = when (lang) {
-                    AppLanguage.AR -> "مثال: 0021458798 مفتاح 45 أو RIP BaridiMob"
-                    AppLanguage.FR -> "Ex : 0021458798 clé 45 ou RIP BaridiMob"
-                    AppLanguage.EN -> "e.g. 0021458798 key 45 or BaridiMob RIP"
+                // Donations (exclusively for Mosque & Musalla) vs. Remote Payment (for Hammams & Restrooms)
+                if (selectedType == RestroomType.MOSQUE || selectedType == RestroomType.MUSALLA) {
+                    val ccpPlaceholder = when (lang) {
+                        AppLanguage.AR -> "مثال: 0021458798 مفتاح 45 أو RIP BaridiMob"
+                        AppLanguage.FR -> "Ex : 0021458798 clé 45 ou RIP BaridiMob"
+                        AppLanguage.EN -> "e.g. 0021458798 key 45 or BaridiMob RIP"
+                    }
+                    OutlinedTextField(
+                        value = donationCcp,
+                        onValueChange = { donationCcp = it },
+                        label = { Text(AppStrings.mosqueCcpNotice(lang)) },
+                        placeholder = { Text(ccpPlaceholder) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.VolunteerActivism,
+                                contentDescription = null,
+                                tint = MosqueEmerald
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("donation_ccp_input"),
+                        singleLine = true
+                    )
+                } else {
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = RahaBlue.copy(alpha = 0.08f),
+                        border = BorderStroke(1.dp, RahaBlue.copy(alpha = 0.35f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("remote_payment_section")
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.CreditCard,
+                                    contentDescription = null,
+                                    tint = RahaBlue,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = AppStrings.remotePaymentSectionTitle(lang),
+                                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                                    color = RahaBlue
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { supportsRemotePayment = !supportsRemotePayment }
+                            ) {
+                                Checkbox(
+                                    checked = supportsRemotePayment,
+                                    onCheckedChange = { supportsRemotePayment = it },
+                                    modifier = Modifier.testTag("remote_payment_checkbox")
+                                )
+                                Text(
+                                    text = "💳 " + AppStrings.remotePaymentEnableCheckbox(lang),
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold)
+                                )
+                            }
+
+                            if (supportsRemotePayment) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                OutlinedTextField(
+                                    value = remotePaymentInfo,
+                                    onValueChange = { remotePaymentInfo = it },
+                                    label = { Text(AppStrings.remotePaymentAccountLabel(lang)) },
+                                    placeholder = { Text(AppStrings.remotePaymentAccountPlaceholder(lang)) },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.CreditCard,
+                                            contentDescription = null,
+                                            tint = RahaBlue
+                                        )
+                                    },
+                                    singleLine = true,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("remote_payment_input")
+                                )
+                            }
+                        }
+                    }
                 }
-                OutlinedTextField(
-                    value = donationCcp,
-                    onValueChange = { donationCcp = it },
-                    label = { Text(AppStrings.mosqueCcpNotice(lang)) },
-                    placeholder = { Text(ccpPlaceholder) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.VolunteerActivism,
-                            contentDescription = null,
-                            tint = MosqueEmerald
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("donation_ccp_input"),
-                    singleLine = true
-                )
 
                 // Mosque Specific Services & Facebook Page Section
                 if (selectedType == RestroomType.MOSQUE || selectedType == RestroomType.MUSALLA) {
@@ -546,7 +619,7 @@ fun AddRestroomDialog(
                                     Icon(
                                         imageVector = Icons.Default.Public,
                                         contentDescription = null,
-                                        tint = Color(0xFF1877F2)
+                                        tint = FacebookBlue
                                     )
                                 },
                                 singleLine = true,
@@ -743,6 +816,13 @@ fun AddRestroomDialog(
                             if (name.isNotBlank()) {
                                 val isMosqueType = selectedType == RestroomType.MOSQUE || selectedType == RestroomType.MUSALLA
                                 val isHammamType = selectedType == RestroomType.HAMMAM
+                                val resolvedFinancialAccount = if (isMosqueType) {
+                                    donationCcp.trim()
+                                } else if (supportsRemotePayment) {
+                                    remotePaymentInfo.trim().ifBlank { AppStrings.defaultRemotePaymentMethod(lang) }
+                                } else {
+                                    ""
+                                }
                                 onSubmit(
                                     name,
                                     nameFr,
@@ -761,7 +841,7 @@ fun AddRestroomDialog(
                                     openingHours,
                                     address,
                                     notes,
-                                    donationCcp,
+                                    resolvedFinancialAccount,
                                     if (isMosqueType) hasQuranSchool else false,
                                     if (isMosqueType) hasFridayPrayer else false,
                                     if (isMosqueType) hasLibrary else false,

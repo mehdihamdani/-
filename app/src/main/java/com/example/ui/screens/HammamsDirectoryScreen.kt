@@ -31,6 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Groups
@@ -662,6 +663,13 @@ private fun HammamDirectoryCard(
                         text = AppStrings.womenSection(lang),
                         color = WomenSectionViolet,
                         icon = Icons.Default.Wc
+                    )
+                }
+                if (hammam.hasRemotePayment) {
+                    StatusBadge(
+                        text = AppStrings.remotePaymentBadge(lang),
+                        color = RahaBlue,
+                        icon = Icons.Default.CreditCard
                     )
                 }
                 if (hammam.facebookUrl.isNotBlank()) {

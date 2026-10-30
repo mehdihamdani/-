@@ -43,8 +43,7 @@ class GreetingScreenshotTest {
           onThemePaletteChange = {},
           onDarkModeChange = {},
           onLanguageChange = {},
-          onOpenOfflineDialog = {},
-          onOpenStudyDialog = {}
+          onOpenOfflineDialog = {}
         )
       }
     }

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.ChildCare
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.HotTub
@@ -70,6 +71,7 @@ import com.example.ui.theme.HammamBronze
 import com.example.ui.theme.MallViolet
 import com.example.ui.theme.MosqueEmerald
 import com.example.ui.theme.NaftalFlame
+import com.example.ui.theme.RahaBlue
 import com.example.ui.theme.RahaGreen
 import com.example.ui.theme.SteamAmber
 import com.example.ui.theme.SuccessGreen
@@ -326,8 +328,8 @@ fun RestroomCard(
                     )
                 }
 
-                // Donation Account Badge
-                if (restroom.donationCcp.isNotBlank()) {
+                // Donation Account Badge (Mosque / Musalla only) vs Remote Payment Badge (Hammams & Restrooms)
+                if (restroom.hasMosqueDonation) {
                     StatusBadge(
                         text = when (lang) {
                             com.example.data.model.AppLanguage.AR -> "تبرع جاري CCP"
@@ -336,6 +338,12 @@ fun RestroomCard(
                         },
                         color = MosqueEmerald,
                         icon = Icons.Default.VolunteerActivism
+                    )
+                } else if (restroom.hasRemotePayment) {
+                    StatusBadge(
+                        text = AppStrings.remotePaymentBadge(lang),
+                        color = RahaBlue,
+                        icon = Icons.Default.CreditCard
                     )
                 }
 

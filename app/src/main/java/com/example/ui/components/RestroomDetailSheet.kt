@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Accessible
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.filled.ChildCare
 import androidx.compose.material.icons.filled.CleaningServices
@@ -113,6 +114,7 @@ import com.example.ui.theme.AlertRed
 import com.example.ui.theme.FacebookBlue
 import com.example.ui.theme.HammamBronze
 import com.example.ui.theme.MosqueEmerald
+import com.example.ui.theme.RahaBlue
 import com.example.ui.theme.RahaGreen
 import com.example.ui.theme.SuccessGreen
 import com.example.ui.theme.TealPrimary
@@ -676,8 +678,8 @@ fun RestroomDetailSheet(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Donation Account (CCP / BaridiMob) Card
-            if (restroom.donationCcp.isNotBlank()) {
+            // Donation Account (Mosque / Musalla ONLY) vs. Electronic Remote Payment (Hammams & Restrooms)
+            if (restroom.hasMosqueDonation) {
                 Surface(
                     shape = RoundedCornerShape(14.dp),
                     color = MosqueEmerald.copy(alpha = 0.1f),
@@ -727,6 +729,61 @@ fun RestroomDetailSheet(
                                 imageVector = Icons.Default.ContentCopy,
                                 contentDescription = AppStrings.copyCcpContentDesc(lang),
                                 tint = MosqueEmerald
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            } else if (restroom.hasRemotePayment) {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = RahaBlue.copy(alpha = 0.1f),
+                    border = BorderStroke(1.dp, RahaBlue.copy(alpha = 0.4f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("remote_payment_card")
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Icon(
+                                imageVector = Icons.Default.CreditCard,
+                                contentDescription = null,
+                                tint = RahaBlue,
+                                modifier = Modifier.size(26.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = AppStrings.remotePaymentHeader(lang),
+                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = RahaBlue
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = restroom.donationCcp,
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                        IconButton(
+                            onClick = {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                val clip = ClipData.newPlainText("Remote Payment", restroom.donationCcp)
+                                clipboard.setPrimaryClip(clip)
+                                Toast.makeText(context, AppStrings.copyRemotePaymentSuccess(lang), Toast.LENGTH_SHORT).show()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = AppStrings.copyRemotePaymentContentDesc(lang),
+                                tint = RahaBlue
                             )
                         }
                     }

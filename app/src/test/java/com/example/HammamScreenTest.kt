@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -16,6 +18,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.model.RestroomEntity
 import com.example.data.model.RestroomType
+import com.example.ui.components.AddRestroomDialog
 import com.example.ui.components.HammamDetailView
 import com.example.ui.screens.HammamsDirectoryScreen
 import com.example.ui.theme.MyApplicationTheme
@@ -175,4 +178,42 @@ class HammamScreenTest {
 
         assertEquals(24L, selectedHammamId)
     }
+
+    @Test
+    fun `AddRestroomDialog shows Donations exclusively for Mosque or Musalla`() {
+        composeTestRule.setContent {
+            MyApplicationTheme {
+                AddRestroomDialog(
+                    initialType = RestroomType.MOSQUE,
+                    onDismiss = {},
+                    onSubmit = { _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ -> }
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("donation_ccp_input").performScrollTo().assertIsDisplayed()
+        composeTestRule.onAllNodesWithTag("remote_payment_section").assertCountEquals(0)
+    }
+
+    @Test
+    fun `AddRestroomDialog replaces Donations with Remote Payment for Hammams and Restrooms`() {
+        composeTestRule.setContent {
+            MyApplicationTheme {
+                AddRestroomDialog(
+                    initialType = RestroomType.HAMMAM,
+                    onDismiss = {},
+                    onSubmit = { _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ -> }
+                )
+            }
+        }
+
+        composeTestRule.waitForIdle()
+        composeTestRule.onAllNodesWithTag("donation_ccp_input").assertCountEquals(0)
+        composeTestRule.onNodeWithTag("remote_payment_section").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithTag("remote_payment_checkbox").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithTag("remote_payment_input").performScrollTo().assertIsDisplayed()
+    }
 }
+

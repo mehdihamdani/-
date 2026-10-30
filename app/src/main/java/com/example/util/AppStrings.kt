@@ -388,9 +388,9 @@ object AppStrings {
     }
 
     fun mosqueCcpNotice(lang: AppLanguage): String = when (lang) {
-        AppLanguage.AR -> "حساب التبرع لصيانة مرافق المسجد (CCP)"
-        AppLanguage.FR -> "Compte CCP pour l'entretien de la mosquée"
-        AppLanguage.EN -> "CCP donation account for mosque maintenance"
+        AppLanguage.AR -> "حساب التبرع للمسجد / المصلى (CCP أو BaridiMob - اختياري)"
+        AppLanguage.FR -> "Compte CCP / BaridiMob pour dons à la mosquée / musalla (optionnel)"
+        AppLanguage.EN -> "Mosque / Musalla donation account (CCP or BaridiMob - optional)"
     }
 
     fun reviewsSection(count: Int, lang: AppLanguage): String = when (lang) {
@@ -585,18 +585,6 @@ object AppStrings {
         AppLanguage.AR -> "إدارة البيانات والمزامنة غير المتصلة"
         AppLanguage.FR -> "Gestion des données et synchronisation"
         AppLanguage.EN -> "Data management and offline sync"
-    }
-
-    fun feasibilityStudy(lang: AppLanguage): String = when (lang) {
-        AppLanguage.AR -> "دراسة الجدوى الشاملة للمشروع"
-        AppLanguage.FR -> "Étude de faisabilité du projet"
-        AppLanguage.EN -> "Project Feasibility Study"
-    }
-
-    fun feasibilityStudySub(lang: AppLanguage): String = when (lang) {
-        AppLanguage.AR -> "النموذج الاقتصادي والاستدامة بالجزائر"
-        AppLanguage.FR -> "Modèle économique et impact en Algérie"
-        AppLanguage.EN -> "Economic model & sustainability in Algeria"
     }
 
     // --- USER PROFILE SCREEN ---
@@ -864,9 +852,9 @@ object AppStrings {
     }
 
     fun donationCcpLabelHeader(lang: AppLanguage): String = when (lang) {
-        AppLanguage.AR -> "الحساب الجاري للتبرع وصيانة المرفق:"
-        AppLanguage.FR -> "Compte CCP pour l'entretien et dons :"
-        AppLanguage.EN -> "CCP Account for facility maintenance:"
+        AppLanguage.AR -> "الحساب الجاري للتبرع وصيانة المسجد / المصلى:"
+        AppLanguage.FR -> "Compte CCP pour dons et entretien de la mosquée / musalla :"
+        AppLanguage.EN -> "CCP Donation Account for Mosque / Musalla maintenance:"
     }
 
     fun copyCcpSuccess(lang: AppLanguage): String = when (lang) {
@@ -1249,19 +1237,6 @@ object AppStrings {
         AppLanguage.AR -> "قاعدة البيانات محدثة ومتزامنة"
         AppLanguage.FR -> "Base de données à jour et synchronisée"
         AppLanguage.EN -> "Database is up to date and synced"
-    }
-
-    // --- PROJECT STUDY SHEET ---
-    fun studySheetTitle(lang: AppLanguage): String = when (lang) {
-        AppLanguage.AR -> "دراسة المشروع والهوية المتكاملة"
-        AppLanguage.FR -> "Étude du projet & Identité"
-        AppLanguage.EN -> "Project Study & Architecture"
-    }
-
-    fun studySheetSubtitle(lang: AppLanguage): String = when (lang) {
-        AppLanguage.AR -> "النموذج الاقتصادي والاستدامة بالجزائر"
-        AppLanguage.FR -> "Modèle économique et impact en Algérie"
-        AppLanguage.EN -> "Economic model & sustainability in Algeria"
     }
 
     // --- SIGN IN & AUTH ---
@@ -1662,5 +1637,61 @@ object AppStrings {
         AppLanguage.FR -> "Espaces Femmes"
         AppLanguage.EN -> "Women's Schedule"
     }
+
+    // --- REMOTE PAYMENT FEATURE (HAMMAMS & NON-MOSQUE RESTROOMS) ---
+    fun remotePaymentSectionTitle(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "خاصية الدفع عن بعد (BaridiMob / CCP / البطاقة الذهبية)"
+        AppLanguage.FR -> "Paiement à distance (BaridiMob / CCP / Edahabia)"
+        AppLanguage.EN -> "Remote Payment (BaridiMob / CCP / Edahabia)"
+    }
+
+    fun remotePaymentEnableCheckbox(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "تفعيل الدفع الإلكتروني عن بعد في هذا المرفق"
+        AppLanguage.FR -> "Activer le paiement électronique à distance"
+        AppLanguage.EN -> "Enable electronic remote payment at this facility"
+    }
+
+    fun remotePaymentAccountLabel(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "حساب الدفع عن بعد (RIP BaridiMob / CCP / البطاقة الذهبية)"
+        AppLanguage.FR -> "Compte de paiement à distance (RIP BaridiMob / CCP / Edahabia)"
+        AppLanguage.EN -> "Remote payment details (BaridiMob RIP / CCP / Edahabia)"
+    }
+
+    fun remotePaymentAccountPlaceholder(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "مثال: RIP 00799999... أو الدفع عبر BaridiMob / TPE الذهبية"
+        AppLanguage.FR -> "Ex : RIP 00799999... ou BaridiMob / TPE Edahabia"
+        AppLanguage.EN -> "e.g. RIP 00799999... or BaridiMob / Edahabia POS"
+    }
+
+    fun remotePaymentBadge(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "الدفع عن بعد متاح"
+        AppLanguage.FR -> "Paiement à distance"
+        AppLanguage.EN -> "Remote Payment"
+    }
+
+    fun remotePaymentHeader(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "الدفع الإلكتروني عن بعد (BaridiMob / CCP / الذهبية):"
+        AppLanguage.FR -> "Paiement électronique à distance (BaridiMob / CCP / Edahabia) :"
+        AppLanguage.EN -> "Electronic Remote Payment (BaridiMob / CCP / Edahabia):"
+    }
+
+    fun copyRemotePaymentSuccess(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "تم نسخ معلومات الدفع عن بعد بنجاح ✓"
+        AppLanguage.FR -> "Informations de paiement à distance copiées ✓"
+        AppLanguage.EN -> "Remote payment details copied ✓"
+    }
+
+    fun copyRemotePaymentContentDesc(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "نسخ معلومات الدفع عن بعد"
+        AppLanguage.FR -> "Copier les informations de paiement"
+        AppLanguage.EN -> "Copy remote payment details"
+    }
+
+    fun defaultRemotePaymentMethod(lang: AppLanguage): String = when (lang) {
+        AppLanguage.AR -> "BaridiMob / CCP / البطاقة الذهبية"
+        AppLanguage.FR -> "BaridiMob / CCP / Carte Edahabia"
+        AppLanguage.EN -> "BaridiMob / CCP / Edahabia Card"
+    }
 }
+
 

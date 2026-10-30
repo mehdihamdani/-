@@ -21,11 +21,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Brightness4
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
@@ -69,7 +69,7 @@ import androidx.compose.material3.IconButton
  * 1. 5 Color Theme Palettes selection.
  * 2. Dark Mode control (System Default, Light, Dark).
  * 3. 3 Supported Languages (Arabic, French, English).
- * 4. Offline database & feasibility study utilities.
+ * 4. Offline database utilities.
  */
 @Composable
 fun SettingsScreen(
@@ -78,7 +78,8 @@ fun SettingsScreen(
     onDarkModeChange: (DarkModeOption) -> Unit,
     onLanguageChange: (AppLanguage) -> Unit,
     onOpenOfflineDialog: () -> Unit,
-    onOpenStudyDialog: () -> Unit,
+    isAdmin: Boolean = false,
+    onOpenAdminReviewDialog: (() -> Unit)? = null,
     onBack: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -490,30 +491,32 @@ fun SettingsScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onOpenStudyDialog() }
-                            .padding(vertical = 4.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                    if (isAdmin && onOpenAdminReviewDialog != null) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onOpenAdminReviewDialog() }
+                                .padding(vertical = 4.dp)
+                                .testTag("settings_admin_mosque_review_button")
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(imageVector = Icons.Default.Description, contentDescription = null, tint = RahaBlue)
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(AppStrings.feasibilityStudy(currentLang), style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
-                                    Text(AppStrings.feasibilityStudySub(currentLang), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                    Icon(imageVector = Icons.Default.AdminPanelSettings, contentDescription = null, tint = TealPrimary)
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = AppStrings.adminReviewTitle(currentLang),
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                                    )
                                 }
+                                Text(AppStrings.openButton(currentLang), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = TealPrimary)
                             }
-                            Text(AppStrings.viewButton(currentLang), style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = RahaBlue)
                         }
                     }
                 }

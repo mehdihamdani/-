@@ -88,6 +88,12 @@ data class RestroomEntity(
     val isHammam: Boolean
         get() = type == RestroomType.HAMMAM
 
+    val hasMosqueDonation: Boolean
+        get() = isMosqueOrMusalla && donationCcp.isNotBlank()
+
+    val hasRemotePayment: Boolean
+        get() = !isMosqueOrMusalla && donationCcp.isNotBlank()
+
     /**
      * Formats basic metadata for offline display when internet is unavailable.
      */

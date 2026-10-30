@@ -64,7 +64,8 @@ object InitialRestroomsData {
             hasWudu = true,
             openingHours = "24/7 (على مدار الساعة)",
             address = "خروبة، الطريق الوطني رقم 5، حسين داي",
-            notes = "دخول رمزي 20 دج، عمال نظافة متواجدون، توجد مساحة للوضوء ومصلى ملحق."
+            notes = "دخول رمزي 20 دج، عمال نظافة متواجدون، توجد مساحة للوضوء ومصلى ملحق.",
+            donationCcp = "BaridiMob / البطاقة الذهبية (TPE)"
         ),
         RestroomEntity(
             id = 3,
@@ -788,7 +789,8 @@ object InitialRestroomsData {
             hammamPhone = "0550 88 42 19",
             hammamMenHours = "أيام السبت، الإثنين، الأربعاء، الجمعة: 09:00 - 22:30",
             hammamWomenHours = "أيام الأحد، الثلاثاء، الخميس: 09:00 - 20:00",
-            hammamServicesNotes = "باقة العريس والاسترخاء، ساونا وبخار بالأوكاليبتوس، حلاقة وعناية، مناشف معقمة مجانية وشاي بالنعناع."
+            hammamServicesNotes = "باقة العريس والاسترخاء، ساونا وبخار بالأوكاليبتوس، حلاقة وعناية، مناشف معقمة مجانية وشاي بالنعناع.",
+            donationCcp = "BaridiMob RIP: 00799999002468135790 • البطاقة الذهبية"
         ),
         RestroomEntity(
             id = 28,
